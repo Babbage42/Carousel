@@ -20,6 +20,7 @@ import {
   QueryList,
   Inject,
   PLATFORM_ID,
+  ViewEncapsulation,
 } from '@angular/core';
 import { debounceTime, fromEvent } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -53,6 +54,7 @@ export interface CarouselResponsiveConfig {
   templateUrl: './carousel.component.html',
   styleUrl: './carousel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @ContentChildren(SlideDirective) projectedSlides!: QueryList<SlideDirective>;
@@ -94,9 +96,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   // @todo
   // Handle first display of center (and margin/initial slide) via purcent
   // in style
-  @Input() ssrMode = false;
+
   @Input() customStyle = undefined;
-  //   lazyPreloadPrevNext	number	0
+  //  add lazyPreloadPrevNext	number	0
   // Number of next and previous slides to preload. Only applicable if using lazy loading.
 
   @Output() slideUpdate = new EventEmitter();
@@ -106,13 +108,24 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() reachEnd = new EventEmitter();
   @Output() reachStart = new EventEmitter();
 
+  private _currentPosition: number = this.initialSlide;
+  set currentPosition(newPosition: number) {
+    if (newPosition !== this._currentPosition) {
+      this.slideUpdate.emit(newPosition);
+    }
+    this._currentPosition = newPosition;
+  }
+  get currentPosition() {
+    return this._currentPosition;
+  }
+
   uniqueCarouselId = '';
   generatedStyles: SafeHtml = '';
   fullWidth = 0;
+  scrollWidth = 0;
   totalSlides = 0;
   totalSlidesVisible = 0;
   allSlidesElements: HTMLElement[] = [];
-  currentPosition = this.initialSlide;
   slidesWidths: number[] = [];
   slidesPositions = [];
   hasReachedEnd = false;
@@ -144,13 +157,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     return !isPlatformBrowser(this.platformId);
   }
 
-  ngOnDestroy(): void {
-    this.mediaQueryListeners.forEach(({ mql, listener }) => {
-      mql.removeEventListener('change', listener);
-    });
-  }
-
   ngOnInit(): void {
+    if (
+      typeof this.slidesPerView === 'string' &&
+      this.slidesPerView !== 'auto'
+    ) {
+      this.slidesPerView = parseInt(this.slidesPerView);
+    }
     if (!this.uniqueCarouselId) {
       this.uniqueCarouselId = this.generateRandomClassName(10);
     }
@@ -158,18 +171,14 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    console.log('allslides aterinit', this.allSlides);
-
     this.initProjectedSlides();
-    this.applySpaceBetween();
-    this.applySlidesPerView();
+    this.refresh();
+  }
 
-    // We must wait browser calculation for grid display.
-    this.calculateGridWidth();
-
-    this.updateSlides();
-
-    this.detectChanges.detectChanges();
+  ngOnDestroy(): void {
+    this.mediaQueryListeners.forEach(({ mql, listener }) => {
+      mql.removeEventListener('change', listener);
+    });
   }
 
   private generateRandomClassName(length: number = 8): string {
@@ -221,6 +230,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentPosition = index;
     }
     console.log('sliding to index:', index);
+
+    this.applyTransitionAnimation();
+
+    const newTranslate = this.getTranslateFromPosition(index);
+    this.currentTranslate = newTranslate;
+    this.updateTransform(false);
+  }
+
+  private applyTransitionAnimation() {
     this.renderer.setStyle(
       this.allSlides?.nativeElement,
       'transition-duration',
@@ -233,10 +251,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         `0s`
       );
     }, 400);
-
-    const newTranslate = this.getTranslateFromPosition(index);
-    this.currentTranslate = newTranslate;
-    this.updateTransform(false);
   }
 
   // Handle scroll on desktop
@@ -253,8 +267,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   minTranslate = 0;
   maxTranslate = 0;
   sensitivity = 1;
-  velocitySensitivity = 5; // Réduit la sensibilité du déplacement
-  velocitySensitivityFreeMode = 1; // Réduit la sensibilité du déplacement
+  velocitySensitivity = 5;
+  velocitySensitivityFreeMode = 1;
   velocityBounds = 0.5;
 
   @HostListener('mousedown', ['$event'])
@@ -274,8 +288,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
-
-    //event.preventDefault();
   }
 
   @HostListener('mousemove', ['$event'])
@@ -293,7 +305,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.lastMoveTime = new Date().getTime();
 
-    const deltaX = (xPosition - this.startX) * this.sensitivity; // Ajuste la vitesse
+    const deltaX = (xPosition - this.startX) * this.sensitivity;
 
     let newTranslate = this.lastTranslate + deltaX;
     if (
@@ -388,20 +400,19 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private applyInertia() {
     if (!this.allSlides) return;
 
-    let friction = 0.93; // 🔥 Ajuste pour un ralentissement progressif
+    let friction = 0.93;
 
     const step = () => {
-      if (Math.abs(this.velocity) < 0.5) return; // 🔥 Arrête l’inertie quand la vitesse est trop faible
+      if (Math.abs(this.velocity) < 0.5) return;
 
       this.currentTranslate += this.velocity;
-      this.velocity *= friction; // 🔥 Réduction progressive de la vitesse
+      this.velocity *= friction;
 
-      // 🔥 Si on atteint un bord, on freine plus vite
       if (
         this.currentTranslate <= this.maxTranslate ||
         this.currentTranslate >= this.minTranslate
       ) {
-        this.velocity *= 0.8; // 🔥 Réduction plus rapide pour éviter un effet rebond brutal
+        this.velocity *= 0.8;
       }
 
       this.currentTranslate = Math.max(
@@ -410,7 +421,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       );
 
       this.updateTransform();
-
       this.animationFrameId = requestAnimationFrame(step);
     };
 
@@ -439,8 +449,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getGridColumnsValue(slidesPerView: number, spaceBetween: number) {
-    const value = (100 - spaceBetween * (slidesPerView - 1)) / slidesPerView;
-    const roundedValue = Math.round(value);
+    // const value = (100 - spaceBetween * (slidesPerView - 1)) / slidesPerView;
+    // const roundedValue = Math.round(value);
     //return `calc(${roundedValue}%)`;
     return `round(nearest,calc((100% - ${
       spaceBetween * (slidesPerView - 1)
@@ -481,58 +491,68 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.isServerMode) {
         setTimeout(() => {
           this.fullWidth = this.allSlides?.nativeElement.clientWidth;
-          console.log(this.fullWidth);
-          const scrollWidth = this.allSlides?.nativeElement.scrollWidth;
-          this.slidesWidths = [];
-          for (const slide of this.allSlidesElements) {
-            const slideWidth = slide.getBoundingClientRect().width;
-            this.slidesWidths.push(slideWidth);
-          }
+          this.scrollWidth = this.allSlides?.nativeElement.scrollWidth;
 
-          // Calculate total slides visible for auto slidesperview.
+          this.calculateSlidesWidths();
           if (this.slidesPerView === 'auto' && !this.center) {
-            let index = this.totalSlides - 1;
-            let total = 0;
-            let count = 0;
-            while (index >= 0 && total + this.marginEnd < this.fullWidth) {
-              total += this.slidesWidths[index];
-              count++;
-              index--;
-            }
-            this.totalSlidesVisible = this.totalSlides - count + 2;
-            this.detectChanges.detectChanges();
+            this.calculateSlidesVisibleAuto();
           }
-
-          this.maxTranslate = -(scrollWidth - this.fullWidth) - this.marginEnd;
-          this.minTranslate = this.marginStart;
-          if (this.center) {
-            this.minTranslate = this.fullWidth / 2 - this.slidesWidths[0] / 2;
-            this.maxTranslate -= this.fullWidth / 2 - this.slidesWidths[0] / 2;
-            this.currentTranslate = this.initialSlide
-              ? this.getTranslateFromPosition(this.initialSlide)
-              : this.minTranslate;
-            this.updateTransform(false);
-          } else {
-            if (this.initialSlide) {
-              this.currentTranslate = this.getTranslateFromPosition(
-                this.initialSlide
-              );
-              this.updateTransform(false);
-            } else if (this.marginStart) {
-              this.currentTranslate = this.minTranslate;
-              this.updateTransform(false);
-            }
-          }
-
-          console.log('mintranslate', this.minTranslate);
-          console.log('maxtranslate', this.maxTranslate);
+          this.calculateTranslations();
         });
       }
     }
   }
 
+  private calculateTranslations() {
+    this.maxTranslate = -(this.scrollWidth - this.fullWidth) - this.marginEnd;
+    this.minTranslate = this.marginStart;
+    if (this.center) {
+      this.minTranslate = this.fullWidth / 2 - this.slidesWidths[0] / 2;
+      this.maxTranslate -= this.fullWidth / 2 - this.slidesWidths[0] / 2;
+      this.currentTranslate = this.initialSlide
+        ? this.getTranslateFromPosition(this.initialSlide)
+        : this.minTranslate;
+      this.updateTransform(false);
+    } else {
+      if (this.initialSlide) {
+        this.currentTranslate = this.getTranslateFromPosition(
+          this.initialSlide
+        );
+        this.updateTransform(false);
+      } else if (this.marginStart) {
+        this.currentTranslate = this.minTranslate;
+        this.updateTransform(false);
+      }
+    }
+
+    console.log('mintranslate', this.minTranslate);
+    console.log('maxtranslate', this.maxTranslate);
+  }
+
+  private calculateSlidesWidths() {
+    this.slidesWidths = [];
+    for (const slide of this.allSlidesElements) {
+      const slideWidth = slide.getBoundingClientRect().width;
+      this.slidesWidths.push(slideWidth);
+    }
+  }
+
+  private calculateSlidesVisibleAuto() {
+    let index = this.totalSlides - 1;
+    let total = 0;
+    let count = 0;
+    while (index >= 0 && total + this.marginEnd < this.fullWidth) {
+      total += this.slidesWidths[index];
+      count++;
+      index--;
+    }
+    this.totalSlidesVisible = this.totalSlides - count + 2;
+    this.detectChanges.detectChanges();
+  }
+
   private initProjectedSlides() {
-    this.isPojected = this.slides.length === 0;
+    this.isPojected =
+      this.slides.length === 0 && this.projectedSlides.length === 0;
     if (this.isPojected) {
       const slidesProjected =
         this.allSlides?.nativeElement.querySelectorAll('* > div');
@@ -688,6 +708,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * Add media queries to stylesheet to work with SSR.
+   * @returns
+   */
   private applyBreakpoints() {
     if (this.breakpoints === undefined || this.slidesPerView === 'auto') {
       return;
@@ -710,7 +734,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         `;
 
       // const mql = window.matchMedia(query);
-
       // const listener = (e: MediaQueryListEvent) => {
       //   this.ngZone.run(() => {
       //     if (e.matches) {

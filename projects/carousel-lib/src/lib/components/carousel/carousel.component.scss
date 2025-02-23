@@ -8,6 +8,11 @@
   justify-content: flex-start;
   gap: 1rem;
 
+  .slides-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
   .slides {
     z-index: 1;
     overflow: visible;
@@ -24,21 +29,17 @@
     }
 
     display: grid;
-    grid-auto-flow: column; /* Pour un défilement horizontal */
-    //grid-auto-columns: calc(100% / 3.5); /* Pour afficher 3.5 slides */
-    //overflow-x: auto; /* Pour permettre le défilement */
-    /* Ces propriétés sont importantes pour le scroll : */
-    scroll-snap-type: x mandatory; /* Optionnel: pour un défilement "snap" */
-    scroll-behavior: smooth; /* Pour un défilement fluide */
-    -webkit-overflow-scrolling: touch; /* Pour le support mobile */
+    grid-auto-flow: column;
 
-    /* Très important : empêcher le wrapping */
+    // scroll-snap-type: x mandatory;
+    // scroll-behavior: smooth;
+    // -webkit-overflow-scrolling: touch;
+
     flex-wrap: nowrap;
     white-space: nowrap;
 
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
-    /* Cache la scrollbar pour Chrome, Safari et Opera */
     &::-webkit-scrollbar {
       display: none;
     }
@@ -76,9 +77,4 @@
       }
     }
   }
-}
-
-.slides-wrapper {
-  position: relative;
-  width: 100%;
 }
