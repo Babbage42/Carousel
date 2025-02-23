@@ -1,0 +1,49 @@
+.dot-pagination {
+  &.clickable {
+    .dot {
+      cursor: pointer;
+    }
+  }
+  .dot {
+    opacity: 0.5;
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: white;
+    //border: 1px solid grey;
+    border-radius: 50%;
+    &.selected {
+      background-color: darkblue;
+      transform: scale(1.5);
+    }
+  }
+  &.pagination-dot {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  &.dynamic {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    max-width: calc(5 * 0.5rem + 4 * 1rem);
+    overflow: hidden;
+    .dot {
+      position: relative;
+      transition: left 0.2s;
+      flex: 0 0 auto;
+      transform: scale(1);
+      &.next,
+      &.prev {
+        transform: scale(0.6);
+      }
+      &.next-next,
+      &.prev-prev {
+        transform: scale(0.4);
+      }
+    }
+  }
+}

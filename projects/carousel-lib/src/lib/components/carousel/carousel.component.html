@@ -1,0 +1,61 @@
+<div [innerHTML]="generatedStyles"></div>
+
+<div #carousel class="carousel">
+  <span>real position:{{ currentPosition }}</span>
+  <span>total visible:{{ totalSlidesVisible }}</span>
+
+  <div class="slides-wrapper">
+    @if (showControls) {
+    <app-navigation
+      (slidePrev)="slidePrev.emit()"
+      (slideNext)="slideNext.emit()"
+      (slideTo)="slideTo($event)"
+      [loop]="loop"
+      [rewind]="rewind"
+      [currentPosition]="currentPosition"
+      [hasReachedStart]="hasReachedStart"
+      [hasReachedEnd]="hasReachedEnd"
+      [totalSlides]="totalSlides"
+      [iconSize]="iconSize"
+    ></app-navigation>
+    }
+
+    <div
+      #allSlides
+      class="slides"
+      [class.slides-auto]="slidesPerView === 'auto'"
+    >
+      @if (slides.length) { @for (slide of slides; track $index) {
+      <div class="slide position-{{ $index + 1 }}">
+        <img src="{{ slide }}" alt="" />
+        <span>{{ $index + 1 }}</span>
+      </div>
+      } } @else if (projectedSlides.length) { @for (slide of projectedSlides;
+      track $index) {
+      <ng-container>
+        <div class="slide position-{{ $index + 1 }}">
+          <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
+        </div>
+      </ng-container>
+      } } @else {
+      <ng-content></ng-content>
+      }
+    </div>
+  </div>
+
+  @if (pagination && !pagination.external) {
+  <ng-container *ngTemplateOutlet="paginationTemplate"></ng-container>
+  }
+</div>
+
+<ng-template #paginationTemplate>
+  @if (pagination) {
+  <app-pagination
+    (goToSlide)="slideTo($event)"
+    [currentPosition]="currentPosition"
+    [totalSlides]="totalSlides"
+    [totalSlidesVisible]="totalSlidesVisible"
+    [pagination]="pagination"
+  ></app-pagination>
+  }
+</ng-template>

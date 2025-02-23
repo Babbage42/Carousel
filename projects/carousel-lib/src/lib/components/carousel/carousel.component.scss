@@ -1,0 +1,84 @@
+.carousel {
+  overflow: hidden;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+
+  .slides {
+    z-index: 1;
+    overflow: visible;
+    width: 100%;
+    display: flex;
+
+    will-change: transform;
+    backface-visibility: hidden;
+    transition-property: transform;
+    transition-duration: 0s;
+
+    &.slides-auto {
+      grid-auto-columns: max-content;
+    }
+
+    display: grid;
+    grid-auto-flow: column; /* Pour un défilement horizontal */
+    //grid-auto-columns: calc(100% / 3.5); /* Pour afficher 3.5 slides */
+    //overflow-x: auto; /* Pour permettre le défilement */
+    /* Ces propriétés sont importantes pour le scroll : */
+    scroll-snap-type: x mandatory; /* Optionnel: pour un défilement "snap" */
+    scroll-behavior: smooth; /* Pour un défilement fluide */
+    -webkit-overflow-scrolling: touch; /* Pour le support mobile */
+
+    /* Très important : empêcher le wrapping */
+    flex-wrap: nowrap;
+    white-space: nowrap;
+
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    /* Cache la scrollbar pour Chrome, Safari et Opera */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    cursor: grab;
+    user-select: none;
+
+    transform: translate3d(0, 0, 0);
+
+    .slide {
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      position: relative;
+      user-select: none;
+      width: 100%;
+      height: auto;
+      img {
+        user-select: none;
+        pointer-events: none;
+        width: 100%;
+      }
+      span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        background-color: red;
+        top: calc(50% - 1.5rem);
+        left: calc(50% - 1.5rem);
+        position: absolute;
+        font-size: 30px;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.slides-wrapper {
+  position: relative;
+  width: 100%;
+}

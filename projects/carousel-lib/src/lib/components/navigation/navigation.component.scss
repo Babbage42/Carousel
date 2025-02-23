@@ -1,0 +1,16 @@
+.controls {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  > div {
+    cursor: pointer;
+    z-index: 2;
+    position: absolute;
+  }
+  .control-left {
+    //left: 5px;
+  }
+  .control-right {
+    //right: 5px;
+  }
+}
