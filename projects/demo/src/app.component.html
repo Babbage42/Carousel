@@ -1,7 +1,7 @@
 <div style="width: 80%; padding: 50px">
   <app-carousel
+    [mouseWheel]="true"
     [freeMode]="false"
-    [rewind]="true"
     [slides]="[
       'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
       'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
@@ -17,6 +17,62 @@
   ></app-carousel>
 </div>
 
+<div style="width: 80%; padding: 50px">
+  <app-carousel
+    #myCarousel
+    [freeMode]="false"
+    [slides]="[
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'
+    ]"
+  >
+    <div class="custom-control" *carouselNavLeft><span>TEST LEFT</span></div>
+    <div class="custom-control" *carouselNavRight><span>TEST RIGHT</span></div>
+  </app-carousel>
+
+  <app-navigation-left-external
+    [carousel]="myCarousel"
+  ></app-navigation-left-external>
+  <app-navigation-right-external
+    [carousel]="myCarousel"
+  ></app-navigation-right-external>
+</div>
+
+<div style="width: 80%; padding: 50px">
+  <app-carousel
+    #myCarousel2
+    [freeMode]="false"
+    [slides]="[
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',
+      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'
+    ]"
+  ></app-carousel>
+
+  <app-navigation-left-external
+    [carousel]="myCarousel2"
+  ></app-navigation-left-external>
+  <app-navigation-right-external
+    [carousel]="myCarousel2"
+  ></app-navigation-right-external>
+</div>
+
+<!-- 
 <div style="width: 80%; padding: 50px">
   <app-carousel
     [freeMode]="false"
@@ -196,4 +252,4 @@
     </div>
   </app-carousel>
 </div>
-<router-outlet />
+<router-outlet /> -->

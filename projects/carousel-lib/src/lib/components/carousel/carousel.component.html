@@ -1,5 +1,7 @@
 <div [innerHTML]="generatedStyles"></div>
 
+<div>{{ slidesElements().length }}</div>
+
 <div #carousel class="carousel">
   <span>real position:{{ currentPosition }}</span>
   <span>total visible:{{ totalSlidesVisible }}</span>
@@ -7,6 +9,9 @@
   <div class="slides-wrapper">
     @if (showControls) {
     <app-navigation
+      [alwaysShowControls]="alwaysShowControls"
+      [customLeftArrow]="customLeftArrow?.templateRef"
+      [customRightArrow]="customRightArrow?.templateRef"
       (slidePrev)="slidePrev.emit()"
       (slideNext)="slideNext.emit()"
       (slideTo)="slideTo($event)"
@@ -17,7 +22,8 @@
       [hasReachedEnd]="hasReachedEnd"
       [totalSlides]="totalSlides"
       [iconSize]="iconSize"
-    ></app-navigation>
+    >
+    </app-navigation>
     }
 
     <div
@@ -26,7 +32,7 @@
       [class.slides-auto]="slidesPerView === 'auto'"
     >
       @if (slides.length) { @for (slide of slides; track $index) {
-      <div class="slide position-{{ $index + 1 }}">
+      <div #slide class="slide position-{{ $index + 1 }}">
         <img src="{{ slide }}" alt="" />
         <span>{{ $index + 1 }}</span>
       </div>

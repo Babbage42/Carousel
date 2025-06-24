@@ -1,11 +1,20 @@
-<div class="controls">
-  @if (loop || rewind || (currentPosition > 0 && !hasReachedStart)) {
-  <div
-    [style.left.px]="0"
-    [style.top]="'calc(50% - ' + iconSize / 2 + 'px)'"
+<ng-template #leftControl>
+  @if (alwaysShowControls || loop || rewind || (currentPosition > 0 &&
+  !hasReachedStart)) {
+  <button
+    tabindex="0"
+    [style.left.px]="carouselRegistry.hasExternalControls() ? null : 0"
+    [style.top]="
+      carouselRegistry.hasExternalControls()
+        ? null
+        : 'calc(50% - ' + iconSize / 2 + 'px)'
+    "
     class="control-left"
     (click)="slideToPrev()"
   >
+    @if (customLeftArrow) {
+    <ng-container *ngTemplateOutlet="customLeftArrow"></ng-container>
+    }@else {
     <svg
       [attr.width]="iconSize || '24'"
       [attr.height]="iconSize || '24'"
@@ -18,15 +27,28 @@
         fill="currentColor"
       ></path>
     </svg>
-  </div>
-  } @if (loop || rewind || (currentPosition < totalSlides - 1 &&
-  !hasReachedEnd)) {
-  <div
-    [style.right.px]="0"
-    [style.top]="'calc(50% - ' + iconSize / 2 + 'px)'"
+    }
+  </button>
+  }
+</ng-template>
+
+<ng-template #rightControl>
+  @if (alwaysShowControls || loop || rewind || (currentPosition < totalSlides -
+  1 && !hasReachedEnd)) {
+  <button
+    tabindex="0"
+    [style.right.px]="carouselRegistry.hasExternalControls() ? null : 0"
+    [style.top]="
+      carouselRegistry.hasExternalControls()
+        ? null
+        : 'calc(50% - ' + iconSize / 2 + 'px)'
+    "
     class="control-right"
     (click)="slideToNext()"
   >
+    @if (customRightArrow) {
+    <ng-container *ngTemplateOutlet="customRightArrow"></ng-container>
+    } @else {
     <svg
       [attr.width]="iconSize || '24'"
       [attr.height]="iconSize || '24'"
@@ -37,8 +59,17 @@
       <path
         d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"
         fill="currentColor"
-      ></path>
-    </svg>
-  </div>
+      ></path></svg
+    >}
+  </button>
+  }
+</ng-template>
+
+<div class="controls">
+  @if (!carouselRegistry.hasExternalControls()) {
+  <ng-container *ngTemplateOutlet="leftControl"></ng-container>
+  <ng-container *ngTemplateOutlet="rightControl"></ng-container>
   }
 </div>
+
+<div>{{ totalSlides }}</div>

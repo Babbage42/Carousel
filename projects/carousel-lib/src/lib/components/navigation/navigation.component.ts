@@ -1,17 +1,36 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  ContentChild,
+  effect,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  TemplateRef,
+  viewChild,
+  ViewChild,
+} from '@angular/core';
+import { CarouselRegistryService } from '../carousel/carousel-registry.service';
 
 @Component({
   selector: 'app-navigation',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './navigation.component.html',
   styleUrl: './navigation.component.scss',
 })
-export class NavigationComponent {
+export class NavigationComponent implements OnInit {
+  ngOnInit(): void {}
+
+  @Input() customLeftArrow?: TemplateRef<any>;
+  @Input() customRightArrow?: TemplateRef<any>;
+
   @Output() slidePrev = new EventEmitter<void>();
   @Output() slideNext = new EventEmitter<void>();
   @Output() slideTo = new EventEmitter<number>();
 
+  @Input() alwaysShowControls = false;
   @Input() loop = false;
   @Input() rewind = false;
   @Input() currentPosition = 0;
@@ -19,6 +38,11 @@ export class NavigationComponent {
   @Input() hasReachedEnd = false;
   @Input() totalSlides = 0;
   @Input() iconSize = 0;
+
+  public leftControl = viewChild<TemplateRef<any>>('leftControl');
+  public rightControl = viewChild<TemplateRef<any>>('rightControl');
+
+  constructor(public readonly carouselRegistry: CarouselRegistryService) {}
 
   public slideToPrev() {
     this.slidePrev.emit();

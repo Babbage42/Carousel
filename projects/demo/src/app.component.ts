@@ -1,12 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CarouselComponent, SlideDirective } from 'carousel-lib';
+import {
+  CarouselComponent,
+  CarouselNavLeftDirective,
+  CarouselNavRightDirective,
+  SlideDirective,
+  NavigationLeftExternalComponent,
+  NavigationRightExternalComponent,
+} from 'carousel-lib';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CarouselComponent, CommonModule, SlideDirective],
+  imports: [
+    RouterOutlet,
+    CarouselComponent,
+    NavigationLeftExternalComponent,
+    NavigationRightExternalComponent,
+    CommonModule,
+    SlideDirective,
+    CarouselNavLeftDirective,
+    CarouselNavRightDirective,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
