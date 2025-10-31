@@ -4,7 +4,7 @@
 
 <div #carousel class="carousel">
   <span>real position:{{ currentPosition }}</span>
-  <span>total visible:{{ totalSlidesVisible }}</span>
+  <span>total visible:{{ totalSlidesVisible() }}</span>
 
   <div class="slides-wrapper">
     @if (showControls) {
@@ -12,8 +12,8 @@
       [alwaysShowControls]="alwaysShowControls"
       [customLeftArrow]="customLeftArrow?.templateRef"
       [customRightArrow]="customRightArrow?.templateRef"
-      (slidePrev)="slidePrev.emit()"
-      (slideNext)="slideNext.emit()"
+      (slidePrev)="slideToPrev()"
+      (slideNext)="slideToNext()"
       (slideTo)="slideTo($event)"
       [loop]="loop"
       [rewind]="rewind"
@@ -39,7 +39,7 @@
       } } @else if (projectedSlides.length) { @for (slide of projectedSlides;
       track $index) {
       <ng-container>
-        <div class="slide position-{{ $index + 1 }}">
+        <div #slide class="slide position-{{ $index + 1 }}">
           <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
         </div>
       </ng-container>
@@ -60,7 +60,7 @@
     (goToSlide)="slideTo($event)"
     [currentPosition]="currentPosition"
     [totalSlides]="totalSlides"
-    [totalSlidesVisible]="totalSlidesVisible"
+    [totalSlidesVisible]="totalSlidesVisible()"
     [pagination]="pagination"
   ></app-pagination>
   }

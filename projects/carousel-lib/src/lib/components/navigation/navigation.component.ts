@@ -46,29 +46,29 @@ export class NavigationComponent implements OnInit {
 
   public slideToPrev() {
     this.slidePrev.emit();
-    let newPos = this.currentPosition;
-    if (this.rewind || this.loop) {
-      newPos =
-        this.currentPosition - 1 < 0
-          ? this.totalSlides - 1
-          : this.currentPosition - 1;
-    } else {
-      newPos = Math.max(0, this.currentPosition - 1);
-    }
-    this.slideTo.emit(newPos);
+    // let newPos = this.currentPosition;
+    // if (this.rewind || this.loop) {
+    //   newPos =
+    //     this.currentPosition - 1 < 0
+    //       ? this.totalSlides - 1
+    //       : this.currentPosition - 1;
+    // } else {
+    //   newPos = Math.max(0, this.currentPosition - 1);
+    // }
+    // this.slideTo.emit(newPos);
   }
 
   public slideToNext() {
     this.slideNext.emit();
-    let newPos = this.currentPosition;
-    if (this.rewind || this.loop) {
-      newPos =
-        this.currentPosition + 1 > this.totalSlides - 1
-          ? 0
-          : this.currentPosition + 1;
-    } else {
-      newPos = Math.min(this.totalSlides - 1, this.currentPosition + 1);
-    }
-    this.slideTo.emit(newPos);
+    // let newPos = this.currentPosition;
+    // if (this.rewind || this.loop) {
+    //   newPos =
+    //     this.currentPosition + 1 > this.totalSlides - 1
+    //       ? 0
+    //       : this.currentPosition + 1;
+    // } else {
+    //   newPos = Math.min(this.totalSlides - 1, this.currentPosition + 1);
+    // }
+    // this.slideTo.emit(newPos);
   }
 }

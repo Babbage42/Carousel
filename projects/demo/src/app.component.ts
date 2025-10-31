@@ -14,7 +14,6 @@ import {
   selector: 'app-root',
   standalone: true,
   imports: [
-    RouterOutlet,
     CarouselComponent,
     NavigationLeftExternalComponent,
     NavigationRightExternalComponent,

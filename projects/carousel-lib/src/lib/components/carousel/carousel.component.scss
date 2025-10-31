@@ -14,6 +14,8 @@
   }
 
   .slides {
+    will-change: transform;
+    backface-visibility: hidden;
     z-index: 1;
     overflow: visible;
     width: 100%;
@@ -50,6 +52,10 @@
     transform: translate3d(0, 0, 0);
 
     .slide {
+      // &.clone {
+      //   display: none;
+      // }
+
       will-change: transform;
       transform: translateZ(0);
       backface-visibility: hidden;

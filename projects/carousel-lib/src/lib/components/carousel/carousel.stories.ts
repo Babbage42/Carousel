@@ -95,7 +95,7 @@ const meta: Meta<CarouselComponent> = {
     center: {
       control: 'boolean',
     },
-    centerBounds: {
+    notCenterBounds: {
       control: 'boolean',
     },
     slideOnClick: {
