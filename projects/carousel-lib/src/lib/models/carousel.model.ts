@@ -4,6 +4,7 @@ import { CarouselResponsiveConfig, Pagination } from '../../public-api';
 export interface Slide {}
 
 export interface Carousel {
+  slidePositions: number[];
   resistance: boolean;
   slides: Slide[];
   slidesPerView: number | 'auto';

@@ -82,6 +82,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private loopCheckTimeout?: any;
   private isAnimating = false;
 
+  public slideTranslates = signal<number[]>([]);
+
   @ContentChildren(SlideDirective) projectedSlides!: QueryList<SlideDirective>;
 
   @ContentChild(CarouselNavLeftDirective)
@@ -261,22 +263,95 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.carouselState().spaceBetween;
   }
 
-  private insertLoopSlides(before = true) {
+  /**
+   * Can take a virtual index (when sliding without selecting slide directly)
+   * By default, take the current position.
+   * @param before
+   * @returns
+   */
+  private insertLoopSlides(before = true, virtualCurrentPostion?: number) {
     if (!this.loopInput()) {
       return;
     }
 
-    const firstIndex = this.slidesIndexOrder[0];
-    const lastIndex = this.slidesIndexOrder[this.slidesIndexOrder.length - 1];
-    const realOrderIndex = this.slidesIndexOrder.indexOf(this.currentPosition);
-    if (before && realOrderIndex > 0) {
+    const snapsLogical = this.slideTranslates(); // translate par index logique
+    if (!snapsLogical || snapsLogical.length === 0) {
       return;
     }
+
+    const base = 0; //  snapsLogical[0]
+    // Build DOM snaps using slidesIndexOrder (no layout reads)
+    const snapsDom = this.slidesIndexOrder.map((logicalIndex, domIndex) => {
+      const translate = snapsLogical[logicalIndex];
+      const left = Math.abs(translate - base);
+      const width = this.slidesWidths[logicalIndex] ?? 0;
+      return { domIndex, logicalIndex, left, width, translate };
+    });
+
+    console.log(
+      'snapsdoms',
+      snapsDom,
+      ' fullwidth,',
+      this.fullWidth,
+      'currentranslate',
+      this.currentTranslate
+    );
+    const visibleDom = snapsDom.filter((s) => {
+      const leftInView = s.left + this.currentTranslate;
+      const rightInView = leftInView + s.width;
+      return rightInView > 0 && leftInView < this.fullWidth;
+    });
+    if (visibleDom.length === 0) {
+      return;
+    }
+    console.log('visibleDOM', visibleDom);
+    const leftmostDom = visibleDom[0];
+    const rightmostDom = visibleDom[visibleDom.length - 1];
+    console.log('leftmostdom', leftmostDom);
+    console.log('rightmostdom', rightmostDom);
+
+    console.log('currenttranslate', this.currentTranslate);
+
+    let continueProcess = false;
+    const realLeftPosition = this.slidesIndexOrder.indexOf(
+      leftmostDom.logicalIndex
+    );
     if (
-      !before &&
-      realOrderIndex <
-        this.slidesIndexOrder.length - 1 - (this.realSlidesPerView as number)
+      realLeftPosition === 0 &&
+      leftmostDom.translate < this.currentTranslate
     ) {
+      console.log('OUT LEFT !!!!');
+      before = true;
+      continueProcess = true;
+    }
+
+    const realRightPosition = this.slidesIndexOrder.indexOf(
+      rightmostDom.logicalIndex
+    );
+    if (
+      realRightPosition === this.slidesIndexOrder.length - 1 &&
+      rightmostDom.translate + this.fullWidth > this.currentTranslate
+    ) {
+      console.log('OUT RIGHT !!!!');
+      before = false;
+      continueProcess = true;
+    }
+
+    const currentPosition = virtualCurrentPostion ?? this.currentPosition;
+
+    const realOrderIndex = this.slidesIndexOrder.indexOf(currentPosition);
+    console.log(
+      'trY to insert slides',
+      this.currentPosition,
+      currentPosition,
+      realOrderIndex,
+      before
+    );
+
+    if (before && !continueProcess) {
+      return;
+    }
+    if (!before && !continueProcess) {
       return;
     }
 
@@ -288,7 +363,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const currentIndex = this.currentPosition;
+    const currentIndex = currentPosition;
 
     if (before) {
       const lastRef = slides[slides.length - 1];
@@ -322,14 +397,27 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
+    // While swiping, slide is not fully selected,
+    // we need to translate to partial position.
     this.applyTranslate(
       before
-        ? this.currentTranslate - this.slidesWidths[currentIndex]
-        : this.currentTranslate + this.slidesWidths[currentIndex]
+        ? this.currentTranslate -
+            this.slidesWidths[currentIndex] -
+            this.realSpaceBetween
+        : this.currentTranslate +
+            this.slidesWidths[currentIndex] +
+            this.realSpaceBetween
     );
 
-    // Very important to update mousemoving.
-    this.lastTranslate = this.currentTranslate;
+    this.lastTranslate = before
+      ? this.lastTranslate -
+        this.slidesWidths[currentIndex] -
+        this.realSpaceBetween
+      : this.lastTranslate +
+        this.slidesWidths[currentIndex] +
+        this.realSpaceBetween;
+
+    this.updateSlideTranslates();
   }
 
   public get isServerMode() {
@@ -348,6 +436,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.carouselState.set({
+      slidePositions: [],
       resistance: this.resistance,
       showControls: this.showControls,
       alwaysShowControls: this.alwaysShowControls,
@@ -579,6 +668,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Apply transform to slides.
     this.updateTransform(false);
+
+    this.updateSlideTranslates();
   }
 
   private focusOnCurrentSlide() {
@@ -881,7 +972,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private updatePositionOnMouseMove(newTranslate: number, xPosition?: number) {
     this.currentTranslate = newTranslate;
 
-    this.insertLoopSlides(newTranslate > this.lastTranslate);
+    this.insertLoopSlides(
+      newTranslate > this.lastTranslate,
+      positiveModulo(
+        Math.floor(this.getNewPositionFromTranslate().exactPosition),
+        this.totalSlides
+      )
+    );
 
     this.velocity = xPosition
       ? (xPosition - this.lastPageXPosition) *
@@ -1052,6 +1149,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     console.log('--- slidesWidths calcultaed:', this.slidesWidths);
+
+    this.updateSlideTranslates();
   }
 
   private calculateSlidesVisibleAuto() {
@@ -1148,13 +1247,18 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getNewPositionFromTranslate(velocity = false) {
-    this.currentTranslate = Math.max(
-      this.maxTranslate,
-      Math.min(
-        this.currentTranslate + (velocity ? this.velocity : 0),
-        this.minTranslate
-      )
-    );
+    if (!this.loop) {
+      this.currentTranslate = Math.max(
+        this.maxTranslate,
+        Math.min(
+          this.currentTranslate + (velocity ? this.velocity : 0),
+          this.minTranslate
+        )
+      );
+    } else {
+      this.currentTranslate =
+        this.currentTranslate + (velocity ? this.velocity : 0);
+    }
 
     let position =
       Math.abs(this.currentTranslate - this.minTranslate) /
@@ -1356,5 +1460,25 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       mql.addEventListener('change', listener);
       this.mediaQueryListeners.push({ mql, listener });
     });
+  }
+
+  private updateSlideTranslates() {
+    if (!Array.isArray(this.slidesWidths) || this.totalSlides === 0) {
+      this.slideTranslates.set([]);
+      return;
+    }
+
+    const snaps: number[] = [];
+    for (let i = 0; i < this.totalSlides; i++) {
+      // utilise la fonction existante pour calculer la position depuis l'index
+      // (renvoie la valeur de translate correspondant à l'index logique)
+      const pos = this.calculateTranslateValueFromIndex(i);
+      snaps.push(pos);
+    }
+
+    this.slideTranslates.set(snaps);
+    // optionnel : exposer aussi dans carouselState si tu veux un seul objet central
+    this.updateCarouselState({ slidePositions: snaps } as Partial<Carousel>);
+    console.log('--- caluclated slidesTranslate', this.slideTranslates());
   }
 }
