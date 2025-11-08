@@ -11,19 +11,18 @@ import {
 } from 'carousel-lib';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [
-    CarouselComponent,
-    NavigationLeftExternalComponent,
-    NavigationRightExternalComponent,
-    CommonModule,
-    SlideDirective,
-    CarouselNavLeftDirective,
-    CarouselNavRightDirective,
-  ],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+    selector: 'app-root',
+    imports: [
+        CarouselComponent,
+        NavigationLeftExternalComponent,
+        NavigationRightExternalComponent,
+        CommonModule,
+        SlideDirective,
+        CarouselNavLeftDirective,
+        CarouselNavRightDirective,
+    ],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'carousel';

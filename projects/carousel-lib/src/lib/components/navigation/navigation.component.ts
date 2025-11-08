@@ -14,11 +14,10 @@ import {
 import { CarouselRegistryService } from '../carousel/carousel-registry.service';
 
 @Component({
-  selector: 'app-navigation',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './navigation.component.html',
-  styleUrl: './navigation.component.scss',
+    selector: 'app-navigation',
+    imports: [CommonModule],
+    templateUrl: './navigation.component.html',
+    styleUrl: './navigation.component.scss'
 })
 export class NavigationComponent {
   @Input() customLeftArrow?: TemplateRef<any>;

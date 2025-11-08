@@ -19,11 +19,10 @@ import { CarouselComponent } from '../carousel/carousel.component';
 import { CarouselRegistryService } from '../carousel/carousel-registry.service';
 
 @Component({
-  selector: 'app-navigation-right-external',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './navigation-right-external.component.html',
-  styleUrl: './navigation-right-external.component.scss',
+    selector: 'app-navigation-right-external',
+    imports: [CommonModule],
+    templateUrl: './navigation-right-external.component.html',
+    styleUrl: './navigation-right-external.component.scss'
 })
 export class NavigationRightExternalComponent implements OnInit {
   @Input() carousel?: CarouselComponent;

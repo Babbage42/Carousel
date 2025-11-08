@@ -63,31 +63,29 @@ import { CarouselTransformService } from '../../services/carousel-transform.serv
 import { CAROUSEL_VIEW } from './view-adapter';
 
 @Component({
-  selector: 'app-carousel',
-  standalone: true,
-  imports: [
-    CommonModule,
-    PaginationComponent,
-    SlideDirective,
-    CarouselNavLeftDirective,
-    CarouselNavRightDirective,
-    NavigationComponent,
-  ],
-  templateUrl: './carousel.component.html',
-  styleUrl: './carousel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
-  providers: [
-    CarouselStore,
-    CarouselTransformService,
-    CarouselLoopService,
-    { provide: CarouselRegistryService, useClass: CarouselRegistryService },
-
-    {
-      provide: CAROUSEL_VIEW,
-      useExisting: forwardRef(() => CarouselComponent),
-    },
-  ],
+    selector: 'app-carousel',
+    imports: [
+        CommonModule,
+        PaginationComponent,
+        SlideDirective,
+        CarouselNavLeftDirective,
+        CarouselNavRightDirective,
+        NavigationComponent,
+    ],
+    templateUrl: './carousel.component.html',
+    styleUrl: './carousel.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    encapsulation: ViewEncapsulation.None,
+    providers: [
+        CarouselStore,
+        CarouselTransformService,
+        CarouselLoopService,
+        { provide: CarouselRegistryService, useClass: CarouselRegistryService },
+        {
+            provide: CAROUSEL_VIEW,
+            useExisting: forwardRef(() => CarouselComponent),
+        },
+    ]
 })
 export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly store = inject(CarouselStore);

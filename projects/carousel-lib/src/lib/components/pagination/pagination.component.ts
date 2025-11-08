@@ -17,11 +17,10 @@ export interface Pagination {
 }
 
 @Component({
-  standalone: true,
-  imports: [CommonModule],
-  selector: 'app-pagination',
-  templateUrl: './pagination.component.html',
-  styleUrls: ['./pagination.component.scss'],
+    imports: [CommonModule],
+    selector: 'app-pagination',
+    templateUrl: './pagination.component.html',
+    styleUrls: ['./pagination.component.scss']
 })
 export class PaginationComponent {
   @Input() pagination!: Pagination;
