@@ -1,9 +1,9 @@
 <div [innerHTML]="generatedStyles"></div>
 
-<div>{{ slidesElements().length }}</div>
-
 <div #carousel class="carousel">
-  <span>real position:{{ currentPosition }}</span>
+  <span>total slides:{{ totalSlides() }}</span>
+  <span>current anchor:{{ currentPosition() }}</span>
+  <span>real position:{{ currentRealPosition() }}</span>
   <span>total visible:{{ totalSlidesVisible() }}</span>
 
   <div class="slides-wrapper">
@@ -17,10 +17,10 @@
       (slideTo)="slideTo($event)"
       [loop]="loop"
       [rewind]="rewind"
-      [currentPosition]="currentPosition"
-      [hasReachedStart]="hasReachedStart"
-      [hasReachedEnd]="hasReachedEnd"
-      [totalSlides]="totalSlides"
+      [currentPosition]="currentPosition()"
+      [hasReachedStart]="hasReachedStart()"
+      [hasReachedEnd]="hasReachedEnd()"
+      [totalSlides]="totalSlides()"
       [iconSize]="iconSize"
     >
     </app-navigation>
@@ -31,7 +31,7 @@
       class="slides"
       [class.slides-auto]="slidesPerView === 'auto'"
     >
-      @if (slides.length) { @for (slide of slides; track $index) {
+      @if (slides().length) { @for (slide of slides(); track $index) {
       <div #slide class="slide position-{{ $index + 1 }}">
         <img src="{{ slide }}" alt="" />
         <span>{{ $index + 1 }}</span>
@@ -58,8 +58,10 @@
   @if (pagination) {
   <app-pagination
     (goToSlide)="slideTo($event)"
-    [currentPosition]="currentPosition"
-    [totalSlides]="totalSlides"
+    [currentPosition]="currentPosition()"
+    [firstSlideAnchor]="firstSlideAnchor()"
+    [lastSlideAnchor]="lastSlideAnchor()"
+    [totalSlides]="totalSlides()"
     [totalSlidesVisible]="totalSlidesVisible()"
     [pagination]="pagination"
   ></app-pagination>

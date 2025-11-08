@@ -1,12 +1,31 @@
 import { SafeHtml } from '@angular/platform-browser';
-import { CarouselResponsiveConfig, Pagination } from '../../public-api';
+import { Pagination } from '../../public-api';
+import { ElementRef } from '@angular/core';
 
 export interface Slide {}
 
+export interface CarouselResponsiveConfig {
+  [mediaQuery: string]: {
+    slidesPerView?: number;
+    spaceBetween?: number;
+  };
+}
+
+export interface SnapDom {
+  domIndex: number;
+  logicalIndex: number;
+  left: number;
+  width: number;
+  translate: number;
+}
+
 export interface Carousel {
-  slidePositions: number[];
+  isProjected: boolean;
+  snapsDom: SnapDom[];
+  visibleDom: SnapDom[];
   resistance: boolean;
   slides: Slide[];
+  slidesElements: ElementRef<HTMLElement>[];
   slidesPerView: number | 'auto';
   spaceBetween: number;
   showControls: boolean;
@@ -30,8 +49,8 @@ export interface Carousel {
   notCenterBounds: boolean;
   slideOnClick: boolean;
 
-  marginEnd?: number;
-  marginStart?: number;
+  marginEnd: number;
+  marginStart: number;
 
   lazyLoading?: boolean;
 
@@ -49,15 +68,30 @@ export interface Carousel {
 
   totalSlides: number;
 
-  fullWidth?: number;
+  fullWidth: number;
 
-  scrollWidth?: number;
+  scrollWidth: number;
 
-  currentTranslate?: number;
-  minTranslate?: number;
-  maxTranslate?: number;
+  currentTranslate: number;
+  currentRealPosition: number;
+  lastTranslate: number;
+  minTranslate: number;
+  maxTranslate: number;
 
-  slidesWidths?: number[];
+  slidesWidths: number[];
 
   uniqueCarouselId: string;
+
+  allSlides: ElementRef<any> | undefined;
+
+  slidesIndexOrder: number[];
+
+  slideTranslates: number[];
+
+  velocity: number;
+
+  firstSlideAnchor: number;
+  lastSlideAnchor: number;
 }
+
+export const CAROUSEL_SLIDE_CLASS = 'slide';

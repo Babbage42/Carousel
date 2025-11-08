@@ -1,33 +1,37 @@
 @if (pagination.type === "dot") {
-  <div
-    class="dot-pagination pagination-dot"
-    [class.clickable]="pagination.clickable"
-  >
-    @for (num of range; track $index) {
-      <span
-        (click)="pagination.clickable ? slideTo(num - 1) : null"
-        class="dot"
-        [class.selected]="currentPosition === num - 1"
-      ></span>
-    }
-  </div>
+<div
+  class="dot-pagination pagination-dot"
+  [class.clickable]="pagination.clickable"
+>
+  @for (num of range; track $index) {
+  <span
+    (click)="pagination.clickable ? slideTo(num - 1) : null"
+    class="dot"
+    [class.selected]="currentPosition === num - 1"
+  ></span>
+  }
+</div>
 } @else if (pagination.type === "dynamic_dot") {
-  <div class="dot-pagination dynamic" [class.clickable]="pagination.clickable">
-    @for (num of range; track $index) {
-      <span
-        (click)="pagination.clickable ? slideTo(num - 1) : null"
-        class="dot"
-        [style.left.rem]="dotLeftPosition"
-        [class.selected]="currentPositionVisible === num - 1"
-        [class.next]="currentPositionVisible === num - 2"
-        [class.next-next]="currentPositionVisible === num - 3"
-        [class.prev]="currentPositionVisible === num"
-        [class.prev-prev]="currentPositionVisible === num + 1"
-      ></span>
-    }
-  </div>
+<div
+  class="dot-pagination dynamic"
+  [style.width.rem]="maxWidth()"
+  [class.clickable]="pagination.clickable"
+>
+  @for (num of range; track $index) {
+  <span
+    (click)="pagination.clickable ? slideTo(num - 1) : null"
+    class="dot"
+    [style.left.rem]="dotLeftPosition"
+    [class.selected]="currentPositionVisible === num - 1"
+    [class.next]="currentPositionVisible === num - 2"
+    [class.next-next]="currentPositionVisible === num - 3"
+    [class.prev]="currentPositionVisible === num"
+    [class.prev-prev]="currentPositionVisible === num + 1"
+  ></span>
+  }
+</div>
 } @else if (pagination.type === "fraction") {
-  <div>
-    <span>{{ currentPosition + 1 }} / {{ totalSlides }}</span>
-  </div>
+<div>
+  <span>{{ currentPosition + 1 }} / {{ totalSlides }}</span>
+</div>
 }

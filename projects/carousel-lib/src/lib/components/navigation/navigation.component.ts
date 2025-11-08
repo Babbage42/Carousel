@@ -20,9 +20,7 @@ import { CarouselRegistryService } from '../carousel/carousel-registry.service';
   templateUrl: './navigation.component.html',
   styleUrl: './navigation.component.scss',
 })
-export class NavigationComponent implements OnInit {
-  ngOnInit(): void {}
-
+export class NavigationComponent {
   @Input() customLeftArrow?: TemplateRef<any>;
   @Input() customRightArrow?: TemplateRef<any>;
 
