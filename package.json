@@ -30,15 +30,11 @@
     "@angular-devkit/build-angular": "^19.2.19",
     "@angular/cli": "^19.2.19",
     "@angular/compiler-cli": "^19.2.15",
-    "@chromatic-com/storybook": "^3.2.4",
+    "@chromatic-com/storybook": "^4.1.2",
     "@compodoc/compodoc": "^1.1.26",
-    "@storybook/addon-docs": "^8.5.8",
-    "@storybook/addon-essentials": "^8.5.8",
-    "@storybook/addon-interactions": "^8.5.8",
-    "@storybook/addon-onboarding": "^8.5.8",
-    "@storybook/angular": "^8.5.8",
-    "@storybook/blocks": "^8.5.8",
-    "@storybook/test": "^8.5.8",
+    "@storybook/addon-docs": "^10.0.6",
+    "@storybook/addon-onboarding": "^10.0.6",
+    "@storybook/angular": "^10.0.6",
     "@types/express": "^4.17.17",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^18.18.0",
@@ -49,7 +45,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "ng-packagr": "^19.2.2",
-    "storybook": "^8.5.8",
+    "storybook": "^10.0.6",
     "typescript": "~5.5.2"
   }
 }
