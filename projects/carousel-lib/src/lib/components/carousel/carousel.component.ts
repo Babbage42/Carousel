@@ -34,10 +34,14 @@ import {
   afterNextRender,
   runInInjectionContext,
   EnvironmentInjector,
+  afterRenderEffect,
+  output,
 } from '@angular/core';
-import { debounceTime, fromEvent } from 'rxjs';
+import { debounceTime, fromEvent, single } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SlideDirective } from '../../directives/slide.directive';
+import { ImagesReadyDirective } from '../../directives/images-ready.directive';
+
 import {
   Pagination,
   PaginationComponent,
@@ -52,6 +56,7 @@ import {
   CarouselResponsiveConfig,
   Slide,
   SnapDom,
+  TRANSITION_DURATION,
 } from '../../models/carousel.model';
 import {
   generateRandomClassName,
@@ -63,47 +68,44 @@ import { CarouselTransformService } from '../../services/carousel-transform.serv
 import { CAROUSEL_VIEW } from './view-adapter';
 
 @Component({
-    selector: 'app-carousel',
-    imports: [
-        CommonModule,
-        PaginationComponent,
-        SlideDirective,
-        CarouselNavLeftDirective,
-        CarouselNavRightDirective,
-        NavigationComponent,
-    ],
-    templateUrl: './carousel.component.html',
-    styleUrl: './carousel.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    encapsulation: ViewEncapsulation.None,
-    providers: [
-        CarouselStore,
-        CarouselTransformService,
-        CarouselLoopService,
-        { provide: CarouselRegistryService, useClass: CarouselRegistryService },
-        {
-            provide: CAROUSEL_VIEW,
-            useExisting: forwardRef(() => CarouselComponent),
-        },
-    ]
+  selector: 'app-carousel',
+  imports: [
+    CommonModule,
+    PaginationComponent,
+    SlideDirective,
+    CarouselNavLeftDirective,
+    CarouselNavRightDirective,
+    NavigationComponent,
+    ImagesReadyDirective,
+  ],
+  templateUrl: './carousel.component.html',
+  styleUrl: './carousel.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  providers: [
+    CarouselStore,
+    CarouselTransformService,
+    CarouselLoopService,
+    { provide: CarouselRegistryService, useClass: CarouselRegistryService },
+    {
+      provide: CAROUSEL_VIEW,
+      useExisting: forwardRef(() => CarouselComponent),
+    },
+  ],
 })
 export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly store = inject(CarouselStore);
   private readonly loopService = inject(CarouselLoopService);
   private readonly transformService = inject(CarouselTransformService);
-  private readonly env = inject(EnvironmentInjector);
 
   readonly currentPosition = this.store.currentPosition;
   readonly firstSlideAnchor = this.store.firstSlideAnchor;
   readonly lastSlideAnchor = this.store.lastSlideAnchor;
-
   readonly currentRealPosition = this.store.currentRealPosition;
   readonly totalSlides = this.store.totalSlides;
   readonly totalSlidesVisible = this.store.totalSlidesVisible;
   readonly hasReachedStart = this.store.hasReachedStart;
   readonly hasReachedEnd = this.store.hasReachedEnd;
-
-  private readonly TRANSITION_DURATION = 400; // ms
 
   @ContentChildren(SlideDirective) projectedSlides!: QueryList<SlideDirective>;
   @ContentChild(CarouselNavLeftDirective)
@@ -145,7 +147,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   initialSlide = input<number>(0);
   realInitialSlide = computed(() => {
     const initial = this.initialSlide();
-    return initial;
+    const firstSlideAnchor = this.firstSlideAnchor();
+    return Math.max(firstSlideAnchor, initial);
   });
 
   @Input() slideOnClick = true;
@@ -170,6 +173,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() touched = new EventEmitter();
   @Output() reachEnd = new EventEmitter();
   @Output() reachStart = new EventEmitter();
+  imagesLoaded = output<void>();
 
   firstTouch = false;
   uniqueCarouselId = '';
@@ -182,6 +186,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public paginationTemplate!: TemplateRef<any>;
 
   private navigation = viewChild(NavigationComponent);
+
+  private areImagesReady = signal(false);
 
   constructor(
     private renderer: Renderer2,
@@ -198,50 +204,44 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         .subscribe(() => this.refresh());
     }
 
-    effect(
-      () => {
-        const allSlides = this.allSlides();
-        this.store.patch({ allSlides });
-      },
-      { allowSignalWrites: true }
-    );
-
-    effect(
-      () => {
-        const navigation = this.navigation();
-        this.carouselRegistry.carouselNavigationLeftSignal.set(
-          navigation?.leftControl()
-        );
-        this.carouselRegistry.carouselNavigationRightSignal.set(
-          navigation?.rightControl()
-        );
-      },
-      {
-        allowSignalWrites: true,
-      }
-    );
-
-    effect(
-      () => {
-        const slides = this.slidesElements();
-        runInInjectionContext(this.env, () => {
-          afterNextRender(() => {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                console.log('slides', this.slidesElements());
-                this.store.patch({
-                  slidesElements: [...this.slidesElements()],
-                  slidesIndexOrder: slides.map((_, index) => index),
-                });
-
-                this.transformService.calculateInitialTranslations();
-              });
-            });
-          });
+    /**
+     * Set initial current position to apply.
+     */
+    effect(() => {
+      const realInitialSlide = this.realInitialSlide();
+      untracked(() => {
+        this.store.patch({
+          currentPosition: realInitialSlide,
         });
-      },
-      { allowSignalWrites: true }
-    );
+      });
+    });
+
+    effect(() => {
+      const allSlides = this.allSlides();
+      untracked(() => this.store.patch({ allSlides }));
+    });
+
+    effect(() => {
+      const navigation = this.navigation();
+      this.carouselRegistry.carouselNavigationLeftSignal.set(
+        navigation?.leftControl()
+      );
+      this.carouselRegistry.carouselNavigationRightSignal.set(
+        navigation?.rightControl()
+      );
+    });
+
+    effect(() => {
+      const slides = this.slidesElements();
+
+      untracked(() => {
+        this.store.patch({
+          slidesElements: [...this.slidesElements()],
+          slidesIndexOrder: slides.map((_, index) => index),
+        });
+        this.transformService.calculateInitialTranslations();
+      });
+    });
 
     effect(() => {
       const currentPosition = this.store.currentPosition();
@@ -285,7 +285,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       dotsControl: this.dotsControl,
       slidesPerView: this.slidesPerView,
       spaceBetween: this.spaceBetween,
-      currentPosition: this.initialSlide(),
+      //currentPosition: this.initialSlide(),
       currentRealPosition: this.initialSlide(),
       loop: this.loop,
       rewind: this.rewind,
@@ -487,8 +487,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const roundedCurrentTranslate = this.store.currentTranslate(); //Math.round
 
-    console.log('UPDATING SLIDES after currenttransalte');
-
     this.renderer.setStyle(
       this.store.allSlides()?.nativeElement,
       'transform',
@@ -556,7 +554,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderer.setStyle(
       this.allSlides()?.nativeElement,
       'transition-duration',
-      `${this.TRANSITION_DURATION}ms`
+      `${TRANSITION_DURATION}ms`
     );
     setTimeout(() => {
       this.removeTransitionAnimation();
@@ -586,7 +584,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   velocityBounds = 0.5;
 
   @HostListener('transitionend', ['$event'])
-  private onHostTransitionEnd(event: TransitionEvent) {
+  onHostTransitionEnd(event: TransitionEvent) {
     const slidesEl = this.allSlides()?.nativeElement;
     if (event.propertyName === 'transform' && event.target === slidesEl) {
       console.log('*** trnasition end event:', event);
@@ -1125,5 +1123,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       mql.addEventListener('change', listener);
       this.mediaQueryListeners.push({ mql, listener });
     });
+  }
+
+  public onImagesReady() {
+    console.log('IMAGES LOADED !!!!');
+    this.imagesLoaded.emit();
+    this.areImagesReady.set(true);
+  }
+
+  public onImagesChanged() {
+    console.log('IMAGES CHANGED !!!!');
   }
 }

@@ -2,6 +2,8 @@ import { SafeHtml } from '@angular/platform-browser';
 import { Pagination } from '../../public-api';
 import { ElementRef } from '@angular/core';
 
+export const TRANSITION_DURATION = 400; // ms
+
 export interface Slide {}
 
 export interface CarouselResponsiveConfig {

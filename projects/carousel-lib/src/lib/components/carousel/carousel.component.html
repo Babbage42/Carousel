@@ -30,6 +30,9 @@
       #allSlides
       class="slides"
       [class.slides-auto]="slidesPerView === 'auto'"
+      appImagesReady
+      (imagesReady)="onImagesReady()"
+      (imagesChanged)="onImagesChanged()"
     >
       @if (slides().length) { @for (slide of slides(); track $index) {
       <div #slide class="slide position-{{ $index + 1 }}">
