@@ -3,9 +3,14 @@
   "compilerOptions": {
     "types": ["node"],
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "carousel-lib": ["../src/public-api.ts"],
+      "carousel-lib/*": ["../src/*"]
+    }
   },
   "exclude": ["../src/test.ts", "../src/**/*.spec.ts"],
-  "include": ["../src/**/*.stories.*", "./preview.ts"],
+  "include": ["../src/**/*.stories.*", "./preview.ts", "../src/**/*"],
   "files": ["./typings.d.ts"]
 }

@@ -1,3 +1,4 @@
+//test
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -296,7 +297,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     afterRenderEffect(() => {
       const slides = this.slidesElements();
+
       if (this.areImagesReady()) {
+        console.log('slides ready', slides);
         untracked(() => {
           this.store.patch({
             slidesElements: [...this.slidesElements()],
@@ -981,7 +984,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const isProjected =
       this.slides().length === 0 &&
       this.projectedSlides !== undefined &&
-      (this.projectedSlides as any).length === 0;
+      (this.projectedSlides as any).length > 0;
 
     this.updateCarouselState({
       isProjected,
