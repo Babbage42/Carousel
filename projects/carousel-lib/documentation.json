@@ -11,154 +11,194 @@
     "miscellaneous": {
         "variables": [
             {
-                "name": "actions",
+                "name": "AutoPlay",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "object",
-                "defaultValue": "{\n  slideNext: {\n    action: 'slide next',\n  },\n  slidePrev: {\n    action: 'slide prev',\n  },\n  slideUpdate: {\n    action: 'slide update',\n  },\n  reachStart: {\n    action: 'has reached start',\n  },\n  reachEnd: {\n    action: 'has reached end',\n  },\n  touched: {\n    action: 'has been touched',\n  },\n}"
-            },
-            {
-                "name": "CarouselWithProjectedNavigation",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "",
-                "defaultValue": "TemplateWithProjectedNavigation.bind({ slides: slidesDefault })"
-            },
-            {
-                "name": "Centre",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    center: true,\n    freeMode: false,\n  },\n}"
-            },
-            {
-                "name": "Default",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "",
-                "defaultValue": "Template.bind({})"
-            },
-            {
-                "name": "Freemode",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Story",
-                "defaultValue": "{\n  args: {\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: 3,\n    stepSlides: 1,\n    loop: true,\n    autoplay: { delay: 1800, pauseOnHover: true, stopOnInteraction: true },\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    const nextBtn = await c\n      .findByRole('button', { name: /next/i })\n      .catch(() => null);\n    if (!nextBtn) return;\n    await step('Hover to pause', async () => {\n      await userEvent.hover(canvasElement);\n    });\n    await new Promise((r) => setTimeout(r, 1000));\n    await step('Unhover to resume', async () => {\n      await userEvent.unhover(canvasElement);\n    });\n    await new Promise((r) => setTimeout(r, 1000));\n  },\n}"
             },
             {
-                "name": "FreemodeNoSpace",
+                "name": "Basic",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Story",
-                "defaultValue": "{\n  args: {\n    freeMode: true,\n    spaceBetween: 0,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                "defaultValue": "{\n  render: TemplateProjected,\n  args: {\n    slides: [],\n  },\n}"
             },
             {
-                "name": "LazyLoading",
+                "name": "Centered",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    lazyLoading: true,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    center: true,\n    freeMode: false,\n  },\n}"
             },
             {
-                "name": "Loop",
+                "name": "ExactSlidesPerView",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    loop: true,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(10), slidesPerView: '4', freeMode: false },\n}"
             },
             {
-                "name": "ManySlides",
+                "name": "FreeMode",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slides: Array(20).fill(slides[0]),\n    slidesPerView: 5,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(12), slidesPerView: '3', freeMode: true },\n}"
             },
             {
-                "name": "Marges",
+                "name": "FreeModeNoSpace",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    marginStart: 50,\n    marginEnd: 150,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    freeMode: true,\n    spaceBetween: 0,\n  },\n}"
+            },
+            {
+                "name": "Interaction_ClickDots",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n    freeMode: false,\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    // à adapter selon ton markup de dots (role=\"button\" / \"radio\" / \".dot\")\n    const dots = await c\n      .findAllByRole('button', { name: /dot/i })\n      .catch(() => []);\n    if (dots.length >= 3) {\n      await step('Go to dot #3', async () => {\n        await userEvent.click(dots[2]);\n      });\n    }\n  },\n}"
+            },
+            {
+                "name": "Interaction_NextPrev",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    stepSlides: 2,\n    freeMode: false,\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    const nextBtn = await c.findByRole('button', { name: /next/i });\n    const prevBtn = await c.findByRole('button', { name: /prev/i });\n\n    await step('Next twice', async () => {\n      await userEvent.click(nextBtn);\n      await userEvent.click(nextBtn);\n    });\n\n    await step('Prev once', async () => {\n      await userEvent.click(prevBtn);\n    });\n\n    // si tu exposes un aria-selected sur le slide actif ou un aria-valuenow,\n    // tu peux ajouter une assertion ici (exemple):\n    // const active = await c.findByRole('option', { selected: true });\n    // expect(active).toHaveTextContent(/Slide 3|4/);\n  },\n}"
+            },
+            {
+                "name": "Looping",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: '3',\n    stepSlides: 2,\n    loop: true,\n    freeMode: false,\n  },\n}"
+            },
+            {
+                "name": "Margins",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    marginStart: 100,\n    marginEnd: 150,\n    freeMode: false,\n  },\n}"
             },
             {
                 "name": "meta",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Meta<CarouselComponent>",
-                "defaultValue": "{\n  title: 'Carousel',\n  component: CarouselComponent,\n  tags: ['autodocs'],\n  argTypes: {\n    slides: {\n      control: 'object',\n    },\n    slidesPerView: {\n      control: 'text',\n    },\n    spaceBetween: {\n      control: 'number',\n    },\n    showControls: {\n      control: 'boolean',\n    },\n    iconSize: {\n      control: 'number',\n    },\n    pagination: {\n      control: 'object',\n    },\n    initialSlide: {\n      control: 'number',\n    },\n    freeMode: {\n      control: 'boolean',\n    },\n    deltaPosition: {\n      control: 'number',\n    },\n    showProgress: {\n      control: 'boolean',\n    },\n    dotsControl: {\n      control: 'boolean',\n    },\n    rewind: {\n      control: 'boolean',\n    },\n    loop: {\n      control: 'boolean',\n    },\n    center: {\n      control: 'boolean',\n    },\n    notCenterBounds: {\n      control: 'boolean',\n    },\n    slideOnClick: {\n      control: 'boolean',\n    },\n    marginEnd: {\n      control: 'number',\n    },\n    marginStart: {\n      control: 'number',\n    },\n    lazyLoading: {\n      control: 'boolean',\n    },\n    breakpoints: {\n      control: 'object',\n    },\n    ...actions,\n  },\n  args: {\n    slides,\n  },\n  //args: { slideNext: fn() },\n}"
+                "defaultValue": "{\n  title: 'Components/Carousel',\n  component: CarouselComponent,\n  decorators: [\n    moduleMetadata({\n      imports: [\n        SlideDirective,\n        NavigationComponent,\n        PaginationComponent,\n        CarouselNavLeftDirective,\n        CarouselNavRightDirective,\n        RandomSrcPipe,\n      ],\n    }),\n  ],\n  parameters: {\n    layout: 'padded',\n    docs: {\n      description: {\n        component: `\n**Carousel** — Options clés:\n- \\`slidesPerView: number | 'auto'\\`\n- \\`stepSlides: number\\` (nb de slides avancées par navigation)\n- \\`freeMode\\`, \\`loop\\`, \\`rewind\\`, \\`center\\`, \\`notCenterBounds\\`\n- \\`mouseWheel: boolean | { horizontal?: boolean; vertical?: boolean }\\`\n- \\`pagination\\` (ex: { type: 'dynamic_dot', clickable: true, external: false })\n- \\`imagesLoaded\\` émis quand les images initiales sont prêtes\n        `.trim(),\n      },\n    },\n  },\n  argTypes: {\n    slides: {\n      control: 'object',\n      description: 'Liste de slides (dans tes tests: URLs)',\n    },\n    slidesPerView: {\n      control: 'text',\n      table: { type: { summary: '\"auto\" | number' } },\n      description: 'Nombre de slides visibles ou \"auto\"',\n    },\n    stepSlides: { control: 'number', description: 'Avance par N slides' },\n    spaceBetween: { control: 'number' },\n    showControls: { control: 'boolean' },\n    alwaysShowControls: { control: 'boolean' },\n    iconSize: { control: 'number' },\n    pagination: { control: 'object' },\n    freeMode: { control: 'boolean' },\n    mouseWheel: { control: 'object' }, // accepte boolean ou objet\n    deltaPosition: { control: 'number' },\n    showProgress: { control: 'boolean' },\n    dotsControl: { control: 'boolean' },\n    rewind: { control: 'boolean' },\n    loop: { control: 'boolean' },\n    center: { control: 'boolean' },\n    notCenterBounds: { control: 'boolean' },\n    slideOnClick: { control: 'boolean' },\n    marginEnd: { control: 'number' },\n    marginStart: { control: 'number' },\n    lazyLoading: { control: 'boolean' },\n    breakpoints: { control: 'object' },\n    // outputs -> actions\n    slideUpdate: { action: 'slideUpdate' },\n    slideNext: { action: 'slideNext' },\n    slidePrev: { action: 'slidePrev' },\n    reachEnd: { action: 'reachEnd' },\n    reachStart: { action: 'reachStart' },\n    touched: { action: 'touched' },\n    imagesLoaded: { action: 'imagesLoaded' },\n    autoplay: { control: 'object' },\n  },\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    stepSlides: 1,\n    spaceBetween: 5,\n    freeMode: false,\n    showControls: true,\n    alwaysShowControls: false,\n    iconSize: 50,\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n    deltaPosition: 0.6,\n    showProgress: true,\n    dotsControl: true,\n    rewind: false,\n    loop: false,\n    center: false,\n    notCenterBounds: false,\n    slideOnClick: true,\n    marginEnd: 0,\n    marginStart: 0,\n    lazyLoading: true,\n    autoplay: false,\n  },\n  tags: ['autodocs'],\n}"
             },
             {
                 "name": "modules",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "object",
-                "defaultValue": "{\n  imports: [\n    SlideDirective,\n    NavigationComponent,\n    PaginationComponent,\n    CarouselNavLeftDirective,\n    CarouselNavRightDirective,\n  ],\n}"
+                "defaultValue": "{\n  imports: [\n    SlideDirective,\n    NavigationComponent,\n    PaginationComponent,\n    CarouselNavLeftDirective,\n    CarouselNavRightDirective,\n    RandomSrcPipe,\n  ],\n}"
             },
             {
-                "name": "MouseWheel",
+                "name": "MouseWheelBool",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    mouseWheel: true,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(12), slidesPerView: '3', mouseWheel: true },\n}"
             },
             {
-                "name": "NgContent",
+                "name": "MouseWheelHorizontal",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  render: () => ({\n    template: `\n      <app-carousel>\n        <div *slide><span>Slide 1</span></div>\n        <div *slide><img src=\"${slides[0]}\" width=\"50\"/></div>\n        <div *slide><span>Slide 3</span></div>\n      </app-carousel>\n    `,\n  }),\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    mouseWheel: { horizontal: true, vertical: true },\n  },\n}"
             },
             {
-                "name": "PaginationDynamique",
+                "name": "NoSpace",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    spaceBetween: 0,\n  },\n}"
+            },
+            {
+                "name": "NotCenterBounds",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    center: true,\n    notCenterBounds: true,\n    freeMode: false,\n  },\n}"
+            },
+            {
+                "name": "OneSlide",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(1), slidesPerView: '1', freeMode: false },\n}"
+            },
+            {
+                "name": "PaginationDynamicDots",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n  },\n}"
+            },
+            {
+                "name": "PartialSlidesPerView",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(10), slidesPerView: '3.5', freeMode: false },\n}"
             },
             {
                 "name": "preview",
@@ -168,137 +208,87 @@
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Preview",
-                "defaultValue": "{\r\n  parameters: {\r\n    controls: {\r\n      matchers: {\r\n        color: /(background|color)$/i,\r\n        date: /Date$/i,\r\n      },\r\n    },\r\n  },\r\n\r\n  tags: [\"autodocs\"]\r\n}"
+                "defaultValue": "{\n  parameters: {\n    controls: {\n      matchers: {\n        color: /(background|color)$/i,\n        date: /Date$/i,\n      },\n    },\n  },\n\n  tags: [\"autodocs\"]\n}"
             },
             {
-                "name": "PrimaryExactSlidesPerView",
+                "name": "ResponsiveBreakpoints",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Story",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 4,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-            },
-            {
-                "name": "PrimaryPartialSlidesPerView",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "Story",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3.5,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-            },
-            {
-                "name": "Responsive",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    freeMode: false,\n    breakpoints: {\n      '(max-width: 768px)': { slidesPerView: 1.5, spaceBetween: 2 },\n      '(min-width: 769px) and (max-width: 1024px)': {\n        slidesPerView: 2.5,\n        spaceBetween: 5,\n      },\n      '(min-width: 1025px)': { slidesPerView: 3.5, spaceBetween: 1 },\n    },\n  },\n}"
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    freeMode: false,\n    breakpoints: {\n      '(max-width: 768px)': { slidesPerView: 1.5, spaceBetween: 2 },\n      '(min-width: 769px) and (max-width: 1024px)': {\n        slidesPerView: 2.5,\n        spaceBetween: 5,\n      },\n      '(min-width: 1025px)': { slidesPerView: 3.5, spaceBetween: 1 },\n    },\n  },\n}"
             },
             {
                 "name": "Rewind",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    rewind: true,\n  },\n}"
-            },
-            {
-                "name": "SingleSlide",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Story",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 1,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-            },
-            {
-                "name": "SingleSlideFreemode",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "Story",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 1,\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-            },
-            {
-                "name": "SingleSlideFreemodeNoSpace",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "Story",
-                "defaultValue": "{\n  args: {\n    spaceBetween: 0,\n    slidesPerView: 1,\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-            },
-            {
-                "name": "slides",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "[]",
-                "defaultValue": "[\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n]"
-            },
-            {
-                "name": "slidesDefault",
-                "ctype": "miscellaneous",
-                "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "deprecated": false,
-                "deprecationMessage": "",
-                "type": "[]",
-                "defaultValue": "[\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n]"
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: '3',\n    rewind: true,\n    freeMode: false,\n  },\n}"
             },
             {
                 "name": "SlidesPerViewAuto",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 'auto',\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: Array.from({ length: 12 }, (_, i) =>\n      img(i, 200 + (i % 4) * 60, 160)\n    ),\n    slidesPerView: 'auto' as any,\n    freeMode: false,\n  },\n}"
             },
             {
                 "name": "SpaceBetween",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
-                "type": "StoryObj<CarouselComponent>",
-                "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    spaceBetween: 30,\n  },\n}"
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    spaceBetween: 30,\n    freeMode: false,\n  },\n}"
             },
             {
-                "name": "Template",
+                "name": "StepBy3",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    stepSlides: 3,\n    freeMode: false,\n  },\n}"
+            },
+            {
+                "name": "TemplateProjected",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
-                "defaultValue": "(args: CarouselComponent) => ({\n  props: args,\n  template: `\n    <app-carousel\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n    >\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img  src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n    >\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
             },
             {
-                "name": "TemplateWithProjectedNavigation",
+                "name": "TemplateWithSlides",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
-                "defaultValue": "(args: CarouselComponent) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slides]=\"${JSON.stringify(slidesDefault).replaceAll('\"', \"'\")}\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n    >\n      <ng-template carouselNavLeft>\n<span>TEST LEFT</span></ng-template>\n\n      <div *carouselNavLeft><span>TEST LEFT</span></div>\n      <div *carouselNavRight><span>TEST RIGHT</span></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      [slides]=\"slides\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+            },
+            {
+                "name": "TwoSlides",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(2), slidesPerView: '2', freeMode: false },\n}"
             }
         ],
         "functions": [],
@@ -308,7 +298,7 @@
                 "ctype": "miscellaneous",
                 "subtype": "typealias",
                 "rawtype": "StoryObj<CarouselComponent>",
-                "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "description": "",
@@ -317,286 +307,276 @@
         ],
         "enumerations": [],
         "groupedVariables": {
-            "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts": [
+            "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts": [
                 {
-                    "name": "actions",
+                    "name": "AutoPlay",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "object",
-                    "defaultValue": "{\n  slideNext: {\n    action: 'slide next',\n  },\n  slidePrev: {\n    action: 'slide prev',\n  },\n  slideUpdate: {\n    action: 'slide update',\n  },\n  reachStart: {\n    action: 'has reached start',\n  },\n  reachEnd: {\n    action: 'has reached end',\n  },\n  touched: {\n    action: 'has been touched',\n  },\n}"
-                },
-                {
-                    "name": "CarouselWithProjectedNavigation",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "",
-                    "defaultValue": "TemplateWithProjectedNavigation.bind({ slides: slidesDefault })"
-                },
-                {
-                    "name": "Centre",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    center: true,\n    freeMode: false,\n  },\n}"
-                },
-                {
-                    "name": "Default",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "",
-                    "defaultValue": "Template.bind({})"
-                },
-                {
-                    "name": "Freemode",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Story",
-                    "defaultValue": "{\n  args: {\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: 3,\n    stepSlides: 1,\n    loop: true,\n    autoplay: { delay: 1800, pauseOnHover: true, stopOnInteraction: true },\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    const nextBtn = await c\n      .findByRole('button', { name: /next/i })\n      .catch(() => null);\n    if (!nextBtn) return;\n    await step('Hover to pause', async () => {\n      await userEvent.hover(canvasElement);\n    });\n    await new Promise((r) => setTimeout(r, 1000));\n    await step('Unhover to resume', async () => {\n      await userEvent.unhover(canvasElement);\n    });\n    await new Promise((r) => setTimeout(r, 1000));\n  },\n}"
                 },
                 {
-                    "name": "FreemodeNoSpace",
+                    "name": "Basic",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Story",
-                    "defaultValue": "{\n  args: {\n    freeMode: true,\n    spaceBetween: 0,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                    "defaultValue": "{\n  render: TemplateProjected,\n  args: {\n    slides: [],\n  },\n}"
                 },
                 {
-                    "name": "LazyLoading",
+                    "name": "Centered",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    lazyLoading: true,\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    center: true,\n    freeMode: false,\n  },\n}"
                 },
                 {
-                    "name": "Loop",
+                    "name": "ExactSlidesPerView",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    loop: true,\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(10), slidesPerView: '4', freeMode: false },\n}"
                 },
                 {
-                    "name": "ManySlides",
+                    "name": "FreeMode",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slides: Array(20).fill(slides[0]),\n    slidesPerView: 5,\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(12), slidesPerView: '3', freeMode: true },\n}"
                 },
                 {
-                    "name": "Marges",
+                    "name": "FreeModeNoSpace",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    marginStart: 50,\n    marginEnd: 150,\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    freeMode: true,\n    spaceBetween: 0,\n  },\n}"
+                },
+                {
+                    "name": "Interaction_ClickDots",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n    freeMode: false,\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    // à adapter selon ton markup de dots (role=\"button\" / \"radio\" / \".dot\")\n    const dots = await c\n      .findAllByRole('button', { name: /dot/i })\n      .catch(() => []);\n    if (dots.length >= 3) {\n      await step('Go to dot #3', async () => {\n        await userEvent.click(dots[2]);\n      });\n    }\n  },\n}"
+                },
+                {
+                    "name": "Interaction_NextPrev",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    stepSlides: 2,\n    freeMode: false,\n  },\n  play: async ({ canvasElement, step }) => {\n    const c = within(canvasElement);\n    const nextBtn = await c.findByRole('button', { name: /next/i });\n    const prevBtn = await c.findByRole('button', { name: /prev/i });\n\n    await step('Next twice', async () => {\n      await userEvent.click(nextBtn);\n      await userEvent.click(nextBtn);\n    });\n\n    await step('Prev once', async () => {\n      await userEvent.click(prevBtn);\n    });\n\n    // si tu exposes un aria-selected sur le slide actif ou un aria-valuenow,\n    // tu peux ajouter une assertion ici (exemple):\n    // const active = await c.findByRole('option', { selected: true });\n    // expect(active).toHaveTextContent(/Slide 3|4/);\n  },\n}"
+                },
+                {
+                    "name": "Looping",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: '3',\n    stepSlides: 2,\n    loop: true,\n    freeMode: false,\n  },\n}"
+                },
+                {
+                    "name": "Margins",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    marginStart: 100,\n    marginEnd: 150,\n    freeMode: false,\n  },\n}"
                 },
                 {
                     "name": "meta",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Meta<CarouselComponent>",
-                    "defaultValue": "{\n  title: 'Carousel',\n  component: CarouselComponent,\n  tags: ['autodocs'],\n  argTypes: {\n    slides: {\n      control: 'object',\n    },\n    slidesPerView: {\n      control: 'text',\n    },\n    spaceBetween: {\n      control: 'number',\n    },\n    showControls: {\n      control: 'boolean',\n    },\n    iconSize: {\n      control: 'number',\n    },\n    pagination: {\n      control: 'object',\n    },\n    initialSlide: {\n      control: 'number',\n    },\n    freeMode: {\n      control: 'boolean',\n    },\n    deltaPosition: {\n      control: 'number',\n    },\n    showProgress: {\n      control: 'boolean',\n    },\n    dotsControl: {\n      control: 'boolean',\n    },\n    rewind: {\n      control: 'boolean',\n    },\n    loop: {\n      control: 'boolean',\n    },\n    center: {\n      control: 'boolean',\n    },\n    notCenterBounds: {\n      control: 'boolean',\n    },\n    slideOnClick: {\n      control: 'boolean',\n    },\n    marginEnd: {\n      control: 'number',\n    },\n    marginStart: {\n      control: 'number',\n    },\n    lazyLoading: {\n      control: 'boolean',\n    },\n    breakpoints: {\n      control: 'object',\n    },\n    ...actions,\n  },\n  args: {\n    slides,\n  },\n  //args: { slideNext: fn() },\n}"
+                    "defaultValue": "{\n  title: 'Components/Carousel',\n  component: CarouselComponent,\n  decorators: [\n    moduleMetadata({\n      imports: [\n        SlideDirective,\n        NavigationComponent,\n        PaginationComponent,\n        CarouselNavLeftDirective,\n        CarouselNavRightDirective,\n        RandomSrcPipe,\n      ],\n    }),\n  ],\n  parameters: {\n    layout: 'padded',\n    docs: {\n      description: {\n        component: `\n**Carousel** — Options clés:\n- \\`slidesPerView: number | 'auto'\\`\n- \\`stepSlides: number\\` (nb de slides avancées par navigation)\n- \\`freeMode\\`, \\`loop\\`, \\`rewind\\`, \\`center\\`, \\`notCenterBounds\\`\n- \\`mouseWheel: boolean | { horizontal?: boolean; vertical?: boolean }\\`\n- \\`pagination\\` (ex: { type: 'dynamic_dot', clickable: true, external: false })\n- \\`imagesLoaded\\` émis quand les images initiales sont prêtes\n        `.trim(),\n      },\n    },\n  },\n  argTypes: {\n    slides: {\n      control: 'object',\n      description: 'Liste de slides (dans tes tests: URLs)',\n    },\n    slidesPerView: {\n      control: 'text',\n      table: { type: { summary: '\"auto\" | number' } },\n      description: 'Nombre de slides visibles ou \"auto\"',\n    },\n    stepSlides: { control: 'number', description: 'Avance par N slides' },\n    spaceBetween: { control: 'number' },\n    showControls: { control: 'boolean' },\n    alwaysShowControls: { control: 'boolean' },\n    iconSize: { control: 'number' },\n    pagination: { control: 'object' },\n    freeMode: { control: 'boolean' },\n    mouseWheel: { control: 'object' }, // accepte boolean ou objet\n    deltaPosition: { control: 'number' },\n    showProgress: { control: 'boolean' },\n    dotsControl: { control: 'boolean' },\n    rewind: { control: 'boolean' },\n    loop: { control: 'boolean' },\n    center: { control: 'boolean' },\n    notCenterBounds: { control: 'boolean' },\n    slideOnClick: { control: 'boolean' },\n    marginEnd: { control: 'number' },\n    marginStart: { control: 'number' },\n    lazyLoading: { control: 'boolean' },\n    breakpoints: { control: 'object' },\n    // outputs -> actions\n    slideUpdate: { action: 'slideUpdate' },\n    slideNext: { action: 'slideNext' },\n    slidePrev: { action: 'slidePrev' },\n    reachEnd: { action: 'reachEnd' },\n    reachStart: { action: 'reachStart' },\n    touched: { action: 'touched' },\n    imagesLoaded: { action: 'imagesLoaded' },\n    autoplay: { control: 'object' },\n  },\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    stepSlides: 1,\n    spaceBetween: 5,\n    freeMode: false,\n    showControls: true,\n    alwaysShowControls: false,\n    iconSize: 50,\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n    deltaPosition: 0.6,\n    showProgress: true,\n    dotsControl: true,\n    rewind: false,\n    loop: false,\n    center: false,\n    notCenterBounds: false,\n    slideOnClick: true,\n    marginEnd: 0,\n    marginStart: 0,\n    lazyLoading: true,\n    autoplay: false,\n  },\n  tags: ['autodocs'],\n}"
                 },
                 {
                     "name": "modules",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "object",
-                    "defaultValue": "{\n  imports: [\n    SlideDirective,\n    NavigationComponent,\n    PaginationComponent,\n    CarouselNavLeftDirective,\n    CarouselNavRightDirective,\n  ],\n}"
+                    "defaultValue": "{\n  imports: [\n    SlideDirective,\n    NavigationComponent,\n    PaginationComponent,\n    CarouselNavLeftDirective,\n    CarouselNavRightDirective,\n    RandomSrcPipe,\n  ],\n}"
                 },
                 {
-                    "name": "MouseWheel",
+                    "name": "MouseWheelBool",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    mouseWheel: true,\n  },\n}"
-                },
-                {
-                    "name": "NgContent",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  render: () => ({\n    template: `\n      <app-carousel>\n        <div *slide><span>Slide 1</span></div>\n        <div *slide><img src=\"${slides[0]}\" width=\"50\"/></div>\n        <div *slide><span>Slide 3</span></div>\n      </app-carousel>\n    `,\n  }),\n}"
-                },
-                {
-                    "name": "PaginationDynamique",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n  },\n}"
-                },
-                {
-                    "name": "PrimaryExactSlidesPerView",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Story",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 4,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(12), slidesPerView: '3', mouseWheel: true },\n}"
                 },
                 {
-                    "name": "PrimaryPartialSlidesPerView",
+                    "name": "MouseWheelHorizontal",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Story",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3.5,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    mouseWheel: { horizontal: true, vertical: true },\n  },\n}"
                 },
                 {
-                    "name": "Responsive",
+                    "name": "NoSpace",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    freeMode: false,\n    breakpoints: {\n      '(max-width: 768px)': { slidesPerView: 1.5, spaceBetween: 2 },\n      '(min-width: 769px) and (max-width: 1024px)': {\n        slidesPerView: 2.5,\n        spaceBetween: 5,\n      },\n      '(min-width: 1025px)': { slidesPerView: 3.5, spaceBetween: 1 },\n    },\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    spaceBetween: 0,\n  },\n}"
+                },
+                {
+                    "name": "NotCenterBounds",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(9),\n    slidesPerView: '3',\n    center: true,\n    notCenterBounds: true,\n    freeMode: false,\n  },\n}"
+                },
+                {
+                    "name": "OneSlide",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(1), slidesPerView: '1', freeMode: false },\n}"
+                },
+                {
+                    "name": "PaginationDynamicDots",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    pagination: { type: 'dynamic_dot', clickable: true, external: false },\n  },\n}"
+                },
+                {
+                    "name": "PartialSlidesPerView",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(10), slidesPerView: '3.5', freeMode: false },\n}"
+                },
+                {
+                    "name": "ResponsiveBreakpoints",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    freeMode: false,\n    breakpoints: {\n      '(max-width: 768px)': { slidesPerView: 1.5, spaceBetween: 2 },\n      '(min-width: 769px) and (max-width: 1024px)': {\n        slidesPerView: 2.5,\n        spaceBetween: 5,\n      },\n      '(min-width: 1025px)': { slidesPerView: 3.5, spaceBetween: 1 },\n    },\n  },\n}"
                 },
                 {
                     "name": "Rewind",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    rewind: true,\n  },\n}"
-                },
-                {
-                    "name": "SingleSlide",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Story",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 1,\n    freeMode: false,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-                },
-                {
-                    "name": "SingleSlideFreemode",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "Story",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 1,\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-                },
-                {
-                    "name": "SingleSlideFreemodeNoSpace",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "Story",
-                    "defaultValue": "{\n  args: {\n    spaceBetween: 0,\n    slidesPerView: 1,\n    freeMode: true,\n    slides: [\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n      'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n    ],\n  },\n}"
-                },
-                {
-                    "name": "slides",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "[]",
-                    "defaultValue": "[\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n]"
-                },
-                {
-                    "name": "slidesDefault",
-                    "ctype": "miscellaneous",
-                    "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                    "deprecated": false,
-                    "deprecationMessage": "",
-                    "type": "[]",
-                    "defaultValue": "[\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n  'https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif',\n]"
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(8),\n    slidesPerView: '3',\n    rewind: true,\n    freeMode: false,\n  },\n}"
                 },
                 {
                     "name": "SlidesPerViewAuto",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 'auto',\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: Array.from({ length: 12 }, (_, i) =>\n      img(i, 200 + (i % 4) * 60, 160)\n    ),\n    slidesPerView: 'auto' as any,\n    freeMode: false,\n  },\n}"
                 },
                 {
                     "name": "SpaceBetween",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "StoryObj<CarouselComponent>",
-                    "defaultValue": "{\n  args: {\n    slidesPerView: 3,\n    spaceBetween: 30,\n  },\n}"
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(10),\n    slidesPerView: '3',\n    spaceBetween: 30,\n    freeMode: false,\n  },\n}"
                 },
                 {
-                    "name": "Template",
+                    "name": "StepBy3",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(12),\n    slidesPerView: '3',\n    stepSlides: 3,\n    freeMode: false,\n  },\n}"
+                },
+                {
+                    "name": "TemplateProjected",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
-                    "defaultValue": "(args: CarouselComponent) => ({\n  props: args,\n  template: `\n    <app-carousel\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n    >\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img  src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n      <div *slide>\n      <img src='https://images.justwatch.com/poster/176304604/s166/pirates-des-caraibes-i-la-malediction-du-black-pearl.avif'>\n      </div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n    >\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
                 },
                 {
-                    "name": "TemplateWithProjectedNavigation",
+                    "name": "TemplateWithSlides",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
-                    "defaultValue": "(args: CarouselComponent) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slides]=\"${JSON.stringify(slidesDefault).replaceAll('\"', \"'\")}\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n    >\n      <ng-template carouselNavLeft>\n<span>TEST LEFT</span></ng-template>\n\n      <div *carouselNavLeft><span>TEST LEFT</span></div>\n      <div *carouselNavRight><span>TEST RIGHT</span></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      [slides]=\"slides\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                },
+                {
+                    "name": "TwoSlides",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: { slides: buildSlides(2), slidesPerView: '2', freeMode: false },\n}"
                 }
             ],
             "projects/carousel-lib/.storybook/preview.ts": [
@@ -608,20 +588,20 @@
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "Preview",
-                    "defaultValue": "{\r\n  parameters: {\r\n    controls: {\r\n      matchers: {\r\n        color: /(background|color)$/i,\r\n        date: /Date$/i,\r\n      },\r\n    },\r\n  },\r\n\r\n  tags: [\"autodocs\"]\r\n}"
+                    "defaultValue": "{\n  parameters: {\n    controls: {\n      matchers: {\n        color: /(background|color)$/i,\n        date: /Date$/i,\n      },\n    },\n  },\n\n  tags: [\"autodocs\"]\n}"
                 }
             ]
         },
         "groupedFunctions": {},
         "groupedEnumerations": {},
         "groupedTypeAliases": {
-            "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts": [
+            "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts": [
                 {
                     "name": "Story",
                     "ctype": "miscellaneous",
                     "subtype": "typealias",
                     "rawtype": "StoryObj<CarouselComponent>",
-                    "file": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "description": "",
@@ -646,107 +626,107 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "actions",
+                "name": "AutoPlay",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "CarouselWithProjectedNavigation",
+                "name": "Basic",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Centre",
+                "name": "Centered",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Default",
+                "name": "ExactSlidesPerView",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Freemode",
+                "name": "FreeMode",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "FreemodeNoSpace",
+                "name": "FreeModeNoSpace",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "LazyLoading",
+                "name": "Interaction_ClickDots",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Loop",
+                "name": "Interaction_NextPrev",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "ManySlides",
+                "name": "Looping",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Marges",
+                "name": "Margins",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -756,7 +736,7 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -766,67 +746,87 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "MouseWheel",
+                "name": "MouseWheelBool",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "NgContent",
+                "name": "MouseWheelHorizontal",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "PaginationDynamique",
+                "name": "NoSpace",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "PrimaryExactSlidesPerView",
+                "name": "NotCenterBounds",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "PrimaryPartialSlidesPerView",
+                "name": "OneSlide",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Responsive",
+                "name": "PaginationDynamicDots",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "PartialSlidesPerView",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "ResponsiveBreakpoints",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -836,57 +836,7 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "SingleSlide",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "SingleSlideFreemode",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "SingleSlideFreemodeNoSpace",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "slides",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
-                "type": "variable",
-                "linktype": "miscellaneous",
-                "linksubtype": "variable",
-                "name": "slidesDefault",
-                "coveragePercent": 0,
-                "coverageCount": "0/1",
-                "status": "low"
-            },
-            {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -896,7 +846,7 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -906,27 +856,47 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "Template",
+                "name": "StepBy3",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "TemplateWithProjectedNavigation",
+                "name": "TemplateProjected",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/carousel-lib/src/lib/components/carousel/carousel.stories.ts",
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "TemplateWithSlides",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "TwoSlides",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
                 "type": "type alias",
                 "linktype": "miscellaneous",
                 "linksubtype": "typealias",

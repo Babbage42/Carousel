@@ -63,6 +63,7 @@ export class CarouselStore {
     marginEnd: 0,
     firstSlideAnchor: 0,
     lastSlideAnchor: 0,
+    stepSlides: 1,
   });
 
   // Final state with all updated values.
@@ -135,6 +136,10 @@ export class CarouselStore {
   });
   readonly lastSlideAnchor = computed(() => {
     if (this.totalSlides()) {
+      if (this._state().loop) {
+        return this.totalSlides() - 1;
+      }
+
       if (this._state().center) {
         if (
           this._state().notCenterBounds &&

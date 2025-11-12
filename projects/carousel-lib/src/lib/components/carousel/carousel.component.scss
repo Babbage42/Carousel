@@ -1,3 +1,7 @@
+:host {
+  height: inherit;
+}
+
 .carousel {
   overflow: hidden;
   position: relative;
@@ -14,6 +18,13 @@
   }
 
   .slides {
+    &.fix-subpixel {
+      .slide {
+        width: calc(100% + 0.1px);
+        //transform: scale(1.002);
+      }
+    }
+
     will-change: transform;
     backface-visibility: hidden;
     z-index: 1;

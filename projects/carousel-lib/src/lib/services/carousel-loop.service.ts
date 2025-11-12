@@ -5,8 +5,9 @@ import {
   CarouselViewActions,
 } from '../components/carousel/view-adapter';
 import { extractVisibleSlides } from '../helpers/calculations.helper';
-import { CAROUSEL_SLIDE_CLASS } from '../models/carousel.model';
+import { CAROUSEL_SLIDE_CLASS, SnapDom } from '../models/carousel.model';
 import { extractSlidesFromContainer } from '../helpers/dom.helper';
+import { positiveModulo } from '../helpers/utils.helper';
 
 @Injectable()
 export class CarouselLoopService {
@@ -68,104 +69,96 @@ export class CarouselLoopService {
     });
 
     const offset = before
-      ? this.store.currentTranslate() -
-        this.store.slidesWidths()[value] -
-        this.store.state().spaceBetween
-      : this.store.currentTranslate() +
-        this.store.slidesWidths()[value] +
-        this.store.state().spaceBetween;
-    this.applyTranslate(offset);
+      ? -this.store.slidesWidths()[value] - this.store.state().spaceBetween
+      : this.store.slidesWidths()[value] + this.store.state().spaceBetween;
+
+    this.applyTranslate(this.store.currentTranslate() + offset);
 
     this.store.patch({
-      lastTranslate: before
-        ? this.store.lastTranslate() - offset
-        : this.store.lastTranslate() + offset,
+      lastTranslate: this.store.lastTranslate() + offset,
     });
 
     return { width, offset };
   }
 
   /**
-   * Determine if we must insert slide before or after.
-   * We force detection when directy selecting a slide.
-   * When clicking on slide (or jumping) we might need to insert several slides.
-   * @param before
-   * @returns
+   * When moving slides manually.
+   * @todo handle next
    */
-  public insertLoopSlides(
-    force = false,
-    indexSlided: number | undefined = undefined
-  ) {
-    if (!this.store.state().loop) {
-      return;
+  private insertLoopSlidesByTranslation() {
+    const leftmostDom = this.firstVisibleSlide;
+    const order = this.store.slidesIndexOrder();
+    const realLeftPos = order.indexOf(leftmostDom.logicalIndex);
+    const movedLeft =
+      realLeftPos === 0 &&
+      leftmostDom.translate < this.store.currentTranslate();
+    if (movedLeft) {
+      this.insertElement(true);
     }
+  }
 
-    if (this.store.visibleDom().length === 0) {
-      return;
+  /**
+   * By prev or next button. Handle stepslides.
+   * @param before
+   */
+  private insertLoopSlidesByNavigation(before = true) {
+    const leftmostDom = this.firstVisibleSlide;
+    const rightmostDom = this.lastVisibleSlide;
+    const leftMostIndex = leftmostDom.domIndex;
+    const rightMostIndex = rightmostDom.domIndex;
+    const slidesAvailableBefore = leftMostIndex;
+    const slidesAvailableAfter = this.store.totalSlides() - rightMostIndex - 1;
+
+    if (
+      before === true &&
+      slidesAvailableBefore < this.store.state().stepSlides
+    ) {
+      const slidesToInsertBefore =
+        this.store.state().stepSlides - slidesAvailableBefore;
+
+      for (let i = 1; i <= slidesToInsertBefore; i++) {
+        this.insertElement(before);
+      }
     }
+    if (
+      before === false &&
+      slidesAvailableAfter < this.store.state().stepSlides
+    ) {
+      const slidesToInsertAfter =
+        this.store.state().stepSlides - slidesAvailableAfter;
 
+      for (let i = 1; i <= slidesToInsertAfter; i++) {
+        this.insertElement(before);
+      }
+    }
+  }
+
+  /**
+   * Direct click on slide.
+   * @param indexSlided
+   */
+  private insertLoopSlidesBySlidingTo(indexSlided: number) {
     let leftmostDom = this.firstVisibleSlide;
     let rightmostDom = this.lastVisibleSlide;
+    const futureTranslate = this.store.slideTranslates()[indexSlided];
+    const translateDiff = Math.abs(
+      this.store.currentTranslate() - futureTranslate
+    );
 
-    // We slide to specific slide so we need to guess the future state of translation.
-    if (indexSlided !== undefined) {
-      const futureTranslate = this.store.slideTranslates()[indexSlided]; //- this.slidesWidths[indexSlided];
-      const translateDiff = Math.abs(
-        this.store.currentTranslate() - futureTranslate
-      );
+    const modifiedVisibleDoms = extractVisibleSlides(
+      this.store.snapsDom(),
+      this.store.currentTranslate(),
+      this.store.state().fullWidth,
+      translateDiff
+    );
 
-      console.log(
-        '==> future translate',
-        futureTranslate,
-        ' with diff ',
-        translateDiff
-      );
-      const modifiedVisibleDoms = extractVisibleSlides(
-        this.store.snapsDom(),
-        this.store.currentTranslate(),
-        this.store.state().fullWidth,
-        translateDiff
-      );
-
-      leftmostDom = modifiedVisibleDoms[0];
-      rightmostDom = modifiedVisibleDoms[modifiedVisibleDoms.length - 1];
-      console.log('modifierjdiejd', leftmostDom, rightmostDom);
-    }
+    leftmostDom = modifiedVisibleDoms[0];
+    rightmostDom = modifiedVisibleDoms[modifiedVisibleDoms.length - 1];
 
     const spaceBetweenVisibleSlides = Math.abs(
       leftmostDom.translate - rightmostDom.translate
     );
     const offset = this.store.state().fullWidth - spaceBetweenVisibleSlides;
-
-    const realLeftPosition = this.store
-      .slidesIndexOrder()
-      .indexOf(leftmostDom.logicalIndex);
-    const realRightPosition = this.store
-      .slidesIndexOrder()
-      .indexOf(rightmostDom.logicalIndex);
-
-    console.log(
-      'spaaaaaace,',
-      leftmostDom,
-      rightmostDom,
-      spaceBetweenVisibleSlides,
-      offset,
-      realLeftPosition,
-      realRightPosition
-    );
-
-    const shouldInsertBefore =
-      realLeftPosition === 0 &&
-      (leftmostDom.translate < this.store.currentTranslate() || force);
-    const shouldInsertAfter =
-      realRightPosition === this.store.slidesIndexOrder().length - 1;
-    // &&
-    // (rightmostDom.translate + this.fullWidth > this.currentTranslate ||
-    //   force);
-
-    if (!shouldInsertAfter && !shouldInsertBefore) {
-      return;
-    }
 
     const insertElement = (before = true) => {
       let mainOffset = offset;
@@ -185,6 +178,10 @@ export class CarouselLoopService {
       }
     };
 
+    const shouldInsertBefore = leftmostDom.domIndex === 0;
+    const shouldInsertAfter =
+      rightmostDom.domIndex >= this.store.totalSlides() - 1;
+
     if (shouldInsertBefore) {
       insertElement();
     }
@@ -192,6 +189,42 @@ export class CarouselLoopService {
     if (shouldInsertAfter) {
       insertElement(false);
     }
+  }
+
+  /**
+   * Determine if we must insert slide before or after.
+   * 3 cases :
+   * - From prev next action : insert as many slides as necessary (by step)
+   * - From click on slide : insert as many slides as necessary (by space)
+   * - From manual move : insert one slide at start or end
+   * @returns
+   */
+  public insertLoopSlides(
+    indexSlided: number | undefined = undefined,
+    before?: boolean
+  ) {
+    if (!this.store.state().loop) {
+      return;
+    }
+
+    if (this.store.visibleDom().length === 0) {
+      return;
+    }
+
+    // By manuel move.
+    if (indexSlided === undefined && before === undefined) {
+      this.insertLoopSlidesByTranslation();
+      return;
+    }
+
+    // We slide to specific slide so we need to guess the future state of translation.
+    if (indexSlided !== undefined) {
+      this.insertLoopSlidesBySlidingTo(indexSlided);
+      return;
+    }
+
+    // By clicking next or prev.
+    this.insertLoopSlidesByNavigation(before);
   }
 
   private forceReflow() {

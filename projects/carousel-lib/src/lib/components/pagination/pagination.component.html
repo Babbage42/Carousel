@@ -11,7 +11,7 @@
   ></span>
   }
 </div>
-} @else if (pagination.type === "dynamic_dot") {
+} @else if (totalSlidesVisible() > 1 && pagination.type === "dynamic_dot") {
 <div
   class="dot-pagination dynamic"
   [style.width.rem]="maxWidth()"

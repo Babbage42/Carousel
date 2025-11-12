@@ -6,6 +6,15 @@ export const TRANSITION_DURATION = 400; // ms
 
 export interface Slide {}
 
+export type AutoplayOptions = {
+  delay?: number; // ms entre 2 avances (par défaut 2500)
+  pauseOnHover?: boolean; // pause quand la souris est dessus
+  pauseOnFocus?: boolean; // pause quand un élément interne a le focus
+  stopOnInteraction?: boolean; // stop définitif si l’utilisateur interagit (flèche, drag, dot…)
+  disableOnHidden?: boolean; // stop quand l’onglet n’est pas visible
+  resumeOnMouseLeave?: boolean; // relance à la sortie si pas stop
+};
+
 export interface CarouselResponsiveConfig {
   [mediaQuery: string]: {
     slidesPerView?: number;
@@ -94,6 +103,8 @@ export interface Carousel {
 
   firstSlideAnchor: number;
   lastSlideAnchor: number;
+
+  stepSlides: number;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:carousel": "node dist/carousel/server/server.mjs"
+    "serve:ssr:carousel": "node dist/carousel/server/server.mjs",
+    "build-storybook": "ng run carousel-lib:build-storybook"
   },
   "private": true,
   "dependencies": {

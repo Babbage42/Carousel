@@ -7,21 +7,21 @@
   <span>total visible:{{ totalSlidesVisible() }}</span>
 
   <div class="slides-wrapper">
-    @if (showControls) {
+    @if (showControls()) {
     <app-navigation
-      [alwaysShowControls]="alwaysShowControls"
+      [alwaysShowControls]="alwaysShowControls()"
       [customLeftArrow]="customLeftArrow?.templateRef"
       [customRightArrow]="customRightArrow?.templateRef"
       (slidePrev)="slideToPrev()"
       (slideNext)="slideToNext()"
       (slideTo)="slideTo($event)"
-      [loop]="loop"
-      [rewind]="rewind"
+      [loop]="loop()"
+      [rewind]="rewind()"
       [currentPosition]="currentPosition()"
       [hasReachedStart]="hasReachedStart()"
       [hasReachedEnd]="hasReachedEnd()"
       [totalSlides]="totalSlides()"
-      [iconSize]="iconSize"
+      [iconSize]="iconSize()"
     >
     </app-navigation>
     }
@@ -29,7 +29,8 @@
     <div
       #allSlides
       class="slides"
-      [class.slides-auto]="slidesPerView === 'auto'"
+      [class.slides-auto]="slidesPerView() === 'auto'"
+      [class.fix-subpixel]="fixSubPixelIssue()"
       appImagesReady
       (imagesReady)="onImagesReady()"
       (imagesChanged)="onImagesChanged()"
@@ -52,13 +53,13 @@
     </div>
   </div>
 
-  @if (pagination && !pagination.external) {
+  @if (pagination() && !pagination()!.external) {
   <ng-container *ngTemplateOutlet="paginationTemplate"></ng-container>
   }
 </div>
 
 <ng-template #paginationTemplate>
-  @if (pagination) {
+  @if (pagination()) {
   <app-pagination
     (goToSlide)="slideTo($event)"
     [currentPosition]="currentPosition()"
@@ -66,7 +67,7 @@
     [lastSlideAnchor]="lastSlideAnchor()"
     [totalSlides]="totalSlides()"
     [totalSlidesVisible]="totalSlidesVisible()"
-    [pagination]="pagination"
+    [pagination]="pagination()!"
   ></app-pagination>
   }
 </ng-template>

@@ -10,3 +10,11 @@ export function generateRandomClassName(length: number = 8): string {
 export function positiveModulo(n: number, m: number) {
   return ((n % m) + m) % m;
 }
+
+export function deepEqual(a: any, b: any) {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return a === b;
+  }
+}

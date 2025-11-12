@@ -12,3 +12,5 @@ export * from './lib/components/navigation-right-external/navigation-right-exter
 export * from './lib/components/carousel/carousel.component';
 export * from './lib/components/pagination/pagination.component';
 export * from './lib/components/navigation/navigation.component';
+
+export * from './lib/pipes/random-src.pipe';
