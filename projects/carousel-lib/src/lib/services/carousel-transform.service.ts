@@ -37,21 +37,30 @@ export class CarouselTransformService {
       });
     }
 
-    let position =
-      Math.abs(
-        this.store.currentTranslate() - this.store.state().minTranslate
-      ) /
-      (this.store.slidesWidths()[0] + this.store.state().spaceBetween);
+    const currentTranslate =
+      this.store.currentTranslate() +
+      (velocity ? this.store.state().velocity : 0);
+    let closestIndex = 0;
+    let smallestDiff = Infinity;
 
-    position = this.getRealPositionFromExactPosition(position);
+    const snapPoints = this.store.slideTranslates();
+
+    for (let i = 0; i < snapPoints.length; i++) {
+      const diff = Math.abs(currentTranslate - snapPoints[i]);
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        closestIndex = i;
+      }
+    }
+    closestIndex = this.getRealPositionFromExactPosition(closestIndex);
 
     const isNewPosition =
-      Math.abs(this.store.currentPosition() - position) >
+      Math.abs(this.store.currentPosition() - closestIndex) >
       this.store.state().deltaPosition;
 
     return {
-      exactPosition: position,
-      position: isNewPosition ? Math.round(position) : undefined,
+      exactPosition: closestIndex,
+      position: isNewPosition ? Math.round(closestIndex) : undefined,
     };
   }
 

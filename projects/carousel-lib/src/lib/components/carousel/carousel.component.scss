@@ -2,7 +2,27 @@
   height: inherit;
 }
 
+// To respect center in SSR.
+.carousel.carousel--center {
+  .slides {
+    display: grid;
+    grid-auto-flow: column;
+    --col-width: calc((100% - (var(--spv) - 1) * var(--gap)) / var(--spv));
+    --step: calc(var(--col-width) + var(--gap));
+    --center-x: calc(var(--index) * var(--step) + var(--col-width) / 2);
+
+    grid-auto-columns: var(--col-width) !important;
+    column-gap: var(--gap) !important;
+    transform: translate3d(calc(50% - var(--center-x)), 0, 0) !important;
+  }
+}
+
 .carousel {
+  // visibility: hidden;
+  // &.layout-ready {
+  //   visibility: visible;
+  // }
+
   overflow: hidden;
   position: relative;
 

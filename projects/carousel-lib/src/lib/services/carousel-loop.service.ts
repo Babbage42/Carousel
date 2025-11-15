@@ -138,42 +138,53 @@ export class CarouselLoopService {
    * @param indexSlided
    */
   private insertLoopSlidesBySlidingTo(indexSlided: number) {
-    let leftmostDom = this.firstVisibleSlide;
-    let rightmostDom = this.lastVisibleSlide;
+    const state = this.store.state();
     const futureTranslate = this.store.slideTranslates()[indexSlided];
-    const translateDiff = Math.abs(
-      this.store.currentTranslate() - futureTranslate
-    );
+    const currentTranslate = this.store.currentTranslate();
+    const translateDiff = Math.abs(currentTranslate - futureTranslate);
+
+    if (translateDiff < 1) {
+      return;
+    }
 
     const modifiedVisibleDoms = extractVisibleSlides(
       this.store.snapsDom(),
-      this.store.currentTranslate(),
-      this.store.state().fullWidth,
+      currentTranslate,
+      state.fullWidth,
       translateDiff
     );
 
-    leftmostDom = modifiedVisibleDoms[0];
-    rightmostDom = modifiedVisibleDoms[modifiedVisibleDoms.length - 1];
+    if (!modifiedVisibleDoms.length) {
+      return;
+    }
 
-    const spaceBetweenVisibleSlides = Math.abs(
-      leftmostDom.translate - rightmostDom.translate
-    );
-    const offset = this.store.state().fullWidth - spaceBetweenVisibleSlides;
+    const leftmostDom = modifiedVisibleDoms[0];
+    const rightmostDom = modifiedVisibleDoms[modifiedVisibleDoms.length - 1];
+
+    const leftEdge = leftmostDom.translate;
+    const rightEdge = rightmostDom.translate + rightmostDom.width;
+    const visibleSpan = Math.abs(rightEdge - leftEdge);
+
+    const offset = state.fullWidth - visibleSpan;
+    if (offset <= 0) {
+      return;
+    }
 
     const insertElement = (before = true) => {
       let mainOffset = offset;
-      const inserted = this.insertElement(before);
-      if (inserted) {
-        mainOffset -= inserted.width;
+      const firstInserted = this.insertElement(before);
+
+      if (firstInserted) {
+        mainOffset -= firstInserted.width + state.spaceBetween;
 
         let stop = false;
         while (mainOffset > 0 && !stop) {
           const inserted = this.insertElement(before);
-          if (inserted === undefined) {
+          if (!inserted) {
             stop = true;
             continue;
           }
-          mainOffset -= inserted.width;
+          mainOffset -= inserted.width + state.spaceBetween;
         }
       }
     };
@@ -183,7 +194,7 @@ export class CarouselLoopService {
       rightmostDom.domIndex >= this.store.totalSlides() - 1;
 
     if (shouldInsertBefore) {
-      insertElement();
+      insertElement(true);
     }
 
     if (shouldInsertAfter) {
@@ -234,12 +245,47 @@ export class CarouselLoopService {
   }
 
   private applyTranslate(translate: number) {
-    this.renderer.setStyle(
-      this.store.allSlides()?.nativeElement,
-      'transition-duration',
-      `0s`
-    );
-    this.view.updateTransform(translate, false);
+    this.view.disableTransition();
+    this.view.updateTransform(translate, false, true);
     this.forceReflow();
+  }
+
+  /**
+   * Pre-populates the DOM for loop mode on initialization.
+   * This is crucial for modes like 'center' to work from the start,
+   * by ensuring the initial slide has slides before it in the DOM.
+   */
+  public initializeLoopCenter(): void {
+    const state = this.store.state();
+
+    if (!state.loop || !state.center) {
+      return;
+    }
+
+    const totalSlides = this.store.totalSlides();
+    if (totalSlides === 0 || !state.allSlides) {
+      return;
+    }
+
+    const initialSlideWidth =
+      this.store.slidesWidths()[state.initialSlide] ?? 0;
+    const spaceToFill =
+      state.fullWidth / 2 - initialSlideWidth / 2 - state.marginStart;
+
+    if (spaceToFill <= 0) {
+      return;
+    }
+
+    let widthFilled = 0;
+    let slidesInserted = 0;
+
+    while (widthFilled < spaceToFill && slidesInserted < totalSlides - 1) {
+      const inserted = this.insertElement(true);
+
+      if (inserted) {
+        widthFilled += inserted.width + state.spaceBetween;
+      }
+      slidesInserted++;
+    }
   }
 }

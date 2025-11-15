@@ -37,8 +37,28 @@ export class ImagesReadyDirective implements AfterViewInit, OnDestroy {
     const root = this.host.nativeElement;
     const imgs = Array.from(root.querySelectorAll("img"));
 
+    const visibleOrEagerImages = imgs.filter((img) => {
+      const loading = img.getAttribute("loading");
+      if (loading === "eager") return true;
+
+      const rect = img.getBoundingClientRect();
+      return (
+        rect.top < window.innerHeight &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.right > 0
+      );
+    });
+
+    if (visibleOrEagerImages.length === 0) {
+      console.warn(
+        "No visible or eager images found, emitting ready immediately"
+      );
+      return;
+    }
+
     await Promise.all(
-      imgs.map(async (img) => {
+      visibleOrEagerImages.map(async (img) => {
         if (img.complete && img.naturalWidth > 0) {
           return;
         }

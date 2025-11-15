@@ -37,6 +37,9 @@ import {
   EnvironmentInjector,
   afterRenderEffect,
   output,
+  DOCUMENT,
+  contentChildren,
+  HostBinding,
 } from '@angular/core';
 import { debounceTime, fromEvent, single } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -69,6 +72,9 @@ import { CarouselStore } from '../../carousel.store';
 import { CarouselLoopService } from '../../services/carousel-loop.service';
 import { CarouselTransformService } from '../../services/carousel-transform.service';
 import { CAROUSEL_VIEW } from './view-adapter';
+import { CarouselSwipeService } from '../../services/carousel-swipe.service';
+import { CarouselNavigationService } from '../../services/carousel-navigation.service';
+import { CarouselPhysicsService } from '../../services/carousel-physics.service';
 
 @Component({
   selector: 'app-carousel',
@@ -88,7 +94,11 @@ import { CAROUSEL_VIEW } from './view-adapter';
   providers: [
     CarouselStore,
     CarouselTransformService,
+    CarouselSwipeService,
+    CarouselTransformService,
+    CarouselPhysicsService,
     CarouselLoopService,
+    CarouselNavigationService,
     { provide: CarouselRegistryService, useClass: CarouselRegistryService },
     {
       provide: CAROUSEL_VIEW,
@@ -97,9 +107,14 @@ import { CAROUSEL_VIEW } from './view-adapter';
   ],
 })
 export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
-  private readonly store = inject(CarouselStore);
+  public readonly store = inject(CarouselStore);
   private readonly loopService = inject(CarouselLoopService);
   private readonly transformService = inject(CarouselTransformService);
+  private readonly swipeService = inject(CarouselSwipeService);
+  private readonly navigationService = inject(CarouselNavigationService);
+  private readonly physicsService = inject(CarouselPhysicsService);
+  private readonly document = inject(DOCUMENT);
+  private readonly window = this.document?.defaultView;
 
   readonly currentPosition = this.store.currentPosition;
   readonly firstSlideAnchor = this.store.firstSlideAnchor;
@@ -110,11 +125,27 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly hasReachedStart = this.store.hasReachedStart;
   readonly hasReachedEnd = this.store.hasReachedEnd;
 
-  @ContentChildren(SlideDirective) projectedSlides!: QueryList<SlideDirective>;
+  projectedSlides = contentChildren(SlideDirective);
   @ContentChild(CarouselNavLeftDirective)
   customLeftArrow?: CarouselNavLeftDirective;
   @ContentChild(CarouselNavRightDirective)
   customRightArrow?: CarouselNavRightDirective;
+
+  @HostBinding('style.--spv')
+  get cssSpv() {
+    const spv = this.store.state().slidesPerView;
+    return typeof spv === 'number' ? spv : 1;
+  }
+  @HostBinding('style.--gap')
+  get cssGap() {
+    return `${this.store.state().spaceBetween}px`;
+  }
+  @HostBinding('style.--index')
+  get cssIndex() {
+    return this.currentPosition();
+  }
+
+  debug = input(true);
 
   slides = input<Slide[]>([]);
   slidesPerView = input(4.5, {
@@ -199,6 +230,45 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.store.fullWidth() % (this.slidesPerView() as number) !== 0
   );
 
+  /**
+   * We force center by CSS at init (when all values are not ready).
+   */
+  public readonly applyCenterAtInit = computed(() => {
+    const spv = this.store.state().slidesPerView;
+    if (this.isServerMode || !this.layoutReady()) {
+      if (
+        this.store.state().center &&
+        !this.store.state().loop &&
+        typeof spv === 'number'
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  // This translate will be ignored when layout is not ready on center mode.
+  // It will be override temporaly in CSS.
+  public readonly slidesTransform = computed(
+    () => `translate3d(${this.store.currentTranslate()}px, 0, 0)`
+  );
+
+  private readonly _transitionDuration = signal(0);
+  readonly transitionDuration = this._transitionDuration.asReadonly();
+
+  public readonly slidesGap = computed(() => `${this.spaceBetween()}px`);
+
+  public readonly slidesGridColumns = computed(() => {
+    const slidesPerView = this.slidesPerView();
+    if (slidesPerView === 'auto') {
+      return 'max-content';
+    }
+    const spaceBetween = this.spaceBetween();
+    return `calc((100% - ${
+      spaceBetween * (slidesPerView - 1)
+    }px) / ${slidesPerView})`;
+  });
+
   private inputsSnapshot = computed<Partial<Carousel>>(() => ({
     marginStart: this.marginStart(),
     marginEnd: this.marginEnd(),
@@ -252,6 +322,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private navigation = viewChild(NavigationComponent);
 
   private areImagesReady = signal(false);
+  public layoutReady = signal(false); //this.isServerMode);
+
+  private observer?: ResizeObserver;
 
   constructor(
     private renderer: Renderer2,
@@ -261,13 +334,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     public carouselRegistry: CarouselRegistryService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // TODO Replace by resizeobserver
-    if (!this.isServerMode) {
-      fromEvent(window, 'resize')
-        .pipe(debounceTime(200))
-        .subscribe(() => this.refresh());
+    if (this.debug()) {
+      //this.enableDebugMode();
     }
-
     /**
      * Set initial current position to apply.
      */
@@ -306,6 +375,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
             slidesIndexOrder: slides.map((_, index) => index),
           });
           this.transformService.calculateInitialTranslations();
+          this.loopService.initializeLoopCenter();
+          this.layoutReady.set(true);
         });
       }
     });
@@ -360,11 +431,39 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.applyUniqueId();
     this.initProjectedSlides();
     this.refresh();
+    this.setupResizeObserver();
   }
 
   ngOnDestroy(): void {
     this.mediaQueryListeners.forEach(({ mql, listener }) => {
       mql.removeEventListener('change', listener);
+    });
+
+    if (this.autoplayTimer) {
+      clearInterval(this.autoplayTimer);
+      this.autoplayTimer = undefined;
+    }
+
+    this.observer?.disconnect();
+  }
+
+  private enableDebugMode() {
+    (this.window as any).__carouselDebug = {
+      store: this.store,
+      state: () => this.store.state(),
+      slideTo: (index: number) => this.slideTo(index),
+      getTranslate: () => this.store.currentTranslate(),
+      getPosition: () => this.currentPosition(),
+    };
+
+    effect(() => {
+      console.table({
+        position: this.currentPosition(),
+        realPosition: this.currentRealPosition(),
+        translate: this.store.currentTranslate(),
+        hasReachedStart: this.hasReachedStart(),
+        hasReachedEnd: this.hasReachedEnd(),
+      });
     });
   }
 
@@ -391,9 +490,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private refresh() {
-    this.applySpaceBetween();
-    this.applySlidesPerView();
-
     // We must wait browser calculation for grid display.
     this.calculateGridWidth();
 
@@ -449,7 +545,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (hasReachedStart && this.rewind()) {
       newPosition = this.store.totalSlides() - 1;
     } else {
-      newPosition = this.calculateNewPositionAfterNavigation(false);
+      newPosition =
+        this.navigationService.calculateNewPositionAfterNavigation(false);
     }
     this.slidePrev.emit();
 
@@ -462,13 +559,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   public slideToNext() {
     let indexSlided = undefined;
-    if (this.store.state().stepSlides > 1) {
-      indexSlided =
-        this.store.state().currentPosition +
-        (this.store.state().stepSlides - 1) +
-        1;
-      indexSlided = positiveModulo(indexSlided, this.totalSlides());
-    }
+    // if (this.store.state().stepSlides > 1) {
+    //   indexSlided =
+    //     this.store.state().currentPosition +
+    //     (this.store.state().stepSlides - 1) +
+    //     1;
+    //   indexSlided = positiveModulo(indexSlided, this.totalSlides());
+    // }
     this.loopService.insertLoopSlides(indexSlided, false);
 
     const hasReachedEnd = this.store.hasReachedEnd();
@@ -476,10 +573,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (hasReachedEnd && this.rewind()) {
       newPosition = 0;
     } else {
-      newPosition = this.calculateNewPositionAfterNavigation(true);
+      newPosition =
+        this.navigationService.calculateNewPositionAfterNavigation(true);
     }
 
-    console.log('** Sliding to next index:', newPosition);
     this.slideNext.emit();
 
     this.slideTo(newPosition);
@@ -489,130 +586,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * When user swipe or drag, we need to slide to nearest index.
    */
   private swipeToNearest() {
-    const isSwipe = new Date().getTime() - this.lastMoveTime < 100;
-
-    const hasReachedEnd = this.isReachEnd();
-    const hasReachedStart = this.isReachStart();
-
-    const { position, exactPosition } =
-      this.transformService.getNewPositionFromTranslate(isSwipe);
-
-    console.log('** SWIPE TO NEAREST', { position, exactPosition, isSwipe });
-
-    const virtualPosition =
-      this.getVirtualPositionFromExactPosition(exactPosition);
-    const currentVirtualPosition = this.getVirtualPositionFromExactPosition(
-      this.store.currentPosition()
+    const newPosition = this.swipeService.calculateTargetPositionAfterSwipe(
+      this.dragState().lastMoveTime,
+      this.isReachEnd(),
+      this.isReachStart()
     );
-
-    let newPosition: number | undefined =
-      position !== undefined ? position : this.store.currentPosition();
-
-    if (hasReachedEnd) {
-      console.log('maximum reached', newPosition);
-
-      if (isSwipe || virtualPosition > currentVirtualPosition) {
-        // Maximum reached.
-        if (this.rewind()) {
-          newPosition = 0;
-        } else {
-          newPosition = Math.ceil(exactPosition);
-        }
-      }
-    } else if (hasReachedStart) {
-      console.log('minimum reached', { position, exactPosition });
-      if (isSwipe || virtualPosition < currentVirtualPosition) {
-        // Minimum reached.
-        if (this.rewind()) {
-          newPosition = this.store.totalSlides() - 1;
-        } else {
-          newPosition = Math.floor(exactPosition);
-        }
-      }
-    } else if (isSwipe) {
-      const isSlidingNext = virtualPosition > currentVirtualPosition;
-      const isSlidingPrev = virtualPosition < currentVirtualPosition;
-      if (isSlidingNext || isSlidingPrev) {
-        newPosition = this.calculateNewPositionAfterNavigation(isSlidingNext);
-      }
-    }
 
     this.slideTo(newPosition);
-  }
-
-  /**
-   * Move slides.
-   * From arrows or by mouse / touch.
-   * @param posX
-   * @returns
-   *
-   */
-  public updateTransform(
-    translateToApply = this.store.currentTranslate(),
-    updatePosition = true
-  ) {
-    this.store.patch({
-      currentTranslate: translateToApply,
-    });
-
-    if (!this.store.allSlides()) {
-      return;
-    }
-
-    const roundedCurrentTranslate = this.store.currentTranslate(); //Math.round
-
-    // @todo use pourcentage for spacebetween 0.
-    this.renderer.setStyle(
-      this.store.allSlides()?.nativeElement,
-      'transform',
-      `translate3d(${roundedCurrentTranslate}px, 0px, 0px)`
-    );
-
-    this.handleReachEvents();
-
-    if (!this.store.state().freeMode || !updatePosition) {
-      this.updateSlides();
-      return;
-    }
-
-    // Recalculate currentposition.
-    const newPosition =
-      this.transformService.getNewPositionFromTranslate().position;
-
-    if (newPosition !== undefined) {
-      const position = positiveModulo(newPosition, this.store.totalSlides());
-      this.store.setCurrentPosition(this.clampToVisibleSlide(position));
-      this.store.patch({ currentRealPosition: position });
-      this.updateSlides();
-    }
-  }
-
-  /**
-   * Trigger slide to specific index.
-   * If index is not provided, it will slide to the current position.
-   * @param index
-   */
-  public slideTo(index = this.store.currentRealPosition(), animate = true) {
-    // We update the real position.
-    this.store.patch({ currentRealPosition: index });
-
-    index = this.clampToVisibleSlide(index);
-
-    console.log('*** Sliding to index:', index, 'with animate:', animate);
-
-    if (index !== undefined && index !== this.store.currentPosition()) {
-      this.store.setCurrentPosition(index);
-    }
-
-    if (animate) {
-      this.applyTransitionAnimation();
-    }
-
-    const translateToApply =
-      this.transformService.getTranslateFromPosition(index);
-
-    // Apply transform to slides.
-    this.updateTransform(translateToApply, false);
   }
 
   private focusOnCurrentSlide() {
@@ -622,41 +602,31 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Apply animation to carousel.
-   */
-  private applyTransitionAnimation() {
-    this.renderer.setStyle(
-      this.allSlides()?.nativeElement,
-      'transition-duration',
-      `${TRANSITION_DURATION}ms`
-    );
-    setTimeout(() => {
-      this.removeTransitionAnimation();
-    });
-  }
-
-  private removeTransitionAnimation() {
-    this.renderer.setStyle(
-      this.allSlides()?.nativeElement,
-      'transition-duration',
-      `0s`
-    );
-  }
-
   // Handle scroll on desktop
-  hasMoved = false;
-  hasExtraTranslation = false;
-  lastMoveTime = 0;
-  lastClickTime = 0;
-  lastPageXPosition = 0;
-  isDragging = false;
-  startX = 0;
-  animationFrameId?: number;
   sensitivity = 1;
   velocitySensitivity = 5;
   velocitySensitivityFreeMode = 1;
   velocityBounds = 0.5;
+
+  private dragState = signal<{
+    isDragging: boolean;
+    hasMoved: boolean;
+    hasExtraTranslation: boolean;
+    startX: number;
+    lastX: number;
+    lastMoveTime: number;
+    lastClickTime: number;
+    lastPageXPosition: number;
+  }>({
+    isDragging: false,
+    hasMoved: false,
+    hasExtraTranslation: false,
+    startX: 0,
+    lastX: 0,
+    lastMoveTime: 0,
+    lastClickTime: 0,
+    lastPageXPosition: 0,
+  });
 
   @HostListener('transitionend', ['$event'])
   onHostTransitionEnd(event: TransitionEvent) {
@@ -672,18 +642,17 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const xPosition =
       event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
 
-    this.isDragging = true;
-    this.hasMoved = false;
-    this.hasExtraTranslation = false;
-    this.startX = xPosition;
-    this.lastPageXPosition = this.startX;
-
     this.store.patch({ lastTranslate: this.store.currentTranslate() });
 
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
-    this.lastClickTime = new Date().getTime();
+    this.dragState.update((state) => ({
+      ...state,
+      isDragging: true,
+      hasMoved: false,
+      hasExtraTranslation: false,
+      startX: xPosition,
+      lastPageXPosition: xPosition,
+      lastClickTime: new Date().getTime(),
+    }));
   }
 
   @HostListener('wheel', ['$event'])
@@ -711,22 +680,24 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('mousemove', ['$event'])
   @HostListener('touchmove', ['$event'])
   onMouseMove(event: MouseEvent | TouchEvent) {
-    if (!this.isDragging || !this.allSlides()) return;
+    if (!this.dragState().isDragging || !this.allSlides()) return;
 
     this.initTouched();
 
     const xPosition =
       event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
+    const now = Date.now();
+    const state = this.dragState();
 
-    this.hasMoved = true;
+    this.dragState.update((s) => ({
+      ...s,
+      hasMoved: true,
+      lastMoveTime: now,
+      lastPageXPosition:
+        now - s.lastMoveTime > 50 ? xPosition : s.lastPageXPosition,
+    }));
 
-    if (new Date().getTime() - this.lastMoveTime > 50) {
-      this.lastPageXPosition = xPosition;
-    }
-    this.lastMoveTime = new Date().getTime();
-
-    const deltaX = (xPosition - this.startX) * this.sensitivity;
-
+    const deltaX = (xPosition - state.startX) * this.sensitivity;
     this.followUserMove(deltaX, false, xPosition);
   }
 
@@ -737,26 +708,28 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.isDragging) {
+    if (!this.dragState().isDragging) {
       return;
     }
 
-    this.isDragging = false;
+    this.dragState.update((state) => ({ ...state, isDragging: false }));
 
-    const isSwipe = new Date().getTime() - this.lastMoveTime < 200;
+    const isSwipe = new Date().getTime() - this.dragState().lastMoveTime < 200;
 
     if (
-      (this.freeMode() && this.hasExtraTranslation) ||
-      (!this.freeMode() && this.hasMoved)
+      (this.freeMode() && this.dragState().hasExtraTranslation) ||
+      (!this.freeMode() && this.dragState().hasMoved)
     ) {
       this.swipeToNearest();
     } else if (this.freeMode() && isSwipe) {
       // We apply inertia only if move was fast enough.
-      this.applyInertia();
+      this.physicsService.applyInertia(undefined, (translate) => {
+        this.updateTransform(translate);
+      });
     }
 
     this.updateSlides();
-    this.hasMoved = false;
+    this.dragState.update((state) => ({ ...state, hasMoved: false }));
   }
 
   // Accessibility
@@ -780,6 +753,36 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.focusOnCurrentSlide();
       event.preventDefault();
     }
+  }
+
+  @HostListener('mouseenter')
+  onMouseEnter() {
+    const autoplay = this.autoplay();
+    if (autoplay && autoplay.pauseOnHover && this.autoplayTimer) {
+      clearInterval(this.autoplayTimer);
+      this.autoplayTimer = undefined;
+    }
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave() {
+    const autoplay = this.autoplay();
+    if (autoplay && autoplay.resumeOnMouseLeave && !this.autoplayTimer) {
+      this.startAutoplay();
+    }
+  }
+
+  private startAutoplay() {
+    const autoplay = this.autoplay();
+    if (!autoplay) {
+      return;
+    }
+    if (this.autoplayTimer) {
+      clearInterval(this.autoplayTimer);
+    }
+    this.autoplayTimer = setInterval(() => {
+      this.slideToNext();
+    }, autoplay.delay);
   }
 
   private isReachEnd(): boolean {
@@ -810,13 +813,19 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
           Math.min(newTranslate, this.store.state().minTranslate)
         );
       } else {
-        this.hasExtraTranslation = true;
+        this.dragState.update((state) => ({
+          ...state,
+          hasExtraTranslation: true,
+        }));
         newTranslate =
           this.store.lastTranslate() +
           (deltaX / this.sensitivity) * this.velocityBounds;
       }
     } else {
-      this.hasExtraTranslation = false;
+      this.dragState.update((state) => ({
+        ...state,
+        hasExtraTranslation: false,
+      }));
     }
 
     this.updatePositionOnMouseMove(newTranslate, xPosition);
@@ -839,11 +848,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private handleClickOnSlide(event: MouseEvent | TouchEvent): boolean {
     const isClick =
-      !this.hasMoved && new Date().getTime() - this.lastClickTime < 250;
+      !this.dragState().hasMoved &&
+      new Date().getTime() - this.dragState().lastClickTime < 250;
     if (isClick && this.slideOnClick()) {
       this.clickOnSlide(event);
-      this.isDragging = false;
-      this.hasMoved = false;
+      this.dragState.update((state) => ({
+        ...state,
+        hasMoved: false,
+        isDragging: false,
+      }));
       return true;
     }
     return false;
@@ -861,7 +874,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.store.patch({
       velocity: xPosition
-        ? (xPosition - this.lastPageXPosition) *
+        ? (xPosition - this.dragState().lastPageXPosition) *
           (this.freeMode()
             ? this.velocitySensitivityFreeMode
             : this.velocitySensitivity)
@@ -869,40 +882,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.updateTransform();
-  }
-
-  private applyInertia() {
-    if (!this.allSlides()) {
-      return;
-    }
-
-    let friction = 0.93;
-
-    const step = () => {
-      if (Math.abs(this.store.state().velocity) < 0.5) {
-        return;
-      }
-
-      this.store.patch({
-        currentTranslate:
-          this.store.currentTranslate() + this.store.state().velocity,
-      });
-      this.store.patch({ velocity: this.store.state().velocity * friction });
-
-      if (this.isReachEnd() || this.isReachStart()) {
-        this.store.patch({ velocity: this.store.state().velocity * 0.8 });
-      }
-
-      const translateToApply = Math.max(
-        this.store.state().maxTranslate,
-        Math.min(this.store.currentTranslate(), this.store.state().minTranslate)
-      );
-
-      this.updateTransform(translateToApply);
-      this.animationFrameId = requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
   }
 
   private handleReachEvents() {
@@ -923,44 +902,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Set CSS property to apply space between slides.
-   */
-  private applySpaceBetween() {
-    if (this.allSlides()) {
-      this.renderer.setStyle(
-        this.allSlides()?.nativeElement,
-        'gap',
-        `${this.realSpaceBetween}px`
-      );
-    }
-  }
-
   private getGridColumnsValue(slidesPerView: number, spaceBetween: number) {
     return `calc((100% - ${
       spaceBetween * (slidesPerView - 1)
     }px) / ${slidesPerView})`;
-    return `round(nearest,calc((100% - ${
-      spaceBetween * (slidesPerView - 1)
-    }px) / ${slidesPerView}),1px)`;
-  }
-
-  /**
-   * Set CSS property to apply slides per view.
-   */
-  private applySlidesPerView() {
-    // Define grid columns.
-    if (
-      this.allSlides() &&
-      this.realSlidesPerView !== 'auto' &&
-      !this.breakpoints()
-    ) {
-      this.renderer.setStyle(
-        this.allSlides()?.nativeElement,
-        'grid-auto-columns',
-        this.getGridColumnsValue(this.realSlidesPerView, this.realSpaceBetween)
-      );
-    }
   }
 
   /**
@@ -978,61 +923,16 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * We detect if we have projected slides.
    * If we have projected slides, we will use them instead of the slides input.
-   * @TODO why selector > div ???
    */
   private initProjectedSlides() {
     const isProjected =
       this.slides().length === 0 &&
-      this.projectedSlides !== undefined &&
-      (this.projectedSlides as any).length > 0;
+      this.projectedSlides() &&
+      this.projectedSlides().length > 0;
 
     this.updateCarouselState({
       isProjected,
     });
-
-    if (isProjected) {
-      const slidesProjected =
-        this.allSlides()?.nativeElement.querySelectorAll('* > div');
-      if (slidesProjected.length) {
-        slidesProjected.forEach((slide: HTMLElement) => {
-          this.renderer.addClass(slide, 'slide');
-        });
-      }
-    }
-  }
-
-  private getVirtualPositionFromExactPosition(position: number) {
-    const roundPosition = Math.round(position);
-    const virtualPosition = this.store
-      .slidesIndexOrder()
-      .indexOf(roundPosition);
-    // We keep exact decimal part of position and add it to real position.
-    const decimalPart = position - roundPosition;
-    position = virtualPosition + decimalPart;
-    return position;
-  }
-
-  /**
-   * Calculate new index after prev or next action.
-   * @param isSlidingNext
-   * @returns
-   */
-  private calculateNewPositionAfterNavigation(isSlidingNext = true) {
-    const newIndex = isSlidingNext
-      ? this.store.currentPosition() + this.store.state().stepSlides
-      : this.store.currentPosition() - this.store.state().stepSlides;
-
-    if (this.store.state().loop) {
-      return positiveModulo(newIndex, this.store.totalSlides());
-    }
-
-    return Math.max(
-      0,
-      Math.min(
-        newIndex,
-        isSlidingNext ? this.lastSlideAnchor() : this.lastSlideAnchor() - 1
-      )
-    );
   }
 
   /**
@@ -1064,16 +964,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return index;
     }
 
-    // if (index < this.store.firstSlideAnchor()) {
-    //   if (
-    //     index > 0 &&
-    //     this.store.state().notCenterBounds &&
-    //     this.currentPosition() < this.store.firstSlideAnchor()
-    //   ) {
-    //     return this.store.firstSlideAnchor();
-    //   }
-    //   return 0;
-    // }
     return Math.max(
       this.store.firstSlideAnchor(),
       Math.min(index, this.store.lastSlideAnchor())
@@ -1086,24 +976,42 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param index
    */
   private setAccessibility(slide: HTMLElement, index: number) {
+    this.renderer.setAttribute(slide, 'role', 'group');
+    this.renderer.setAttribute(slide, 'aria-roledescription', 'slide');
     this.renderer.setAttribute(
       slide,
       'aria-label',
-      `${index + 1}/${this.store.totalSlides()}`
+      `${index + 1} of ${this.store.totalSlides()}`
     );
-    this.renderer.setAttribute(slide, 'role', 'group');
-    if (index === this.store.currentPosition()) {
-      this.renderer.setAttribute(slide, 'tabindex', '0');
-    } else {
-      this.renderer.setAttribute(slide, 'tabindex', '-1');
-    }
+    this.renderer.setAttribute(
+      slide,
+      'tabindex',
+      index === this.store.currentPosition() ? '0' : '-1'
+    );
   }
 
+  /**
+   * Handled with native loading html.
+   * @todo dynamic while sliding ?
+   * @param slide
+   * @param index
+   */
   private setLazyLoading(slide: HTMLElement, index: number) {
     if (this.lazyLoading()) {
       const images = slide.querySelectorAll('img');
+      const slidesPerView =
+        this.slidesPerView() === 'auto'
+          ? images.length
+          : Math.ceil(this.slidesPerView() as number);
+
       Array.from(images).forEach((image) => {
-        this.renderer.setProperty(image, 'loading', 'lazy');
+        if (index < slidesPerView) {
+          this.renderer.setProperty(image, 'loading', 'eager');
+        } else if (index === slidesPerView) {
+          this.renderer.setProperty(image, 'loading', 'eager');
+        } else {
+          this.renderer.setProperty(image, 'loading', 'lazy');
+        }
       });
     }
   }
@@ -1206,6 +1114,23 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private setupResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') return;
+
+    this.observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        requestAnimationFrame(() => {
+          const newWidth = entry.contentRect.width;
+          if (Math.abs(newWidth - this.store.fullWidth()) > 1) {
+            this.refresh();
+          }
+        });
+      }
+    });
+
+    this.observer.observe(this.allSlides()!.nativeElement);
+  }
+
   public onImagesReady() {
     console.log('IMAGES LOADED !!!!');
     this.imagesLoaded.emit();
@@ -1214,5 +1139,72 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public onImagesChanged() {
     console.log('IMAGES CHANGED !!!!');
+  }
+
+  private enableTransition() {
+    this._transitionDuration.set(TRANSITION_DURATION);
+    setTimeout(() => this.disableTransition(), TRANSITION_DURATION);
+  }
+
+  public disableTransition() {
+    this._transitionDuration.set(0);
+  }
+
+  /**
+   * Move slides.
+   * From arrows or by mouse / touch.
+   * @param posX
+   * @returns
+   */
+  public updateTransform(
+    translateToApply: number = this.store.currentTranslate(),
+    updatePosition = true,
+    detectChanges = false
+  ) {
+    this.store.patch({ currentTranslate: translateToApply });
+
+    if (detectChanges) {
+      this.detectChanges.detectChanges();
+    }
+
+    this.handleReachEvents();
+
+    if (!this.store.state().freeMode || !updatePosition) {
+      this.updateSlides();
+      return;
+    }
+
+    const newPosition =
+      this.transformService.getNewPositionFromTranslate().position;
+    if (newPosition !== undefined) {
+      const position = positiveModulo(newPosition, this.store.totalSlides());
+      this.store.setCurrentPosition(this.clampToVisibleSlide(position));
+      this.store.patch({ currentRealPosition: position });
+      this.updateSlides();
+    }
+  }
+
+  /**
+   * Trigger slide to specific index.
+   * If index is not provided, it will slide to the current position.
+   * @param index
+   */
+  public slideTo(index = this.store.currentRealPosition(), animate = true) {
+    this.store.patch({ currentRealPosition: index });
+
+    index = this.clampToVisibleSlide(index);
+
+    if (index !== undefined && index !== this.store.currentPosition()) {
+      this.store.setCurrentPosition(index);
+    }
+
+    if (animate) {
+      this.enableTransition();
+    }
+
+    const translateToApply =
+      this.transformService.getTranslateFromPosition(index);
+    console.log('TRANSALTE TO APPLY,', translateToApply);
+    this.updateTransform(translateToApply, false);
   }
 }

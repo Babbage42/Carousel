@@ -1,6 +1,11 @@
 <div [innerHTML]="generatedStyles"></div>
 
-<div #carousel class="carousel">
+<div
+  #carousel
+  class="carousel"
+  [class.layout-ready]="layoutReady()"
+  [class.carousel--center]="applyCenterAtInit()"
+>
   <span>total slides:{{ totalSlides() }}</span>
   <span>current anchor:{{ currentPosition() }}</span>
   <span>real position:{{ currentRealPosition() }}</span>
@@ -29,8 +34,13 @@
     <div
       #allSlides
       class="slides"
+      aria-live="polite"
       [class.slides-auto]="slidesPerView() === 'auto'"
       [class.fix-subpixel]="fixSubPixelIssue()"
+      [style.transform]="slidesTransform()"
+      [style.transition-duration.ms]="transitionDuration()"
+      [style.gap]="slidesGap()"
+      [style.grid-auto-columns]="slidesGridColumns()"
       appImagesReady
       (imagesReady)="onImagesReady()"
       (imagesChanged)="onImagesChanged()"
@@ -40,8 +50,8 @@
         <img src="{{ slide }}" alt="" />
         <span>{{ $index + 1 }}</span>
       </div>
-      } } @else if (projectedSlides.length) { @for (slide of projectedSlides;
-      track $index) {
+      } } @else if (projectedSlides().length) { @for (slide of
+      projectedSlides(); track $index) {
       <ng-container>
         <div #slide class="slide position-{{ $index + 1 }}">
           <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
