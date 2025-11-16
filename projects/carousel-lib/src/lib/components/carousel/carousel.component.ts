@@ -76,6 +76,7 @@ import { CarouselSwipeService } from '../../services/carousel-swipe.service';
 import { CarouselNavigationService } from '../../services/carousel-navigation.service';
 import { CarouselPhysicsService } from '../../services/carousel-physics.service';
 import { CarouselDomService } from '../../services/carousel-dom.service';
+import { CarouselBreakpointService } from '../../services/carousel-breakpoints.service';
 
 @Component({
   selector: 'app-carousel',
@@ -101,6 +102,7 @@ import { CarouselDomService } from '../../services/carousel-dom.service';
     CarouselLoopService,
     CarouselNavigationService,
     CarouselDomService,
+    CarouselBreakpointService,
     { provide: CarouselRegistryService, useClass: CarouselRegistryService },
     {
       provide: CAROUSEL_VIEW,
@@ -116,6 +118,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly navigationService = inject(CarouselNavigationService);
   private readonly physicsService = inject(CarouselPhysicsService);
   private readonly domService = inject(CarouselDomService);
+  private readonly breakpointService = inject(CarouselBreakpointService);
   private readonly document = inject(DOCUMENT);
   private readonly window = this.document?.defaultView;
 
@@ -210,11 +213,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return opts;
     },
   });
-
-  private mediaQueryListeners: {
-    mql: MediaQueryList;
-    listener: (e: MediaQueryListEvent) => void;
-  }[] = [];
 
   loop = input<boolean>(false);
 
@@ -429,9 +427,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.mediaQueryListeners.forEach(({ mql, listener }) => {
-      mql.removeEventListener('change', listener);
-    });
+    this.breakpointService.clear();
 
     if (this.autoplayTimer) {
       clearInterval(this.autoplayTimer);
@@ -856,24 +852,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private getGridColumnsValue(slidesPerView: number, spaceBetween: number) {
-    return `calc((100% - ${
-      spaceBetween * (slidesPerView - 1)
-    }px) / ${slidesPerView})`;
-  }
-
-  /**
-   * Initialize slides width and margins.
-   */
-  private calculateGridWidth() {
-    if (Array.isArray(this.slidesElements()) && this.slidesElements().length) {
-      //@todo fix for ssr ?
-      if (!this.isServerMode) {
-        // this.transformService.calculateTranslations();
-      }
-    }
-  }
-
   /**
    * We detect if we have projected slides.
    * If we have projected slides, we will use them instead of the slides input.
@@ -924,66 +902,26 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  /**
-   * Add media queries to stylesheet to work with SSR.
-   * @returns
-   */
   private applyBreakpoints() {
     const breakpoints = this.breakpoints();
-    if (breakpoints === undefined || this.store.slidesPerView() === 'auto') {
-      return;
-    }
 
-    let css = '<style>';
-    const uniqueId = this.uniqueCarouselId;
-    Object.keys(breakpoints).forEach((query) => {
-      const config = breakpoints[query];
-      const calculatedGridColumns = this.getGridColumnsValue(
-        config.slidesPerView ?? (this.slidesPerView() as number),
-        config.spaceBetween ?? this.store.spaceBetween()
-      );
-      css += `
-          @media ${query} {
-            .slides.${uniqueId} {
-              grid-auto-columns: ${calculatedGridColumns} !important;
-              gap: ${
-                config.spaceBetween ?? this.store.spaceBetween()
-              }px !important;
-            }
-          }
-        `;
-    });
-    css += '</style>';
-    this.generatedStyles = this.sanitizer.bypassSecurityTrustHtml(css);
-    this.detectChanges.detectChanges();
+    const css = this.breakpointService.generateCss(
+      breakpoints,
+      this.uniqueCarouselId
+    );
+
+    if (css) {
+      this.generatedStyles = this.sanitizer.bypassSecurityTrustHtml(css);
+      this.detectChanges.detectChanges();
+    }
 
     if (this.isServerMode) {
       return;
     }
-    // Remove previous listeners if any
-    this.mediaQueryListeners.forEach(({ mql, listener }) => {
-      if (mql.removeEventListener) {
-        mql.removeEventListener('change', listener);
-      }
-    });
-    this.mediaQueryListeners = [];
 
-    Object.keys(breakpoints).forEach((query) => {
-      const mql = window.matchMedia(query);
-      const config = breakpoints[query];
-
-      const listener = (e: MediaQueryListEvent) => {
-        this.ngZone.run(() => {
-          if (e.matches) {
-            console.log('** Breakpoint matched:', query, config);
-            this.updateCarouselState(config);
-          }
-        });
-      };
-
-      mql.addEventListener('change', listener);
-      this.mediaQueryListeners.push({ mql, listener });
-    });
+    this.breakpointService.setupMediaQueryListeners(breakpoints, (config) =>
+      this.updateCarouselState(config)
+    );
   }
 
   private setupResizeObserver() {

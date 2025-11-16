@@ -5,6 +5,7 @@ export class CarouselStoreFake {
   private _loop = false;
   private _totalSlides = 0;
   private _lastSlideAnchor = 0;
+  private _spaceBetween = 0;
 
   private _allSlides?: ElementRef<HTMLElement>;
   private _slidesElements?: ElementRef<HTMLElement>[];
@@ -30,6 +31,7 @@ export class CarouselStoreFake {
   allSlides = () => this._allSlides;
   slidesElements = () => this._slidesElements;
   slidesPerView = () => this._slidesPerView;
+  spaceBetween = () => this._spaceBetween;
 
   // --- setters pour les tests ---
 
@@ -67,6 +69,10 @@ export class CarouselStoreFake {
 
   setSlidesPerView(spv: number | 'auto') {
     this._slidesPerView = spv;
+  }
+
+  setSpaceBetween(space: number) {
+    this._spaceBetween = space;
   }
 
   setCenter(center: boolean) {
