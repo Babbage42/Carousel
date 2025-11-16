@@ -75,6 +75,7 @@ import { CAROUSEL_VIEW } from './view-adapter';
 import { CarouselSwipeService } from '../../services/carousel-swipe.service';
 import { CarouselNavigationService } from '../../services/carousel-navigation.service';
 import { CarouselPhysicsService } from '../../services/carousel-physics.service';
+import { CarouselDomService } from '../../services/carousel-dom.service';
 
 @Component({
   selector: 'app-carousel',
@@ -99,6 +100,7 @@ import { CarouselPhysicsService } from '../../services/carousel-physics.service'
     CarouselPhysicsService,
     CarouselLoopService,
     CarouselNavigationService,
+    CarouselDomService,
     { provide: CarouselRegistryService, useClass: CarouselRegistryService },
     {
       provide: CAROUSEL_VIEW,
@@ -113,6 +115,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly swipeService = inject(CarouselSwipeService);
   private readonly navigationService = inject(CarouselNavigationService);
   private readonly physicsService = inject(CarouselPhysicsService);
+  private readonly domService = inject(CarouselDomService);
   private readonly document = inject(DOCUMENT);
   private readonly window = this.document?.defaultView;
 
@@ -292,6 +295,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     slideOnClick: this.slideOnClick(),
     stepSlides: this.stepSlides(),
     autoplay: this.autoplay(),
+    lazyLoading: this.lazyLoading(),
   }));
 
   // @todo
@@ -476,7 +480,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private refresh() {
     this.store.patch({ slidesElements: [...this.slidesElements()] });
-    this.updateSlides();
+    this.domService.updateSlides();
     this.refreshTranslate();
   }
 
@@ -484,28 +488,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.firstTouch) {
       this.touched.emit();
       this.firstTouch = true;
-    }
-  }
-
-  /**
-   * Add class to identify slides roles and states.
-   * @returns
-   */
-  public updateSlides() {
-    if (!this.allSlides()) {
-      return;
-    }
-
-    if (this.slidesElements()) {
-      this.slidesElements()?.forEach(
-        (slide: ElementRef<HTMLElement>, index: number) => {
-          this.resetPositions(slide.nativeElement, index);
-          this.setAccessibility(slide.nativeElement, index);
-          this.setLazyLoading(slide.nativeElement, index);
-        }
-      );
-
-      this.setSlidesPositions();
     }
   }
 
@@ -712,7 +694,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
-    this.updateSlides();
+    this.domService.updateSlides();
     this.dragState.update((state) => ({ ...state, hasMoved: false }));
   }
 
@@ -943,90 +925,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Add accessibility attributes to slides.
-   * @param slide
-   * @param index
-   */
-  private setAccessibility(slide: HTMLElement, index: number) {
-    this.renderer.setAttribute(slide, 'role', 'group');
-    this.renderer.setAttribute(slide, 'aria-roledescription', 'slide');
-    this.renderer.setAttribute(
-      slide,
-      'aria-label',
-      `${index + 1} of ${this.store.totalSlides()}`
-    );
-    this.renderer.setAttribute(
-      slide,
-      'tabindex',
-      index === this.store.currentPosition() ? '0' : '-1'
-    );
-  }
-
-  /**
-   * Handled with native loading html.
-   * @todo dynamic while sliding ?
-   * @param slide
-   * @param index
-   */
-  private setLazyLoading(slide: HTMLElement, index: number) {
-    if (this.lazyLoading()) {
-      const images = slide.querySelectorAll('img');
-      const slidesPerView =
-        this.slidesPerView() === 'auto'
-          ? images.length
-          : Math.ceil(this.slidesPerView() as number);
-
-      Array.from(images).forEach((image) => {
-        if (index < slidesPerView) {
-          this.renderer.setProperty(image, 'loading', 'eager');
-        } else if (index === slidesPerView) {
-          this.renderer.setProperty(image, 'loading', 'eager');
-        } else {
-          this.renderer.setProperty(image, 'loading', 'lazy');
-        }
-      });
-    }
-  }
-
-  private resetPositions(slide: HTMLElement, index: number) {
-    this.renderer.removeClass(slide, 'prev');
-    this.renderer.removeClass(slide, 'curr');
-    this.renderer.removeClass(slide, 'next');
-    this.renderer.addClass(slide, 'position-' + (index + 1));
-  }
-
-  private setSlidesPositions() {
-    const curr = this.allSlides()?.nativeElement.querySelector(
-      '.slide.position-' + (this.store.currentPosition() + 1)
-    );
-    const prev = this.allSlides()?.nativeElement.querySelector(
-      '.slide.position-' +
-        (this.store.currentPosition() <= 0
-          ? this.store.state().loop
-            ? this.store.totalSlides()
-            : null
-          : this.store.currentPosition())
-    );
-    const next = this.allSlides()?.nativeElement.querySelector(
-      '.slide.position-' +
-        (this.store.currentPosition() + 2 <= this.store.totalSlides()
-          ? this.store.currentPosition() + 2
-          : this.store.state().loop
-          ? 1
-          : null)
-    );
-    if (curr) {
-      this.renderer.addClass(curr, 'curr');
-    }
-    if (next) {
-      this.renderer.addClass(next, 'next');
-    }
-    if (prev) {
-      this.renderer.addClass(prev, 'prev');
-    }
-  }
-
-  /**
    * Add media queries to stylesheet to work with SSR.
    * @returns
    */
@@ -1146,7 +1044,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.handleReachEvents();
 
     if (!this.store.state().freeMode || !updatePosition) {
-      this.updateSlides();
+      this.domService.updateSlides();
       return;
     }
 
@@ -1156,7 +1054,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       const position = positiveModulo(newPosition, this.store.totalSlides());
       this.store.setCurrentPosition(this.clampToVisibleSlide(position));
       this.store.patch({ currentRealPosition: position });
-      this.updateSlides();
+      this.domService.updateSlides();
     }
   }
 

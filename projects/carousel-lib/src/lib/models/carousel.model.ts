@@ -63,7 +63,7 @@ export interface Carousel {
   marginEnd: number;
   marginStart: number;
 
-  lazyLoading?: boolean;
+  lazyLoading: boolean;
 
   breakpoints?: CarouselResponsiveConfig;
 

@@ -49,6 +49,7 @@ export class CarouselStore {
     notCenterBounds: false,
     slideOnClick: true,
     resistance: true,
+    lazyLoading: true,
     currentPosition: -1,
     totalSlidesVisible: 0,
     totalSlides: 0,
