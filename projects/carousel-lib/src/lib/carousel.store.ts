@@ -208,18 +208,21 @@ export class CarouselStore {
   readonly snapsDom = computed(() =>
     this.slidesIndexOrder().map((logicalIndex, domIndex) => {
       const translate = this.slideTranslates()[logicalIndex];
-      const left = Math.abs(translate);
+      const left = -translate;
       const width = this.slidesWidths()[logicalIndex] ?? 0;
       return { domIndex, logicalIndex, left, width, translate };
     })
   );
-  readonly visibleDom = computed(() =>
-    extractVisibleSlides(
+  readonly visibleDom = computed(() => {
+    return extractVisibleSlides(
       this.snapsDom(),
       this.currentTranslate(),
-      this.fullWidth()
-    )
-  );
+      this.fullWidth(),
+      undefined,
+      this.center()
+    );
+  });
+
   readonly slideTranslates = computed(() => {
     this.slidesWidths();
     this.slidesIndexOrder();
@@ -250,9 +253,9 @@ export class CarouselStore {
   }
 
   constructor() {
-    effect(() => {
-      const state = this.state();
-      console.log('--------------- State udated:', { ...state });
-    });
+    // effect(() => {
+    //   const state = this.state();
+    //   console.log('--------------- State udated:', { ...state });
+    // });
   }
 }

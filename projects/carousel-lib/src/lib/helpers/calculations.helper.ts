@@ -4,10 +4,12 @@ export function extractVisibleSlides(
   snapDom: SnapDom[],
   currentTranslate: number,
   fullWidth: number,
-  offset?: number
+  offset?: number,
+  center = false
 ): SnapDom[] {
   return snapDom.filter((s) => {
-    const leftInView = s.left + currentTranslate - (offset ?? 0);
+    const leftInView =
+      s.left + currentTranslate + (center ? fullWidth / 2 : 0) - (offset ?? 0);
     const rightInView = leftInView + s.width;
     return rightInView > 0 && leftInView < fullWidth;
   });

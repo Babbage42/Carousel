@@ -31,7 +31,7 @@ export class CarouselLoopService {
     const slides = extractSlidesFromContainer(this.store.allSlides());
 
     const container = this.store.allSlides()?.nativeElement;
-    const indexToInsert = before ? this.store.slides().length - 1 : 0;
+    const indexToInsert = before ? this.store.totalSlides() - 1 : 0;
     const index = this.store.slidesIndexOrder()[indexToInsert];
     const width = this.store.slidesWidths()[index];
     const elementToInsert = slides[indexToInsert] as HTMLElement | undefined;
@@ -141,9 +141,9 @@ export class CarouselLoopService {
     const state = this.store.state();
     const futureTranslate = this.store.slideTranslates()[indexSlided];
     const currentTranslate = this.store.currentTranslate();
-    const translateDiff = Math.abs(currentTranslate - futureTranslate);
+    const translateDiff = currentTranslate - futureTranslate;
 
-    if (translateDiff < 1) {
+    if (Math.abs(translateDiff) < 1) {
       return;
     }
 
@@ -151,7 +151,8 @@ export class CarouselLoopService {
       this.store.snapsDom(),
       currentTranslate,
       state.fullWidth,
-      translateDiff
+      translateDiff,
+      this.store.center()
     );
 
     if (!modifiedVisibleDoms.length) {
