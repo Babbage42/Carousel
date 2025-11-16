@@ -86,22 +86,18 @@ export class CarouselTransformService {
       .findIndex((element) => element === index);
 
     // For centering without centering at bounds.
-    if (this.store.state().center && this.store.state().notCenterBounds) {
+    if (this.store.center() && this.store.notCenterBounds()) {
       const isBefore =
-        realIndexFromPosition <
-        (this.store.state().slidesPerView as number) / 2;
+        realIndexFromPosition < (this.store.slidesPerView() as number) / 2;
       const isAfter =
         realIndexFromPosition >
-        this.store.state().totalSlides -
-          (this.store.state().slidesPerView as number) / 2;
+        this.store.totalSlides() - (this.store.slidesPerView() as number) / 2;
       if (isBefore || isAfter) {
-        return isBefore
-          ? this.store.state().minTranslate
-          : this.store.state().maxTranslate;
+        return isBefore ? this.store.minTranslate() : this.store.maxTranslate();
       }
 
       const centerValue =
-        this.store.state().fullWidth / 2 -
+        this.store.fullWidth() / 2 -
         this.store.slidesWidths()[realIndexFromPosition] / 2;
 
       const posX = this.calculateTranslateValueFromIndex(index) + centerValue;
@@ -111,7 +107,7 @@ export class CarouselTransformService {
     // Calculate position from slides widths and space between.
     const posX = this.calculateTranslateValueFromIndex(index);
 
-    if (this.store.state().loop) {
+    if (this.store.loop()) {
       // Authorize any translation without restriction.
       return posX;
     }
@@ -121,13 +117,21 @@ export class CarouselTransformService {
   }
 
   private calculateTranslateValueFromIndex(index: number) {
-    return calculateTranslateValueFromIndex(index, this.store.state());
+    return calculateTranslateValueFromIndex(index, {
+      minTranslate: this.store.minTranslate(),
+      marginStart: this.store.marginStart(),
+      marginEnd: this.store.marginEnd(),
+      spaceBetween: this.store.spaceBetween(),
+      slidesWidths: this.store.slidesWidths(),
+      totalSlides: this.store.totalSlides(),
+      slidesIndexOrder: this.store.slidesIndexOrder(),
+    });
   }
 
   private clampTranslateValue(posX: number) {
     return Math.max(
-      this.store.state().maxTranslate,
-      Math.min(posX, this.store.state().minTranslate)
+      this.store.maxTranslate(),
+      Math.min(posX, this.store.minTranslate())
     );
   }
 
@@ -138,7 +142,7 @@ export class CarouselTransformService {
       this.store.currentPosition() !== realInitialSlide
         ? this.store.currentPosition()
         : realInitialSlide;
-    if (this.store.state().center) {
+    if (this.store.center()) {
       //@todo issue with initialslide
       const translateToApply = currentIndex
         ? this.getTranslateFromPosition(currentIndex)

@@ -23,7 +23,16 @@ export function calculateTranslateValueFromIndex(
     slidesWidths,
     spaceBetween,
     totalSlides,
-  }: Carousel
+  }: Pick<
+    Carousel,
+    | 'minTranslate'
+    | 'marginStart'
+    | 'marginEnd'
+    | 'slidesIndexOrder'
+    | 'slidesWidths'
+    | 'spaceBetween'
+    | 'totalSlides'
+  >
 ) {
   let posX = index === 0 ? minTranslate : minTranslate - marginStart;
   const realIndexFromPosition = slidesIndexOrder.findIndex(

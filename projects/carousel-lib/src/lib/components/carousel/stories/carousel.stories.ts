@@ -208,8 +208,7 @@ const TemplateWithSlides = (args: any) => ({
   moduleMetadata: modules,
 });
 
-// Stories : utilisez `render:` au lieu de `.bind({})`
-export const Basic: Story = {
+export const ProjectedSlides: Story = {
   render: TemplateProjected,
   args: {
     slides: [],

@@ -104,69 +104,73 @@ export class CarouselStore {
   readonly slidesIndexOrder = computed(() => this._state().slidesIndexOrder);
   readonly slidesElements = computed(() => this._state().slidesElements);
 
+  readonly loop = computed(() => this._state().loop);
+  readonly slidesPerView = computed(() => this._state().slidesPerView);
+  readonly spaceBetween = computed(() => this._state().spaceBetween);
+  readonly center = computed(() => this._state().center);
+  readonly notCenterBounds = computed(() => this._state().notCenterBounds);
+  readonly marginStart = computed(() => this._state().marginStart);
+  readonly marginEnd = computed(() => this._state().marginEnd);
+
   // Computed, need to update manually in state.
   readonly fullWidth = computed(
-    () => this._state().allSlides?.nativeElement?.clientWidth ?? 0
+    () => this.allSlides()?.nativeElement?.clientWidth ?? 0
   );
-  readonly scrollWidth = computed(
-    () => this._state().allSlides?.nativeElement?.scrollWidth
-  );
+  readonly scrollWidth = computed(() => {
+    // We must watch any slides update.
+    this.slidesWidths();
+    return this.allSlides()?.nativeElement?.scrollWidth;
+  });
   readonly maxTranslate = computed(() => {
     const maxTranslate =
-      -(this.scrollWidth() - this.fullWidth()) - this._state().marginEnd;
-    if (this._state().center && !this._state().notCenterBounds) {
+      -(this.scrollWidth() - this.fullWidth()) - this.marginEnd();
+    if (this.center() && !this.notCenterBounds()) {
       return maxTranslate - this.fullWidth() / 2 - this.slidesWidths()[0] / 2;
     }
     return maxTranslate;
   });
   readonly minTranslate = computed(() => {
-    if (this._state().center && !this._state().notCenterBounds) {
-      return this.fullWidth() / 2 - this.slidesWidths()[0] / 2;
+    const fullWidth = this.fullWidth();
+    if (this.center() && !this.notCenterBounds()) {
+      return fullWidth / 2 - this.slidesWidths()[0] / 2;
     }
-    return this._state().marginStart;
+    return this.marginStart();
   });
   readonly totalSlides = computed(() => {
-    if (this._state().slides && this._state().slides.length) {
-      return this._state().slides.length;
+    if (this.slides() && this.slides().length) {
+      return this.slides().length;
     }
-    return this._state().slidesElements.length;
+    return this.slidesElements().length;
   });
   readonly totalSlidesVisible = computed(() => {
     return this.lastSlideAnchor() - this.firstSlideAnchor() + 1;
   });
   readonly lastSlideAnchor = computed(() => {
     if (this.totalSlides()) {
-      if (this._state().loop) {
+      if (this.loop()) {
         return this.totalSlides() - 1;
       }
 
-      if (this._state().center) {
-        if (
-          this._state().notCenterBounds &&
-          this._state().slidesPerView !== 'auto'
-        ) {
+      if (this.center()) {
+        if (this.notCenterBounds() && this.slidesPerView() !== 'auto') {
           return (
             this.totalSlides() -
-            Math.floor((this._state().slidesPerView as number) / 2)
+            Math.floor((this.slidesPerView() as number) / 2)
           );
-        } else if (!this._state().notCenterBounds) {
+        } else if (!this.notCenterBounds()) {
           return this.totalSlides() - 1;
         }
       } else {
-        if (this._state().slidesPerView !== 'auto') {
+        if (this.slidesPerView() !== 'auto') {
           return (
-            this.totalSlides() -
-            Math.floor(this._state().slidesPerView as number)
+            this.totalSlides() - Math.floor(this.slidesPerView() as number)
           );
         }
 
         let index = this.totalSlides() - 1;
         let total = 0;
         let count = 0;
-        while (
-          index >= 0 &&
-          total + this._state().marginEnd < this.fullWidth()
-        ) {
+        while (index >= 0 && total + this.marginEnd() < this.fullWidth()) {
           total += this.slidesWidths()[index];
           count++;
           index--;
@@ -178,10 +182,10 @@ export class CarouselStore {
   });
   readonly firstSlideAnchor = computed(() => {
     this.totalSlides();
-    if (this._state().center) {
-      if (this._state().notCenterBounds) {
-        if (this._state().slidesPerView !== 'auto') {
-          return Math.floor((this._state().slidesPerView as number) / 2);
+    if (this.center()) {
+      if (this.notCenterBounds()) {
+        if (this.slidesPerView() !== 'auto') {
+          return Math.floor((this.slidesPerView() as number) / 2);
         }
         // TODO;
         return 0;
@@ -217,17 +221,27 @@ export class CarouselStore {
     )
   );
   readonly slideTranslates = computed(() => {
+    this.slidesWidths();
+    this.slidesIndexOrder();
+    this.totalSlides();
+
     const snaps: number[] = [];
 
-    for (let i = 0; i < this.totalSlides(); i++) {
-      const pos = calculateTranslateValueFromIndex(i, {
-        ...this._state(),
-        slidesIndexOrder: this.slidesIndexOrder(),
-        slidesWidths: this.slidesWidths(),
-        totalSlides: this.totalSlides(),
-      });
-      snaps.push(pos);
-    }
+    untracked(() => {
+      for (let i = 0; i < this.totalSlides(); i++) {
+        const pos = calculateTranslateValueFromIndex(i, {
+          minTranslate: this.minTranslate(),
+          marginStart: this.marginStart(),
+          marginEnd: this.marginEnd(),
+          spaceBetween: this.spaceBetween(),
+          slidesIndexOrder: this.slidesIndexOrder(),
+          slidesWidths: this.slidesWidths(),
+          totalSlides: this.totalSlides(),
+        });
+        snaps.push(pos);
+      }
+    });
+
     return snaps;
   });
 
@@ -238,7 +252,7 @@ export class CarouselStore {
   constructor() {
     effect(() => {
       const state = this.state();
-      console.log('------- State udated:', { ...state });
+      console.log('--------------- State udated:', { ...state });
     });
   }
 }

@@ -314,6 +314,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   allSlides = viewChild<ElementRef>('allSlides');
   slidesElements = viewChildren<ElementRef<HTMLElement>>('slide');
   autoplayTimer?: ReturnType<typeof setInterval>;
+  resizeTimeout?: ReturnType<typeof setTimeout>;
 
   // Can be used by user to move pagination element.
   @ViewChild('paginationTemplate', { static: true })
@@ -490,10 +491,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private refresh() {
-    // We must wait browser calculation for grid display.
-    this.calculateGridWidth();
-
+    this.store.patch({ slidesElements: [...this.slidesElements()] });
     this.updateSlides();
+    this.refreshTranslate();
   }
 
   private initTouched() {
@@ -787,7 +787,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private isReachEnd(): boolean {
     return this.currentPosition() >= this.lastSlideAnchor();
-    return this.store.currentTranslate() <= this.store.state().maxTranslate;
   }
   private isReachStart(): boolean {
     return this.store.currentTranslate() >= this.store.state().minTranslate;
@@ -885,7 +884,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private handleReachEvents() {
-    console.log('handle reach ::::', this.store.currentTranslate());
     const hasReachedEnd = this.isReachEnd();
     const hasReachedStart = this.isReachStart();
 
@@ -1115,16 +1113,18 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setupResizeObserver() {
-    if (typeof ResizeObserver === 'undefined') return;
-
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
     this.observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        requestAnimationFrame(() => {
-          const newWidth = entry.contentRect.width;
-          if (Math.abs(newWidth - this.store.fullWidth()) > 1) {
+        const newWidth = entry.contentRect.width;
+        if (Math.abs(newWidth - this.store.fullWidth()) > 1) {
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
             this.refresh();
-          }
-        });
+          }, 120);
+        }
       }
     });
 
@@ -1204,7 +1204,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const translateToApply =
       this.transformService.getTranslateFromPosition(index);
-    console.log('TRANSALTE TO APPLY,', translateToApply);
     this.updateTransform(translateToApply, false);
+  }
+
+  private refreshTranslate() {
+    const currentPosition = this.currentPosition();
+    const translate =
+      this.transformService.getTranslateFromPosition(currentPosition);
+    this.store.patch({ currentTranslate: translate });
   }
 }
