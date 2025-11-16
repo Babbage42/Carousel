@@ -15,7 +15,7 @@ export class CarouselNavigationService {
       ? this.store.currentPosition() + this.store.state().stepSlides
       : this.store.currentPosition() - this.store.state().stepSlides;
 
-    if (this.store.state().loop) {
+    if (this.store.loop()) {
       return positiveModulo(newIndex, this.store.totalSlides());
     }
 
