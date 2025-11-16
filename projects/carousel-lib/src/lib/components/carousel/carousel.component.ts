@@ -133,12 +133,12 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostBinding('style.--spv')
   get cssSpv() {
-    const spv = this.store.state().slidesPerView;
+    const spv = this.store.slidesPerView();
     return typeof spv === 'number' ? spv : 1;
   }
   @HostBinding('style.--gap')
   get cssGap() {
-    return `${this.store.state().spaceBetween}px`;
+    return `${this.store.spaceBetween()}px`;
   }
   @HostBinding('style.--index')
   get cssIndex() {
@@ -224,21 +224,21 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public fixSubPixelIssue = computed(
     () =>
-      this.spaceBetween() === 0 &&
-      typeof this.slidesPerView() === 'number' &&
-      Number.isInteger(this.slidesPerView()) &&
-      this.store.fullWidth() % (this.slidesPerView() as number) !== 0
+      this.store.spaceBetween() === 0 &&
+      typeof this.store.slidesPerView() === 'number' &&
+      Number.isInteger(this.store.slidesPerView()) &&
+      this.store.fullWidth() % (this.store.slidesPerView() as number) !== 0
   );
 
   /**
    * We force center by CSS at init (when all values are not ready).
    */
   public readonly applyCenterAtInit = computed(() => {
-    const spv = this.store.state().slidesPerView;
+    const spv = this.store.slidesPerView();
     if (this.isServerMode || !this.layoutReady()) {
       if (
-        this.store.state().center &&
-        !this.store.state().loop &&
+        this.store.center() &&
+        !this.store.loop() &&
         typeof spv === 'number'
       ) {
         return true;
@@ -256,14 +256,14 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly _transitionDuration = signal(0);
   readonly transitionDuration = this._transitionDuration.asReadonly();
 
-  public readonly slidesGap = computed(() => `${this.spaceBetween()}px`);
+  public readonly slidesGap = computed(() => `${this.store.spaceBetween()}px`);
 
   public readonly slidesGridColumns = computed(() => {
-    const slidesPerView = this.slidesPerView();
+    const slidesPerView = this.store.slidesPerView();
     if (slidesPerView === 'auto') {
       return 'max-content';
     }
-    const spaceBetween = this.spaceBetween();
+    const spaceBetween = this.store.spaceBetween();
     return `calc((100% - ${
       spaceBetween * (slidesPerView - 1)
     }px) / ${slidesPerView})`;
@@ -336,7 +336,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     if (this.debug()) {
-      //this.enableDebugMode();
+      this.enableDebugMode();
     }
     /**
      * Set initial current position to apply.
@@ -369,7 +369,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       const slides = this.slidesElements();
 
       if (this.areImagesReady()) {
-        console.log('slides ready', slides);
         untracked(() => {
           this.store.patch({
             slidesElements: [...this.slidesElements()],
@@ -392,7 +391,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     effect(() => {
       const snap = this.inputsSnapshot();
-      console.log('SNAP', snap);
       this.store.patch({
         ...snap,
       });
@@ -400,17 +398,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     effect(() => {
       const autoplay = this.autoplay();
-      if (
-        autoplay !== false &&
-        this.areImagesReady() &&
-        this.store.snapsDom()?.length
-      ) {
-        if (this.autoplayTimer) {
-          clearInterval(this.autoplayTimer);
-        }
-        this.autoplayTimer = setInterval(() => {
-          this.slideToNext();
-        }, (autoplay as AutoplayOptions).delay);
+      if (autoplay !== false && this.layoutReady()) {
+        this.startAutoplay();
       }
     });
   }
@@ -458,25 +447,20 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     effect(() => {
-      console.table({
-        position: this.currentPosition(),
-        realPosition: this.currentRealPosition(),
-        translate: this.store.currentTranslate(),
-        hasReachedStart: this.hasReachedStart(),
-        hasReachedEnd: this.hasReachedEnd(),
-      });
+      console.log('--------------- State udated:', this.store.state());
+
+      //   {
+      //   position: this.currentPosition(),
+      //   realPosition: this.currentRealPosition(),
+      //   translate: this.store.currentTranslate(),
+      //   hasReachedStart: this.hasReachedStart(),
+      //   hasReachedEnd: this.hasReachedEnd(),
+      // });
     });
   }
 
   private updateCarouselState(partial: Partial<Carousel>) {
     this.store.patch(partial);
-  }
-
-  private get realSlidesPerView() {
-    return this.store.state().slidesPerView;
-  }
-  private get realSpaceBetween() {
-    return this.store.state().spaceBetween;
   }
 
   public get isServerMode() {
@@ -830,16 +814,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePositionOnMouseMove(newTranslate, xPosition);
   }
 
-  // private jumpToPosition(position: number) {
-  //   console.log('** Jumping to position:', position);
-  //   // We can jump to any position.
-  //   this.currentTranslate = this.getTranslateFromPosition(position);
-
-  //   this.updateTransform(false);
-
-  //   this.forceReflow();
-  // }
-
   /**
    * Direct click on slide.
    * @param event
@@ -1058,7 +1032,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private applyBreakpoints() {
     const breakpoints = this.breakpoints();
-    if (breakpoints === undefined || this.realSlidesPerView === 'auto') {
+    if (breakpoints === undefined || this.store.slidesPerView() === 'auto') {
       return;
     }
 
@@ -1068,13 +1042,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       const config = breakpoints[query];
       const calculatedGridColumns = this.getGridColumnsValue(
         config.slidesPerView ?? (this.slidesPerView() as number),
-        config.spaceBetween ?? this.spaceBetween()
+        config.spaceBetween ?? this.store.spaceBetween()
       );
       css += `
           @media ${query} {
             .slides.${uniqueId} {
               grid-auto-columns: ${calculatedGridColumns} !important;
-              gap: ${config.spaceBetween ?? this.spaceBetween()}px !important;
+              gap: ${
+                config.spaceBetween ?? this.store.spaceBetween()
+              }px !important;
             }
           }
         `;
