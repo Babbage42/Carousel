@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#0f172a"/>
+  <text x="50%" y="70" fill="#e2e8f0" font-family="Inter,Arial" font-size="36" text-anchor="middle">Carousel Angular Library</text>
+  <rect x="80" y="140" width="800" height="240" rx="16" fill="#111827" stroke="#38bdf8" stroke-width="3"/>
+  <rect x="110" y="170" width="220" height="180" rx="12" fill="#1e293b" stroke="#94a3b8"/>
+  <rect x="370" y="170" width="220" height="180" rx="12" fill="#1e293b" stroke="#94a3b8"/>
+  <rect x="630" y="170" width="220" height="180" rx="12" fill="#1e293b" stroke="#94a3b8"/>
+  <text x="220" y="265" fill="#38bdf8" font-family="Inter,Arial" font-size="28" text-anchor="middle">Slide 1</text>
+  <text x="480" y="265" fill="#38bdf8" font-family="Inter,Arial" font-size="28" text-anchor="middle">Slide 2</text>
+  <text x="740" y="265" fill="#38bdf8" font-family="Inter,Arial" font-size="28" text-anchor="middle">Slide 3</text>
+  <polygon points="120,260 90,240 90,280" fill="#38bdf8"/>
+  <polygon points="840,260 870,240 870,280" fill="#38bdf8"/>
+  <rect x="380" y="400" width="200" height="12" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+  <rect x="390" y="402" width="60" height="8" rx="4" fill="#38bdf8"/>
+  <text x="50%" y="460" fill="#e2e8f0" font-family="Inter,Arial" font-size="18" text-anchor="middle">Storybook-ready • Slides, pagination, autoplay & loop controls</text>
+</svg>

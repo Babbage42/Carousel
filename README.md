@@ -1,27 +1,80 @@
 # Carousel
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.6.
+An Angular carousel component packaged as `carousel-lib`, ready for Storybook docs, demos, and publishing.
 
-## Development server
+![Carousel preview](docs/carousel-demo.svg)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Demo / Storybook
+- Hosted Storybook (GitHub Pages): https://babbage42.github.io/Carousel/?path=/docs/components-carousel--docs
+- Local Storybook: `npm install` then `npm run storybook`, open http://localhost:6006.
+- Demo app: `npm start` to run the sample application at http://localhost:4200.
 
-## Code scaffolding
+## Installation
+- From npm (once published): `npm i carousel-lib`
+- From a local build:
+  ```bash
+  ng build carousel-lib
+  npm i ./dist/carousel-lib
+  ```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Import and quick usage
+1. Import the carousel component in your Angular module or standalone component:
 
-## Build
+```ts
+import { CarouselComponent } from 'carousel-lib';
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+2. Provide data and drop the component into your template:
 
-## Running unit tests
+```ts
+slides = [
+  { image: 'assets/covers/cover-1.jpg', title: 'First slide', caption: 'Custom caption' },
+  { image: 'assets/covers/cover-2.jpg', title: 'Second slide', caption: 'Secondary callout' },
+  { image: 'assets/covers/cover-3.jpg', title: 'Third slide', caption: 'Another highlight' }
+];
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+onSlide(event: any) {
+  console.log('Slide index', event?.activeIndex);
+}
+```
 
-## Running end-to-end tests
+```html
+<app-carousel
+  [slides]="slides"
+  [slidesPerView]="3"
+  [spaceBetween]="16"
+  [pagination]="{ type: 'dynamic_dot', clickable: true }"
+  [autoplay]="{ delay: 3500, pauseOnHover: true }"
+  [loop]="true"
+  [breakpoints]="{ 1024: { slidesPerView: 4 }, 768: { slidesPerView: 2 } }"
+  (slideUpdate)="onSlide($event)"
+  (reachEnd)="onReachEnd()"
+  (imagesLoaded)="onImagesReady()">
+  <ng-container *ngFor="let slide of slides">
+    <ng-template appSlide>
+      <img [src]="slide.image" [alt]="slide.title" />
+      <h3>{{ slide.title }}</h3>
+      <p>{{ slide.caption }}</p>
+    </ng-template>
+  </ng-container>
+</app-carousel>
+```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Key `@Input()` options: `slides`, `slidesPerView`, `spaceBetween`, `stepSlides`, `pagination`, `autoplay`, `loop`, `rewind`, `center`, `freeMode`, `mouseWheel`, `lazyLoading`, `breakpoints`.
 
-## Further help
+Key `@Output()` events: `slideUpdate`, `slideNext`, `slidePrev`, `reachEnd`, `reachStart`, `imagesLoaded`, `touched`.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Key scripts
+- `npm run storybook`: builds and serves Storybook for the library.
+- `ng build carousel-lib`: builds the library package into `dist/carousel-lib`.
+- `ng test carousel-lib`: runs the library unit tests.
+- `npm publish` (from `dist/carousel-lib`): publishes the package after a build.
+
+## Versioning
+The project follows Semantic Versioning. Bump `projects/carousel-lib/package.json` with `npm version patch|minor|major`, rebuild (`ng build carousel-lib`), then publish from `dist/carousel-lib`. Tag and push the release commit to keep Git history aligned with the published package.
+
+## FAQ / known limitations
+- **Angular support**: tested with Angular 20 (`peerDependencies` on ^20.3.x). For earlier versions, rebuild locally and verify compatibility.
+- **SSR / Angular Universal**: the component touches `window`/`document`; add platform guards or disable interactive features on the server.
+- **Accessibility**: provide meaningful `alt` text on images and label your custom navigation controls.
+- **Performance and assets**: enable `lazyLoading` and tune `slidesPerView`/`spaceBetween` for large image sets to reduce layout shifts.
