@@ -1,4 +1,3 @@
-//test
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -95,7 +94,6 @@ import { CarouselBreakpointService } from '../../services/carousel-breakpoints.s
   encapsulation: ViewEncapsulation.None,
   providers: [
     CarouselStore,
-    CarouselTransformService,
     CarouselSwipeService,
     CarouselTransformService,
     CarouselPhysicsService,
