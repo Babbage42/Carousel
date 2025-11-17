@@ -1,4 +1,5 @@
 import { ElementRef } from '@angular/core';
+
 export class CarouselStoreFake {
   private _currentPosition = 0;
   private _stepSlides = 1;
@@ -14,6 +15,18 @@ export class CarouselStoreFake {
   private _slidesPerView: number | 'auto' = 1;
   private _center = false;
 
+  private _fullWidth = 0;
+  private _marginStart = 0;
+  private _initialSlide = 0;
+
+  private _visibleDom: any[] = [];
+  private _slidesIndexOrder: number[] = [];
+  private _slidesWidths: number[] = [];
+  private _slideTranslates: number[] = [];
+  private _snapsDom: any[] = [];
+  private _currentTranslate = 0;
+  private _lastTranslate = 0;
+
   currentPosition = () => this._currentPosition;
 
   state = () =>
@@ -22,6 +35,11 @@ export class CarouselStoreFake {
       loop: this._loop,
       lazyLoading: this._lazyLoading,
       center: this._center,
+      fullWidth: this._fullWidth,
+      marginStart: this._marginStart,
+      spaceBetween: this._spaceBetween,
+      initialSlide: this._initialSlide,
+      allSlides: this._allSlides,
     } as any);
 
   loop = () => this._loop;
@@ -32,8 +50,28 @@ export class CarouselStoreFake {
   slidesElements = () => this._slidesElements;
   slidesPerView = () => this._slidesPerView;
   spaceBetween = () => this._spaceBetween;
+  center = () => this._center;
 
-  // --- setters pour les tests ---
+  visibleDom = () => this._visibleDom;
+  slidesIndexOrder = () => this._slidesIndexOrder;
+  slidesWidths = () => this._slidesWidths;
+  slides = () => this._slidesElements;
+  slideTranslates = () => this._slideTranslates;
+  snapsDom = () => this._snapsDom;
+  currentTranslate = () => this._currentTranslate;
+  lastTranslate = () => this._lastTranslate;
+
+  patch(partial: any) {
+    if (partial.slidesIndexOrder) {
+      this._slidesIndexOrder = partial.slidesIndexOrder;
+    }
+    if (typeof partial.currentTranslate === 'number') {
+      this._currentTranslate = partial.currentTranslate;
+    }
+    if (typeof partial.lastTranslate === 'number') {
+      this._lastTranslate = partial.lastTranslate;
+    }
+  }
 
   setCurrentPosition(pos: number) {
     this._currentPosition = pos;
@@ -77,5 +115,47 @@ export class CarouselStoreFake {
 
   setCenter(center: boolean) {
     this._center = center;
+  }
+
+  // --- nouveaux setters pour ce que le service / tests utilisent ---
+
+  setFullWidth(value: number) {
+    this._fullWidth = value;
+  }
+
+  setMarginStart(value: number) {
+    this._marginStart = value;
+  }
+
+  setInitialSlide(value: number) {
+    this._initialSlide = value;
+  }
+
+  setVisibleDom(snaps: any[]) {
+    this._visibleDom = snaps;
+  }
+
+  setSlidesIndexOrder(order: number[]) {
+    this._slidesIndexOrder = order;
+  }
+
+  setSlidesWidths(widths: number[]) {
+    this._slidesWidths = widths;
+  }
+
+  setSlideTranslates(translates: number[]) {
+    this._slideTranslates = translates;
+  }
+
+  setSnapsDom(snaps: any[]) {
+    this._snapsDom = snaps;
+  }
+
+  setCurrentTranslate(value: number) {
+    this._currentTranslate = value;
+  }
+
+  setLastTranslate(value: number) {
+    this._lastTranslate = value;
   }
 }

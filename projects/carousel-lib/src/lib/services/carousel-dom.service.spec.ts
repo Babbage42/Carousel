@@ -52,7 +52,6 @@ describe('CarouselDomService', () => {
 
   describe('updateSlides', () => {
     it('should do nothing if allSlides() is falsy', () => {
-      // Par défaut, allSlides est undefined dans le fake
       expect(storeFake.allSlides()).toBeUndefined();
 
       expect(() => service.updateSlides()).not.toThrow();
@@ -75,7 +74,7 @@ describe('CarouselDomService', () => {
         new ElementRef(slide3),
       ]);
       storeFake.setTotalSlides(3);
-      storeFake.setCurrentPosition(1); // 2ème slide courante
+      storeFake.setCurrentPosition(1);
       storeFake.setLazyLoading(false);
       storeFake.setSlidesPerView(1);
 
@@ -111,7 +110,7 @@ describe('CarouselDomService', () => {
       ]);
 
       storeFake.setTotalSlides(3);
-      storeFake.setCurrentPosition(1); // slide2 courante
+      storeFake.setCurrentPosition(1);
       storeFake.setLoop(false);
       storeFake.setLazyLoading(false);
       storeFake.setSlidesPerView(1);
@@ -150,7 +149,7 @@ describe('CarouselDomService', () => {
       ]);
 
       storeFake.setTotalSlides(3);
-      storeFake.setCurrentPosition(0); // première slide courante
+      storeFake.setCurrentPosition(0);
       storeFake.setLoop(true);
       storeFake.setLazyLoading(false);
       storeFake.setSlidesPerView(1);
@@ -161,8 +160,6 @@ describe('CarouselDomService', () => {
       expect(slide2.classList.contains('next')).toBe(true);
       expect(slide3.classList.contains('prev')).toBe(true);
     });
-
-    // ========= TESTS LAZY LOADING =========
 
     it('should eager load visible slides in normal mode (center=false, numeric slidesPerView)', () => {
       const container = document.createElement('div');
@@ -178,11 +175,11 @@ describe('CarouselDomService', () => {
       storeFake.setSlidesElements(slides.map((s) => new ElementRef(s)));
       storeFake.setTotalSlides(8);
 
-      storeFake.setCurrentPosition(2); // current = 2
+      storeFake.setCurrentPosition(2);
       storeFake.setLoop(false);
-      storeFake.setCenter(false); // MODE NORMAL
+      storeFake.setCenter(false);
       storeFake.setLazyLoading(true);
-      storeFake.setSlidesPerView(3); // windowSize = 3 → [2, 4]
+      storeFake.setSlidesPerView(3);
 
       service.updateSlides();
 
@@ -210,18 +207,18 @@ describe('CarouselDomService', () => {
       storeFake.setSlidesElements(slides.map((s) => new ElementRef(s)));
       storeFake.setTotalSlides(8);
 
-      storeFake.setCurrentPosition(4); // current = 4
+      storeFake.setCurrentPosition(4);
       storeFake.setLoop(false);
-      storeFake.setCenter(true); // MODE CENTER
+      storeFake.setCenter(true);
       storeFake.setLazyLoading(true);
-      storeFake.setSlidesPerView(3); // windowSize = 3 → radius = 1
+      storeFake.setSlidesPerView(3);
 
       service.updateSlides();
 
       slides.forEach((slide, index) => {
         const img = slide.querySelector('img')!;
         if (index >= 3 && index <= 5) {
-          expect((img as any).loading).toBe('eager'); // 4 ± 1
+          expect((img as any).loading).toBe('eager');
         } else {
           expect((img as any).loading).toBe('lazy');
         }
@@ -242,18 +239,18 @@ describe('CarouselDomService', () => {
       storeFake.setSlidesElements(slides.map((s) => new ElementRef(s)));
       storeFake.setTotalSlides(10);
 
-      storeFake.setCurrentPosition(1); // current = 1
+      storeFake.setCurrentPosition(1);
       storeFake.setLoop(false);
-      storeFake.setCenter(false); // MODE NORMAL
+      storeFake.setCenter(false);
       storeFake.setLazyLoading(true);
-      storeFake.setSlidesPerView('auto'); // windowSize = AUTO_EAGER_SLIDES (6)
+      storeFake.setSlidesPerView('auto');
 
       service.updateSlides();
 
       slides.forEach((slide, index) => {
         const img = slide.querySelector('img')!;
         if (index >= 1 && index <= 6) {
-          expect((img as any).loading).toBe('eager'); // 6 slides à partir de current
+          expect((img as any).loading).toBe('eager');
         } else {
           expect((img as any).loading).toBe('lazy');
         }
@@ -274,11 +271,11 @@ describe('CarouselDomService', () => {
       storeFake.setSlidesElements(slides.map((s) => new ElementRef(s)));
       storeFake.setTotalSlides(8);
 
-      storeFake.setCurrentPosition(7); // current = last slide
+      storeFake.setCurrentPosition(7);
       storeFake.setLoop(true);
-      storeFake.setCenter(true); // center mode
+      storeFake.setCenter(true);
       storeFake.setLazyLoading(true);
-      storeFake.setSlidesPerView(3); // windowSize = 3 → radius = 1
+      storeFake.setSlidesPerView(3);
 
       service.updateSlides();
 

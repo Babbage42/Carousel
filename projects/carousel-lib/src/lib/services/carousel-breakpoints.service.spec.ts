@@ -11,7 +11,6 @@ describe('CarouselBreakpointService', () => {
   beforeEach(() => {
     storeFake = new CarouselStoreFake();
 
-    // matchMedia par défaut pour les tests qui ne checkent pas les listeners
     (window as any).matchMedia = jest
       .fn()
       .mockImplementation((query: string) => {
@@ -56,7 +55,6 @@ describe('CarouselBreakpointService', () => {
     });
 
     it('should generate CSS using breakpoint values and store fallbacks', () => {
-      // valeurs "globales" par défaut du store
       storeFake.setSlidesPerView(2);
       storeFake.setSpaceBetween(10);
 
@@ -67,7 +65,6 @@ describe('CarouselBreakpointService', () => {
         },
         '(min-width: 1024px)': {
           slidesPerView: 4,
-          // pas de spaceBetween => fallback sur store.spaceBetween() = 10
         },
       };
 
@@ -76,14 +73,14 @@ describe('CarouselBreakpointService', () => {
       expect(css.startsWith('<style>')).toBe(true);
       expect(css.endsWith('</style>')).toBe(true);
 
-      // 1er breakpoint : 3 slides, 20px
+      // 1st breakpoint : 3 slides, 20px
       // calc((100% - 40px) / 3)
       expect(css).toContain('@media (min-width: 768px)');
       expect(css).toContain('.slides.carousel-uid');
       expect(css).toContain('grid-auto-columns: calc((100% - 40px) / 3)');
       expect(css).toContain('gap: 20px');
 
-      // 2e breakpoint : 4 slides, fallback espace 10px
+      // 2nd breakpoint : 4 slides, fallback space 10px
       // calc((100% - 30px) / 4)
       expect(css).toContain('@media (min-width: 1024px)');
       expect(css).toContain('grid-auto-columns: calc((100% - 30px) / 4)');
@@ -95,7 +92,6 @@ describe('CarouselBreakpointService', () => {
     it('should register listeners and call onMatch when a breakpoint matches', () => {
       const listeners: ((e: MediaQueryListEvent) => void)[] = [];
 
-      // On remplace matchMedia pour capturer les listeners
       (window as any).matchMedia = jest
         .fn()
         .mockImplementation((query: string) => {
@@ -126,7 +122,6 @@ describe('CarouselBreakpointService', () => {
       expect((window as any).matchMedia).toHaveBeenCalledTimes(2);
       expect(listeners.length).toBe(2);
 
-      // on simule un match du premier media query
       const firstListener = listeners[0];
 
       firstListener({ matches: true } as MediaQueryListEvent);

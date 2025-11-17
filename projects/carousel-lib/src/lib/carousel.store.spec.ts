@@ -25,7 +25,6 @@ describe('CarouselStore', () => {
   }
 
   beforeEach(() => {
-    // éviter le bruit des console.log dans le constructeur
     consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     store = new CarouselStore();
   });
@@ -35,7 +34,7 @@ describe('CarouselStore', () => {
   });
 
   describe('totalSlides', () => {
-    it('utilise slidesElements quand slides() est vide', () => {
+    it('should use slidesElements when slides() is empty', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(120),
@@ -44,25 +43,24 @@ describe('CarouselStore', () => {
 
       store.patch({
         slidesElements,
-        slides: [], // pas de slides “data”
+        slides: [],
       });
 
       expect(store.totalSlides()).toBe(3);
     });
 
-    it('utilise slides() quand il y a des slides déclarés', () => {
+    it('should use slides() when there are slides declared', () => {
       store.patch({
-        // on se moque du type exact Slide ici
         slides: [{}, {}, {}] as any,
-        slidesElements: [createSlideElement(100)], // ne doit pas être utilisé
+        slidesElements: [createSlideElement(100)],
       });
 
       expect(store.totalSlides()).toBe(3);
     });
   });
 
-  describe('minTranslate et maxTranslate', () => {
-    it('calcule les bornes sans centre (mode normal)', () => {
+  describe('minTranslate and maxTranslate', () => {
+    it('calculate bounds without center', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -79,7 +77,7 @@ describe('CarouselStore', () => {
         notCenterBounds: false,
       });
 
-      // largeur visible = 300, contenu = 900
+      // width visible = 300, content = 900
       setAllSlidesSize(300, 900);
 
       // maxTranslate = - (scrollWidth - fullWidth) - marginEnd
@@ -87,11 +85,11 @@ describe('CarouselStore', () => {
       //              = - 600 - 10 = -610
       expect(store.maxTranslate()).toBe(-610);
 
-      // minTranslate = marginStart (sans centre)
+      // minTranslate = marginStart (without center )
       expect(store.minTranslate()).toBe(5);
     });
 
-    it('calcule les bornes en mode center, notCenterBounds = false', () => {
+    it('calculated bounds in center mode and notCenterBounds = false', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -106,7 +104,7 @@ describe('CarouselStore', () => {
         notCenterBounds: false,
       });
 
-      // largeur visible = 300, contenu = 900
+      // width visible = 300, centent = 900
       setAllSlidesSize(300, 900);
 
       const baseMax = -(900 - 300 - 0); // -(600) = -600
@@ -119,7 +117,7 @@ describe('CarouselStore', () => {
   });
 
   describe('lastSlideAnchor', () => {
-    it('retourne totalSlides - 1 quand loop = true', () => {
+    it('returns totalSlides - 1 when loop = true', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -138,7 +136,7 @@ describe('CarouselStore', () => {
       expect(store.lastSlideAnchor()).toBe(4);
     });
 
-    it('centre + notCenterBounds + slidesPerView numérique', () => {
+    it('center + notCenterBounds + slidesPerView numeric', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -160,7 +158,7 @@ describe('CarouselStore', () => {
       expect(store.lastSlideAnchor()).toBe(3);
     });
 
-    it('centre + notCenterBounds = false → last = totalSlides - 1', () => {
+    it('center + notCenterBounds = false → last = totalSlides - 1', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -178,7 +176,7 @@ describe('CarouselStore', () => {
       expect(store.lastSlideAnchor()).toBe(2);
     });
 
-    it('non centré + slidesPerView numérique', () => {
+    it('not center + slidesPerView numeric', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -199,7 +197,7 @@ describe('CarouselStore', () => {
       expect(store.lastSlideAnchor()).toBe(2);
     });
 
-    it('non centré + slidesPerView = auto, calcul à partir des largeurs et de fullWidth', () => {
+    it('non center + slidesPerView = auto, calcutate from width and fullWidth', () => {
       const slidesElements = [
         createSlideElement(100),
         createSlideElement(100),
@@ -216,25 +214,25 @@ describe('CarouselStore', () => {
         marginEnd: 0,
       });
 
-      // fullWidth = 250 → on tient 3 slides depuis la fin
-      setAllSlidesSize(250, 500); // scrollWidth n'est pas utilisé dans ce calcul
+      // fullWidth = 250 → 3 slides from the end
+      setAllSlidesSize(250, 500); // scrollWidth is not used in the calculation
 
-      // boucle dans lastSlideAnchor:
+      // loop in lastSlideAnchor:
       // index = 4, total=0   → total=100, count=1
       // index = 3, total=100 → total=200, count=2
-      // index = 2, total=200 → total=300, count=3 (stop car 300 >= 250)
+      // index = 2, total=200 → total=300, count=3 (stop because 300 >= 250)
       // last = totalSlides - count + 1 = 5 - 3 + 1 = 3
       expect(store.lastSlideAnchor()).toBe(3);
 
-      // firstSlideAnchor vaut 0 dans ce mode
+      // firstSlideAnchor is 0 in this mode
       expect(store.firstSlideAnchor()).toBe(0);
-      // donc totalSlidesVisible = 3 - 0 + 1 = 4
+      // so totalSlidesVisible = 3 - 0 + 1 = 4
       expect(store.totalSlidesVisible()).toBe(4);
     });
   });
 
   describe('firstSlideAnchor', () => {
-    it('centre + notCenterBounds + slidesPerView numérique → floor(slidesPerView / 2)', () => {
+    it('center + notCenterBounds + slidesPerView numeric → floor(slidesPerView / 2)', () => {
       store.patch({
         center: true,
         notCenterBounds: true,
@@ -245,7 +243,7 @@ describe('CarouselStore', () => {
       expect(store.firstSlideAnchor()).toBe(2);
     });
 
-    it('hors cas spécifiques → 0', () => {
+    it('no specific cas => 0', () => {
       store.patch({
         center: false,
         notCenterBounds: false,
@@ -257,14 +255,14 @@ describe('CarouselStore', () => {
   });
 
   describe('setCurrentPosition', () => {
-    it('met à jour currentPosition seulement si la valeur change', () => {
-      // valeur initiale = -1
+    it('update currentPosition only if value changes', () => {
+      // initial value = -1
       expect(store.currentPosition()).toBe(-1);
 
       store.setCurrentPosition(2);
       expect(store.currentPosition()).toBe(2);
 
-      // re-set sur la même valeur : ne devrait pas patcher
+      // re-set same value: should not patch
       const patchSpy = jest.spyOn<any, any>(store as any, 'patch');
       store.setCurrentPosition(2);
       expect(patchSpy).not.toHaveBeenCalled();
@@ -274,7 +272,7 @@ describe('CarouselStore', () => {
   });
 
   describe('slidesWidths', () => {
-    it('lit la largeur des slides via getBoundingClientRect', () => {
+    it('reads the width of slides via getBoundingClientRect', () => {
       const slidesElements = [createSlideElement(120), createSlideElement(80)];
 
       store.patch({ slidesElements });
@@ -294,7 +292,7 @@ describe('CarouselStore', () => {
     });
   });
 
-  describe('fullWidth et scrollWidth', () => {
+  describe('fullWidth and scrollWidth', () => {
     function setAllSlidesSize(fullWidth: number, scrollWidth: number) {
       const nativeElement = {
         clientWidth: fullWidth,
@@ -304,27 +302,26 @@ describe('CarouselStore', () => {
       store.patch({ allSlides: new ElementRef(nativeElement) });
     }
 
-    it('fullWidth lit clientWidth du conteneur', () => {
+    it('fullWidth reads clientWidth from container', () => {
       setAllSlidesSize(300, 900);
 
       expect(store.fullWidth()).toBe(300);
     });
 
-    it('scrollWidth lit scrollWidth du conteneur', () => {
+    it('scrollWidth reads scrollWidth from container', () => {
       setAllSlidesSize(400, 1200);
 
-      // scrollWidth() force aussi la lecture des slidesWidths, mais on s’en fiche ici
+      // scrollWidth() forces also the read of slidesWidths
       expect(store.scrollWidth()).toBe(1200);
     });
   });
 
   describe('snapsDom', () => {
-    it('génère un SnapDom par slide avec domIndex et logicalIndex cohérents', () => {
+    it('generate a snapDom by slide with coherent domIndex and logicalIndex ', () => {
       const slidesElements = [createSlideElement(100), createSlideElement(150)];
 
       store.patch({
         slidesElements,
-        // ordre logique différent de l’ordre DOM pour vérifier le mapping
         slidesIndexOrder: [1, 0],
         marginStart: 0,
         marginEnd: 0,
@@ -336,7 +333,6 @@ describe('CarouselStore', () => {
 
       expect(snaps.length).toBe(2);
 
-      // domIndex = index dans la boucle, logicalIndex = ordre logique fourni
       expect(snaps[0].domIndex).toBe(0);
       expect(snaps[0].logicalIndex).toBe(1);
 
@@ -346,7 +342,7 @@ describe('CarouselStore', () => {
   });
 
   describe('visibleDom', () => {
-    it('délègue à extractVisibleSlides avec les bons arguments', () => {
+    it('delegated to extraVisibleSlides with right arguments', () => {
       const slidesElements = [createSlideElement(100), createSlideElement(100)];
 
       store.patch({
@@ -359,11 +355,9 @@ describe('CarouselStore', () => {
         currentTranslate: -50,
       });
 
-      // on force une largeur du conteneur
       const nativeElement = { clientWidth: 250 } as any;
       store.patch({ allSlides: new ElementRef(nativeElement) });
 
-      // On calcule ce que le store envoie réellement à extractVisibleSlides
       const expectedSnaps = store.snapsDom();
       const expectedTranslate = store.currentTranslate();
       const expectedFullWidth = store.fullWidth();
@@ -382,7 +376,6 @@ describe('CarouselStore', () => {
 
       const result = store.visibleDom();
 
-      // Le store doit renvoyer exactement ce que la fonction mock renvoie
       expect(result).toEqual([
         {
           domIndex: 0,
@@ -393,7 +386,6 @@ describe('CarouselStore', () => {
         },
       ]);
 
-      // Et il doit l’appeler avec les bons paramètres
       expect(spy).toHaveBeenCalledWith(
         expectedSnaps,
         expectedTranslate,

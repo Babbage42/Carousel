@@ -6,37 +6,24 @@ import { CAROUSEL_VIEW } from '../components/carousel/view-adapter';
 import * as CalculationsHelper from '../helpers/calculations.helper';
 import { SnapDom } from '../models/carousel.model';
 import { CAROUSEL_SLIDE_CLASS } from '../models/carousel.model';
+import { CarouselStoreFake } from '../helpers/tests/test.utils.helper';
 
 describe('CarouselLoopService', () => {
   let service: CarouselLoopService;
-  let store: jest.Mocked<CarouselStore>;
-  let state: any;
+  let store: CarouselStoreFake;
   let viewMock: { disableTransition: jest.Mock; updateTransform: jest.Mock };
-  beforeEach(() => {
-    // Mock du store
-    const storeMock: Partial<jest.Mocked<CarouselStore>> = {
-      state: jest.fn(() => state),
-      visibleDom: jest.fn(),
-      slidesIndexOrder: jest.fn(),
-      slidesWidths: jest.fn(),
-      slides: jest.fn(),
-      totalSlides: jest.fn(),
-      slideTranslates: jest.fn(),
-      snapsDom: jest.fn(),
-      currentTranslate: jest.fn(),
-      lastTranslate: jest.fn(),
-      patch: jest.fn(),
-      allSlides: jest.fn(),
-      center: jest.fn(),
-    };
+  let state: any;
 
-    // Mock de la vue
+  beforeEach(() => {
+    store = new CarouselStoreFake();
+
+    // vue mockée
     viewMock = {
       disableTransition: jest.fn(),
       updateTransform: jest.fn(),
     };
 
-    // Mock Renderer2 minimal
+    // Renderer2 minimal
     const rendererMock: Partial<Renderer2> = {
       removeChild: jest.fn(),
       insertBefore: jest.fn(),
@@ -49,18 +36,17 @@ describe('CarouselLoopService', () => {
     TestBed.configureTestingModule({
       providers: [
         CarouselLoopService,
-        { provide: CarouselStore, useValue: storeMock },
+        { provide: CarouselStore, useValue: store },
         { provide: Renderer2, useValue: rendererMock },
         { provide: CAROUSEL_VIEW, useValue: viewMock },
       ],
     });
 
     service = TestBed.inject(CarouselLoopService);
-    store = TestBed.inject(CarouselStore) as jest.Mocked<CarouselStore>;
 
-    // ⚙️ état de base cohérent
     const defaultSlidesOrder = [0, 1, 2, 3, 4];
 
+    // état global simulé (on garde le pattern avec un objet `state`)
     state = {
       loop: true,
       center: false,
@@ -72,27 +58,74 @@ describe('CarouselLoopService', () => {
       allSlides: { nativeElement: {} },
     };
 
-    store.state.mockImplementation(() => state);
-    store.slidesIndexOrder.mockReturnValue(defaultSlidesOrder);
-    store.totalSlides.mockReturnValue(defaultSlidesOrder.length);
-    store.slidesWidths.mockReturnValue(
-      new Array(defaultSlidesOrder.length).fill(100)
-    );
-    store.slideTranslates.mockReturnValue(
-      new Array(defaultSlidesOrder.length).fill(0)
-    );
-    store.currentTranslate.mockReturnValue(0);
+    // on remplace la méthode state() du fake par notre objet
+    (store as any).state = () => state;
+
+    // valeurs par défaut pour le fake
+    if ((store as any).setSlidesIndexOrder) {
+      (store as any).setSlidesIndexOrder(defaultSlidesOrder);
+    }
+    if ((store as any).setTotalSlides) {
+      (store as any).setTotalSlides(defaultSlidesOrder.length);
+    }
+    if ((store as any).setSlidesWidths) {
+      (store as any).setSlidesWidths(
+        new Array(defaultSlidesOrder.length).fill(100)
+      );
+    }
+    if ((store as any).setSlideTranslates) {
+      (store as any).setSlideTranslates(
+        new Array(defaultSlidesOrder.length).fill(0)
+      );
+    }
+    if ((store as any).setCurrentTranslate) {
+      (store as any).setCurrentTranslate(0);
+    }
+    if ((store as any).setAllSlides) {
+      (store as any).setAllSlides({ nativeElement: {} } as any);
+    }
+
+    // pour les méthodes que le service appelle mais que le fake n'implémente
+    // pas encore, on ajoute des impls simples si besoin
+    if (!(store as any).patch) {
+      (store as any).patch = (_: any) => {};
+    }
+    if (!(store as any).snapsDom) {
+      (store as any).snapsDom = () => [];
+    }
+    if (!(store as any).visibleDom) {
+      (store as any).visibleDom = () => [];
+    }
+    if (!(store as any).slidesIndexOrder) {
+      (store as any).slidesIndexOrder = () => defaultSlidesOrder;
+    }
+    if (!(store as any).slidesWidths) {
+      (store as any).slidesWidths = () =>
+        new Array(defaultSlidesOrder.length).fill(100);
+    }
+    if (!(store as any).slideTranslates) {
+      (store as any).slideTranslates = () => [0];
+    }
+    if (!(store as any).currentTranslate) {
+      (store as any).currentTranslate = () => 0;
+    }
+    if (!(store as any).lastTranslate) {
+      (store as any).lastTranslate = () => 0;
+    }
+    if (!(store as any).center) {
+      (store as any).center = () => state.center;
+    }
   });
 
   // ---------------------------------------------------------------------------
-  // insertLoopSlides : sélection de la bonne stratégie
+  // insertLoopSlides : strategy selection
   // ---------------------------------------------------------------------------
 
-  it('ne fait rien si loop est désactivé', () => {
+  it('should do nothing when loop is disabled', () => {
     state.loop = false;
-    store.visibleDom.mockReturnValue([
+    (store as any).visibleDom = () => [
       { domIndex: 0, logicalIndex: 0 } as SnapDom,
-    ]);
+    ];
 
     const spyTranslation = jest.spyOn<any, any>(
       service as any,
@@ -114,11 +147,11 @@ describe('CarouselLoopService', () => {
     expect(spySlideTo).not.toHaveBeenCalled();
   });
 
-  it('pour un move manuel (aucun param) appelle insertLoopSlidesByTranslation', () => {
+  it('should call insertLoopSlidesByTranslation for manual move (no params)', () => {
     state.loop = true;
-    store.visibleDom.mockReturnValue([
+    (store as any).visibleDom = () => [
       { domIndex: 0, logicalIndex: 0 } as SnapDom,
-    ]);
+    ];
 
     const spyTranslation = jest.spyOn<any, any>(
       service as any,
@@ -130,11 +163,11 @@ describe('CarouselLoopService', () => {
     expect(spyTranslation).toHaveBeenCalled();
   });
 
-  it('pour un clic direct sur une slide appelle insertLoopSlidesBySlidingTo', () => {
+  it('should call insertLoopSlidesBySlidingTo for direct click on a slide', () => {
     state.loop = true;
-    store.visibleDom.mockReturnValue([
+    (store as any).visibleDom = () => [
       { domIndex: 0, logicalIndex: 0 } as SnapDom,
-    ]);
+    ];
 
     const spySlideTo = jest.spyOn<any, any>(
       service as any,
@@ -146,16 +179,17 @@ describe('CarouselLoopService', () => {
     expect(spySlideTo).toHaveBeenCalledWith(3);
   });
 
-  it('pour une navigation prev/next appelle insertLoopSlidesByNavigation', () => {
+  it('should call insertLoopSlidesByNavigation for prev/next navigation', () => {
     state.loop = true;
-    store.visibleDom.mockReturnValue([
+    (store as any).visibleDom = () => [
       { domIndex: 0, logicalIndex: 0 } as SnapDom,
-    ]);
+    ];
 
-    const spyNav = jest.spyOn<any, any>(
-      service as any,
-      'insertLoopSlidesByNavigation'
-    );
+    const spyNav = jest
+      .spyOn<any, any>(service as any, 'insertLoopSlidesByNavigation')
+      // ✅ on NE VEUT PAS exécuter la vraie méthode ici
+      // pour éviter d’aller dans insertElement → DOM → querySelectorAll
+      .mockImplementation(() => {});
 
     service.insertLoopSlides(undefined, true);
 
@@ -163,11 +197,10 @@ describe('CarouselLoopService', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // insertLoopSlidesByNavigation : insère le bon nombre de slides avant/après
+  // insertLoopSlidesByNavigation : insert correct number of slides before/after
   // ---------------------------------------------------------------------------
 
-  it('insertLoopSlidesByNavigation insère le bon nombre de slides avant', () => {
-    // visibleDom : 0 à 1 → il n’y a rien avant
+  it('insertLoopSlidesByNavigation should insert the correct number of slides before', () => {
     const leftmost: SnapDom = {
       domIndex: 0,
       logicalIndex: 0,
@@ -182,25 +215,22 @@ describe('CarouselLoopService', () => {
       width: 100,
       left: 0,
     };
-    store.visibleDom.mockReturnValue([leftmost, rightmost]);
 
-    store.totalSlides.mockReturnValue(5);
+    (store as any).visibleDom = () => [leftmost, rightmost];
+    (store as any).totalSlides = () => 5;
     state.stepSlides = 3;
 
     const insertSpy = jest
       .spyOn<any, any>(service as any, 'insertElement')
       .mockReturnValue({ width: 80, offset: 0 });
 
-    // before = true → on regarde combien de slides on doit insérer avant
     (service as any).insertLoopSlidesByNavigation(true);
 
-    // slidesAvailableBefore = 0, stepSlides = 3 → on doit insérer 3 fois
     expect(insertSpy).toHaveBeenCalledTimes(3);
     insertSpy.mockRestore();
   });
 
-  it('insertLoopSlidesByNavigation insère le bon nombre de slides après', () => {
-    // visibleDom : 2 à 3 sur totalSlides = 5
+  it('insertLoopSlidesByNavigation should insert the correct number of slides after', () => {
     const leftmost: SnapDom = {
       domIndex: 2,
       logicalIndex: 2,
@@ -215,9 +245,9 @@ describe('CarouselLoopService', () => {
       width: 100,
       left: 0,
     };
-    store.visibleDom.mockReturnValue([leftmost, rightmost]);
 
-    store.totalSlides.mockReturnValue(5);
+    (store as any).visibleDom = () => [leftmost, rightmost];
+    (store as any).totalSlides = () => 5;
     state.stepSlides = 3;
 
     const insertSpy = jest
@@ -226,19 +256,17 @@ describe('CarouselLoopService', () => {
 
     (service as any).insertLoopSlidesByNavigation(false);
 
-    // slidesAvailableAfter = 5 - 3 - 1 = 1
-    // stepSlides = 3 → on doit insérer 2 fois
     expect(insertSpy).toHaveBeenCalledTimes(2);
     insertSpy.mockRestore();
   });
 
   // ---------------------------------------------------------------------------
-  // insertLoopSlidesBySlidingTo : clic direct slide
+  // insertLoopSlidesBySlidingTo : direct slide click
   // ---------------------------------------------------------------------------
 
-  it('insertLoopSlidesBySlidingTo ne fait rien si translateDiff < 1', () => {
-    store.slideTranslates.mockReturnValue([0, 0]);
-    store.currentTranslate.mockReturnValue(0);
+  it('insertLoopSlidesBySlidingTo should do nothing if translateDiff < 1', () => {
+    (store as any).slideTranslates = () => [0, 0];
+    (store as any).currentTranslate = () => 0;
     state.fullWidth = 300;
 
     const extractSpy = jest.spyOn(CalculationsHelper, 'extractVisibleSlides');
@@ -249,15 +277,16 @@ describe('CarouselLoopService', () => {
     extractSpy.mockRestore();
   });
 
-  it('insertLoopSlidesBySlidingTo insère des slides quand l’espace visible est plus petit que fullWidth', () => {
-    store.slideTranslates.mockReturnValue([100]);
-    store.currentTranslate.mockReturnValue(0);
-    store.totalSlides.mockReturnValue(5);
+  it('insertLoopSlidesBySlidingTo should insert slides when visible space is smaller than fullWidth', () => {
+    (store as any).slideTranslates = () => [100];
+    (store as any).currentTranslate = () => 0;
+    (store as any).totalSlides = () => 5;
     state.fullWidth = 300;
     state.spaceBetween = 10;
 
-    const snaps: SnapDom[] = []; // pas utilisé grâce au mock
-    store.snapsDom.mockReturnValue(snaps);
+    const snaps: SnapDom[] = [];
+    (store as any).snapsDom = () => snaps;
+    (store as any).center = () => false;
 
     const extractSpy = jest
       .spyOn(CalculationsHelper, 'extractVisibleSlides')
@@ -285,18 +314,15 @@ describe('CarouselLoopService', () => {
     (service as any).insertLoopSlidesBySlidingTo(0);
 
     // translateDiff = 0 - 100 = -100
+    // ✅ la vraie implé appelle : extractVisibleSlides(snaps, 0, fullWidth, -100, this.store.center())
     expect(extractSpy).toHaveBeenCalledWith(
       snaps,
       0,
       state.fullWidth,
       -100,
-      undefined
+      false // ⬅️ correction : c'est false, pas undefined
     );
 
-    // offset = fullWidth - visibleSpan
-    // visibleSpan = 200 → offset = 100
-    // Chaque insertion "prend" width + spaceBetween = 80 + 10 = 90
-    // → 2 appels pour couvrir ~100
     expect(insertSpy).toHaveBeenCalledTimes(2);
 
     insertSpy.mockRestore();
@@ -304,15 +330,15 @@ describe('CarouselLoopService', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // initializeLoopCenter : pré-remplit le DOM autour de l’initialSlide en mode center
+  // initializeLoopCenter : pre-fill DOM around initialSlide in center mode
   // ---------------------------------------------------------------------------
 
-  it('initializeLoopCenter ne fait rien si loop ou center sont désactivés', () => {
+  it('initializeLoopCenter should do nothing when loop or center are disabled', () => {
     state.loop = false;
     state.center = true;
-    store.totalSlides.mockReturnValue(5);
-    store.slidesWidths.mockReturnValue([100, 100, 100]);
-    store.state.mockReturnValue(state);
+    (store as any).totalSlides = () => 5;
+    (store as any).slidesWidths = () => [100, 100, 100];
+    (store as any).state = () => state;
 
     const insertSpy = jest
       .spyOn<any, any>(service as any, 'insertElement')
@@ -324,17 +350,17 @@ describe('CarouselLoopService', () => {
     insertSpy.mockRestore();
   });
 
-  it('initializeLoopCenter insère des slides avant pour centrer l’initialSlide', () => {
+  it('initializeLoopCenter should insert slides before to center the initial slide', () => {
     state.loop = true;
     state.center = true;
     state.fullWidth = 300;
     state.marginStart = 0;
     state.initialSlide = 0;
     state.spaceBetween = 10;
-    store.totalSlides.mockReturnValue(5);
-    store.slidesWidths.mockReturnValue([100, 100, 100, 100, 100]);
 
-    store.state.mockReturnValue(state);
+    (store as any).totalSlides = () => 5;
+    (store as any).slidesWidths = () => [100, 100, 100, 100, 100];
+    (store as any).state = () => state;
 
     const insertSpy = jest
       .spyOn<any, any>(service as any, 'insertElement')
@@ -342,18 +368,11 @@ describe('CarouselLoopService', () => {
 
     service.initializeLoopCenter();
 
-    // spaceToFill = fullWidth / 2 - initialSlideWidth / 2 - marginStart
-    //             = 150 - 50 - 0 = 100
-    // widthFilled += width + spaceBetween = 80 + 10 = 90 → deux tours
     expect(insertSpy).toHaveBeenCalledTimes(2);
     insertSpy.mockRestore();
   });
 
-  describe('insertElement (cohérence de l’ordre et invariants)', () => {
-    /**
-     * Prépare un container DOM avec 4 slides .CAROUSEL_SLIDE_CLASS
-     * afin que extractSlidesFromContainer trouve des éléments valides.
-     */
+  describe('insertElement (order consistency and invariants)', () => {
     function setupDomForInsert(slidesCount = 4): void {
       const container = document.createElement('div');
 
@@ -363,94 +382,95 @@ describe('CarouselLoopService', () => {
         container.appendChild(slide);
       }
 
-      // allSlides() doit renvoyer ce container
-      store.allSlides.mockReturnValue({
-        nativeElement: container,
-      });
-
-      // Largeurs “logiques” des slides
-      store.slidesWidths.mockReturnValue(new Array(slidesCount).fill(100));
-      store.totalSlides.mockReturnValue(slidesCount);
-      store.currentTranslate.mockReturnValue(0);
-      store.lastTranslate.mockReturnValue(0);
-    }
-
-    it('insérer avant modifie l’ordre mais conserve la même permutation des slides', () => {
-      // ordre logique initial
-      let slidesOrder = [0, 1, 2, 3];
-
-      store.slidesIndexOrder.mockImplementation(() => slidesOrder);
-
-      // patch met à jour l’ordre courant utilisé par le service
-      (store.patch as jest.Mock).mockImplementation((partial: any) => {
-        if (partial.slidesIndexOrder) {
-          slidesOrder = partial.slidesIndexOrder;
-        }
-        // on ignore les autres champs pour ce test
-      });
-
-      setupDomForInsert(4);
-
-      const inserted = (service as any).insertElement(true); // insertion "before"
-
-      expect(inserted).toBeTruthy();
-
-      // 1) Toujours le même nombre de slides
-      expect(slidesOrder.length).toBe(4);
-
-      // 2) Pas de doublon / pas de perte : même ensemble d’indexes
-      const sorted = [...slidesOrder].sort((a, b) => a - b);
-      expect(sorted).toEqual([0, 1, 2, 3]);
-
-      // 3) L’ordre a bien changé (sinon l’insertion ne sert à rien)
-      expect(slidesOrder).not.toEqual([0, 1, 2, 3]);
-    });
-
-    it('insérer après modifie aussi l’ordre en conservant la permutation', () => {
-      let slidesOrder = [0, 1, 2, 3];
-
-      store.slidesIndexOrder.mockImplementation(() => slidesOrder);
-
-      (store.patch as jest.Mock).mockImplementation((partial: any) => {
-        if (partial.slidesIndexOrder) {
-          slidesOrder = partial.slidesIndexOrder;
-        }
-      });
-
-      setupDomForInsert(4);
-
-      const inserted = (service as any).insertElement(false); // insertion "after"
-
-      expect(inserted).toBeTruthy();
-      expect(slidesOrder.length).toBe(4);
-
-      const sorted = [...slidesOrder].sort((a, b) => a - b);
-      expect(sorted).toEqual([0, 1, 2, 3]);
-      expect(slidesOrder).not.toEqual([0, 1, 2, 3]);
-    });
-
-    it('après plusieurs insertions, slidesIndexOrder reste toujours une permutation valide', () => {
-      let slidesOrder = [0, 1, 2, 3];
-
-      store.slidesIndexOrder.mockImplementation(() => slidesOrder);
-
-      (store.patch as jest.Mock).mockImplementation((partial: any) => {
-        if (partial.slidesIndexOrder) {
-          slidesOrder = partial.slidesIndexOrder;
-        }
-      });
-
-      setupDomForInsert(4);
-
-      // On simule plusieurs insertions avant/après comme en vrai loop
-      for (let i = 0; i < 5; i++) {
-        (service as any).insertElement(i % 2 === 0); // true, false, true, ...
+      if ((store as any).setAllSlides) {
+        (store as any).setAllSlides({ nativeElement: container } as any);
+      } else {
+        (store as any).allSlides = () => ({ nativeElement: container } as any);
       }
 
-      // Toujours le même nombre d’éléments
+      if ((store as any).setSlidesWidths) {
+        (store as any).setSlidesWidths(new Array(slidesCount).fill(100));
+      } else {
+        (store as any).slidesWidths = () => new Array(slidesCount).fill(100);
+      }
+
+      if ((store as any).setTotalSlides) {
+        (store as any).setTotalSlides(slidesCount);
+      } else {
+        (store as any).totalSlides = () => slidesCount;
+      }
+
+      (store as any).currentTranslate = () => 0;
+      (store as any).lastTranslate = () => 0;
+    }
+
+    it('inserting before should change order while keeping the same permutation of slides', () => {
+      let slidesOrder = [0, 1, 2, 3];
+
+      (store as any).slidesIndexOrder = () => slidesOrder;
+
+      (store as any).patch = (partial: any) => {
+        if (partial.slidesIndexOrder) {
+          slidesOrder = partial.slidesIndexOrder;
+        }
+      };
+
+      setupDomForInsert(4);
+
+      const inserted = (service as any).insertElement(true);
+
+      expect(inserted).toBeTruthy();
+
       expect(slidesOrder.length).toBe(4);
 
-      // Toujours la même permutation de base
+      const sorted = [...slidesOrder].sort((a, b) => a - b);
+      expect(sorted).toEqual([0, 1, 2, 3]);
+
+      expect(slidesOrder).not.toEqual([0, 1, 2, 3]);
+    });
+
+    it('inserting after should also change order while keeping the permutation', () => {
+      let slidesOrder = [0, 1, 2, 3];
+
+      (store as any).slidesIndexOrder = () => slidesOrder;
+
+      (store as any).patch = (partial: any) => {
+        if (partial.slidesIndexOrder) {
+          slidesOrder = partial.slidesIndexOrder;
+        }
+      };
+
+      setupDomForInsert(4);
+
+      const inserted = (service as any).insertElement(false);
+
+      expect(inserted).toBeTruthy();
+      expect(slidesOrder.length).toBe(4);
+
+      const sorted = [...slidesOrder].sort((a, b) => a - b);
+      expect(sorted).toEqual([0, 1, 2, 3]);
+      expect(slidesOrder).not.toEqual([0, 1, 2, 3]);
+    });
+
+    it('after multiple insertions, slidesIndexOrder should always remain a valid permutation', () => {
+      let slidesOrder = [0, 1, 2, 3];
+
+      (store as any).slidesIndexOrder = () => slidesOrder;
+
+      (store as any).patch = (partial: any) => {
+        if (partial.slidesIndexOrder) {
+          slidesOrder = partial.slidesIndexOrder;
+        }
+      };
+
+      setupDomForInsert(4);
+
+      for (let i = 0; i < 5; i++) {
+        (service as any).insertElement(i % 2 === 0);
+      }
+
+      expect(slidesOrder.length).toBe(4);
+
       const sorted = [...slidesOrder].sort((a, b) => a - b);
       expect(sorted).toEqual([0, 1, 2, 3]);
     });

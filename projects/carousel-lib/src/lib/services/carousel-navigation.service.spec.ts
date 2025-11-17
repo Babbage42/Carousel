@@ -13,11 +13,7 @@ describe('CarouselNavigationService', () => {
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // Cas LOOP = true → on doit utiliser positiveModulo
-  // ---------------------------------------------------------------------------
-
-  it('en mode loop, next wrap correctement avec positiveModulo', () => {
+  it('in mode loop, next wrap correclty with positiveModulo', () => {
     storeFake.setLoop(true);
     storeFake.setCurrentPosition(2);
     storeFake.setStepSlides(3);
@@ -29,7 +25,7 @@ describe('CarouselNavigationService', () => {
     expect(result).toBe(0);
   });
 
-  it('en mode loop, prev wrap correctement avec positiveModulo', () => {
+  it('in mode loop, prev wrap correctly with positiveModulo', () => {
     storeFake.setLoop(true);
     storeFake.setCurrentPosition(0);
     storeFake.setStepSlides(2);
@@ -41,23 +37,19 @@ describe('CarouselNavigationService', () => {
     expect(result).toBe(3);
   });
 
-  // ---------------------------------------------------------------------------
-  // Cas LOOP = false → on clamp entre 0 et les anchors
-  // ---------------------------------------------------------------------------
-
-  it('en mode non-loop, next simple reste dans les bornes', () => {
+  it('in mode non-loop, next stays in bounds', () => {
     storeFake.setLoop(false);
     storeFake.setCurrentPosition(2);
     storeFake.setStepSlides(2);
     storeFake.setLastSlideAnchor(7);
 
-    // newIndex = 2 + 2 = 4, clamp entre [0, lastSlideAnchor=7] → 4
+    // newIndex = 2 + 2 = 4, clamp in [0, lastSlideAnchor=7] → 4
     const result = service.calculateNewPositionAfterNavigation(true);
 
     expect(result).toBe(4);
   });
 
-  it('en mode non-loop, next ne dépasse pas lastSlideAnchor', () => {
+  it('in mode non-loop, next will not be over lastSlideAnchor', () => {
     storeFake.setLoop(false);
     storeFake.setCurrentPosition(6);
     storeFake.setStepSlides(3);
@@ -69,7 +61,7 @@ describe('CarouselNavigationService', () => {
     expect(result).toBe(7);
   });
 
-  it('en mode non-loop, prev simple descend correctement', () => {
+  it('in mode non-loop, prev lows correctly', () => {
     storeFake.setLoop(false);
     storeFake.setCurrentPosition(5);
     storeFake.setStepSlides(2);
@@ -77,13 +69,13 @@ describe('CarouselNavigationService', () => {
 
     // newIndex = 5 - 2 = 3
     // clamp min( newIndex, lastSlideAnchor-1 = 6 ) => 3
-    // puis max(0, 3) => 3
+    // then max(0, 3) => 3
     const result = service.calculateNewPositionAfterNavigation(false);
 
     expect(result).toBe(3);
   });
 
-  it('en mode non-loop, prev ne descend jamais en dessous de 0', () => {
+  it('in mode no-loop, prev do not low below 0', () => {
     storeFake.setLoop(false);
     storeFake.setCurrentPosition(1);
     storeFake.setStepSlides(3);
@@ -97,11 +89,7 @@ describe('CarouselNavigationService', () => {
     expect(result).toBe(0);
   });
 
-  // ---------------------------------------------------------------------------
-  // Cas générique : utilisation de stepSlides
-  // ---------------------------------------------------------------------------
-
-  it('utilise bien stepSlides du state pour calculer newIndex', () => {
+  it('uses stepSlides from state to calculate newIndex', () => {
     storeFake.setLoop(false);
     storeFake.setCurrentPosition(4);
     storeFake.setStepSlides(5);
@@ -111,6 +99,6 @@ describe('CarouselNavigationService', () => {
     const resultPrev = service.calculateNewPositionAfterNavigation(false);
 
     expect(resultNext).toBe(9); // 4 + 5
-    expect(resultPrev).toBe(0); // 4 - 5 = -1 → clamp à 0
+    expect(resultPrev).toBe(0); // 4 - 5 = -1 → clamp to 0
   });
 });

@@ -16,16 +16,12 @@ describe('CarouselComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CarouselComponent], // standalone
+      imports: [CarouselComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CarouselComponent);
     component = fixture.componentInstance;
   });
-
-  // ============================================================
-  // TESTS DE BASE : INIT, SLIDETO, NEXT/PREV, SWIPE
-  // ============================================================
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -172,10 +168,6 @@ describe('CarouselComponent', () => {
     expect(slideToSpy).toHaveBeenCalledWith(4);
   });
 
-  // ============================================================
-  // TESTS PREMIUM – INPUTS, EVENTS, BREAKPOINTS, KEYBOARD, WHEEL
-  // ============================================================
-
   it('should patch store when inputs change', () => {
     const store = component.store as CarouselStore;
 
@@ -204,7 +196,7 @@ describe('CarouselComponent', () => {
       '(min-width: 500px)': { slidesPerView: 2 },
     });
 
-    fixture.detectChanges(); // triggers applyBreakpoints()
+    fixture.detectChanges();
 
     expect(cssSpy).toHaveBeenCalled();
     expect(setupSpy).toHaveBeenCalled();
@@ -225,7 +217,6 @@ describe('CarouselComponent', () => {
   it('should emit reachStart when attempting to slidePrev at the first slide (no loop)', () => {
     const store = component.store;
 
-    // Simule un carrousel non-loop avec 4 slides
     store.patch({ slides: [{}, {}, {}, {}], currentPosition: 0 });
     fixture.componentRef.setInput('loop', false);
     fixture.detectChanges();
@@ -237,7 +228,6 @@ describe('CarouselComponent', () => {
 
     component.slideToPrev();
 
-    // Doit émettre reachStart
     expect(reachStartSpy).toHaveBeenCalledTimes(1);
   });
 
