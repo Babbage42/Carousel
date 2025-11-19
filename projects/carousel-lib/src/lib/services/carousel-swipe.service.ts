@@ -29,6 +29,14 @@ export class CarouselSwipeService {
       this.store.currentPosition()
     );
 
+    if (isSwipe) {
+      return this.handleSwipeGesture(
+        position,
+        virtualPosition,
+        currentVirtualPosition
+      );
+    }
+
     if (isReachEnd) {
       return this.handleEndReached(
         position,
@@ -44,14 +52,6 @@ export class CarouselSwipeService {
         position,
         isSwipe,
         exactPosition,
-        virtualPosition,
-        currentVirtualPosition
-      );
-    }
-
-    if (isSwipe) {
-      return this.handleSwipeGesture(
-        position,
         virtualPosition,
         currentVirtualPosition
       );
@@ -99,15 +99,41 @@ export class CarouselSwipeService {
     virtualPosition: number,
     currentVirtualPosition: number
   ): number {
-    const isSlidingNext = virtualPosition > currentVirtualPosition;
-    const isSlidingPrev = virtualPosition < currentVirtualPosition;
-    if (isSlidingNext || isSlidingPrev) {
-      return this.navigationService.calculateNewPositionAfterNavigation(
-        isSlidingNext
-      );
+    const velocity = this.store.state().velocity;
+
+    const positionNext = virtualPosition > currentVirtualPosition;
+    const positionPrev = virtualPosition < currentVirtualPosition;
+    const velocityNext = velocity < -0.1;
+    const velocityPrev = velocity > 0.1;
+
+    const isSlidingNext = positionNext || velocityNext;
+    const isSlidingPrev = positionPrev || velocityPrev;
+
+    if (isSlidingNext) {
+      return this.navigationService.calculateNewPositionAfterNavigation(true);
     }
+
+    if (isSlidingPrev) {
+      return this.navigationService.calculateNewPositionAfterNavigation(false);
+    }
+
     return position ?? this.store.currentPosition();
   }
+
+  //   private handleSwipeGesture(
+  //     position: number | undefined,
+  //     virtualPosition: number,
+  //     currentVirtualPosition: number
+  //   ): number {
+  //     const isSlidingNext = virtualPosition > currentVirtualPosition;
+  //     const isSlidingPrev = virtualPosition < currentVirtualPosition;
+  //     if (isSlidingNext || isSlidingPrev) {
+  //       return this.navigationService.calculateNewPositionAfterNavigation(
+  //         isSlidingNext
+  //       );
+  //     }
+  //     return position ?? this.store.currentPosition();
+  //   }
 
   private getVirtualPositionFromExactPosition(position: number) {
     const roundPosition = Math.round(position);

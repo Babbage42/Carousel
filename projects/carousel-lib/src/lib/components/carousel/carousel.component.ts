@@ -326,6 +326,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public layoutReady = signal(false); //this.isServerMode);
 
   private observer?: ResizeObserver;
+  private gestureStart = { x: 0, time: 0 };
 
   constructor(
     private renderer: Renderer2,
@@ -602,6 +603,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const xPosition =
       event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
 
+    this.gestureStart = {
+      x: xPosition,
+      time: Date.now(),
+    };
+
     this.store.patch({ lastTranslate: this.store.currentTranslate() });
 
     this.dragState.update((state) => ({
@@ -664,33 +670,91 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('document:mouseup', ['$event'])
   @HostListener('document:touchend', ['$event'])
   onMouseUp(event: MouseEvent | TouchEvent) {
-    if (this.handleClickOnSlide(event)) {
-      return;
-    }
-
     if (!this.dragState().isDragging) {
       return;
     }
 
-    this.dragState.update((state) => ({ ...state, isDragging: false }));
+    // 1. Calculer les différentiels finaux
+    // Note: Pour touchend, changedTouches contient la position où le doigt a quitté l'écran
+    const xEnd =
+      event instanceof MouseEvent
+        ? event.pageX
+        : (event as TouchEvent).changedTouches[0].pageX;
+    const timeEnd = Date.now();
 
-    const isSwipe = new Date().getTime() - this.dragState().lastMoveTime < 200;
+    const dist = xEnd - this.gestureStart.x;
+    const duration = timeEnd - this.gestureStart.time;
+    const absDist = Math.abs(dist);
 
-    if (
-      (this.freeMode() && this.dragState().hasExtraTranslation) ||
-      (!this.freeMode() && this.dragState().hasMoved)
-    ) {
-      this.swipeToNearest();
-    } else if (this.freeMode() && isSwipe) {
-      // We apply inertia only if move was fast enough.
-      this.physicsService.applyInertia(undefined, (translate) => {
-        this.updateTransform(translate);
-      });
+    // Seuils
+    const SWIPE_THRESHOLD = 30; // px
+    const SWIPE_TIME_LIMIT = 300; // ms
+
+    // CAS 1 : Clic (ou micro mouvement involontaire)
+    if (absDist < 5 && duration < 250) {
+      this.clickOnSlide(event); // Votre logique de clic existante
+      this.resetDrag();
+      return;
     }
 
-    this.domService.updateSlides();
-    this.dragState.update((state) => ({ ...state, hasMoved: false }));
+    // CAS 2 : SWIPE VIF (La priorité absolue)
+    // Si c'est rapide et qu'on a parcouru une distance minimale
+    if (duration < SWIPE_TIME_LIMIT && absDist > SWIPE_THRESHOLD) {
+      if (dist < 0) {
+        // Mouvement vers la gauche (doigt va à gauche) -> Slide Suivant
+        this.slideToNext();
+      } else {
+        // Mouvement vers la droite -> Slide Précédent
+        this.slideToPrev();
+      }
+      this.resetDrag();
+      return;
+    }
+
+    // CAS 3 : DRAG LENT (Logique de position)
+    // Si on arrive ici, c'est que l'utilisateur a bougé lentement.
+    // On laisse votre service existant calculer le "snap" le plus proche.
+    this.swipeToNearest();
+
+    this.resetDrag();
   }
+
+  private resetDrag() {
+    this.dragState.update((state) => ({
+      ...state,
+      isDragging: false,
+      hasMoved: false,
+    }));
+    this.domService.updateSlides();
+  }
+
+  //   if (this.handleClickOnSlide(event)) {
+  //     return;
+  //   }
+
+  //   if (!this.dragState().isDragging) {
+  //     return;
+  //   }
+
+  //   this.dragState.update((state) => ({ ...state, isDragging: false }));
+
+  //   const isSwipe = new Date().getTime() - this.dragState().lastMoveTime < 200;
+
+  //   if (
+  //     (this.freeMode() && this.dragState().hasExtraTranslation) ||
+  //     (!this.freeMode() && this.dragState().hasMoved)
+  //   ) {
+  //     this.swipeToNearest();
+  //   } else if (this.freeMode() && isSwipe) {
+  //     // We apply inertia only if move was fast enough.
+  //     this.physicsService.applyInertia(undefined, (translate) => {
+  //       this.updateTransform(translate);
+  //     });
+  //   }
+
+  //   this.domService.updateSlides();
+  //   this.dragState.update((state) => ({ ...state, hasMoved: false }));
+  // }
 
   // Accessibility
   @HostListener('keydown', ['$event'])
