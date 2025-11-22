@@ -6,9 +6,9 @@ import { CarouselStore } from '../../carousel.store';
 import { CarouselNavigationService } from '../../services/carousel-navigation.service';
 import { CarouselLoopService } from '../../services/carousel-loop.service';
 import { CarouselTransformService } from '../../services/carousel-transform.service';
-import { CarouselPhysicsService } from '../../services/carousel-physics.service';
-import { CarouselSwipeService } from '../../services/carousel-swipe.service';
 import { CarouselBreakpointService } from '../../services/carousel-breakpoints.service';
+import { Renderer2 } from '@angular/core';
+import { CarouselDomService } from '../../services/carousel-dom.service';
 
 describe('CarouselComponent', () => {
   let fixture: ComponentFixture<CarouselComponent>;
@@ -17,7 +17,15 @@ describe('CarouselComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CarouselComponent],
-    }).compileComponents();
+      providers: [],
+    })
+      .overrideProvider(CarouselDomService, {
+        useValue: {
+          resetPositions: jest.fn(),
+          updateSlides: jest.fn(),
+        },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(CarouselComponent);
     component = fixture.componentInstance;
@@ -140,10 +148,10 @@ describe('CarouselComponent', () => {
   });
 
   it('should slide to nearest position when swipeToNearest is called', () => {
-    const swipeService = (component as any)
-      .swipeService as CarouselSwipeService;
-    const swipeSpy = jest
-      .spyOn(swipeService, 'calculateTargetPositionAfterSwipe')
+    const transformService = (component as any)
+      .transformService as CarouselTransformService;
+    const transformSpy = jest
+      .spyOn(transformService, 'calculateTargetPositionAfterTranslation')
       .mockReturnValue(4);
 
     const slideToSpy = jest.spyOn(component, 'slideTo');
@@ -162,9 +170,9 @@ describe('CarouselComponent', () => {
       lastPageXPosition: 0,
     });
 
-    (component as any)['swipeToNearest']();
+    (component as any)['slideToNearest']();
 
-    expect(swipeSpy).toHaveBeenCalledWith(99, false, false);
+    expect(transformSpy).toHaveBeenCalledWith(false, false);
     expect(slideToSpy).toHaveBeenCalledWith(4);
   });
 
@@ -216,8 +224,32 @@ describe('CarouselComponent', () => {
 
   it('should emit reachStart when attempting to slidePrev at the first slide (no loop)', () => {
     const store = component.store;
+    fixture.detectChanges();
 
-    store.patch({ slides: [{}, {}, {}, {}], currentPosition: 0 });
+    store.patch({
+      slidesElements: [
+        {
+          nativeElement: {
+            getBoundingClientRect: () => ({ width: 100 } as any),
+          },
+        },
+        {
+          nativeElement: {
+            getBoundingClientRect: () => ({ width: 100 } as any),
+          },
+        },
+        {
+          nativeElement: {
+            getBoundingClientRect: () => ({ width: 100 } as any),
+          },
+        },
+        {
+          nativeElement: {
+            getBoundingClientRect: () => ({ width: 100 } as any),
+          },
+        },
+      ],
+    });
     fixture.componentRef.setInput('loop', false);
     fixture.detectChanges();
 

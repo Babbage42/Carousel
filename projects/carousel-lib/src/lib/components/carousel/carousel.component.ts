@@ -7,7 +7,6 @@ import {
   ElementRef,
   EventEmitter,
   HostListener,
-  Input,
   NgZone,
   OnDestroy,
   OnInit,
@@ -16,31 +15,23 @@ import {
   signal,
   TemplateRef,
   ViewChild,
-  ContentChildren,
-  QueryList,
   Inject,
   PLATFORM_ID,
   ViewEncapsulation,
   ContentChild,
   viewChild,
-  WritableSignal,
   forwardRef,
   viewChildren,
-  ViewContainerRef,
   inject,
   input,
   computed,
   untracked,
-  afterNextRender,
-  runInInjectionContext,
-  EnvironmentInjector,
   afterRenderEffect,
   output,
   DOCUMENT,
   contentChildren,
   HostBinding,
 } from '@angular/core';
-import { debounceTime, fromEvent, single } from 'rxjs';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SlideDirective } from '../../directives/slide.directive';
 import { ImagesReadyDirective } from '../../directives/images-ready.directive';
@@ -59,11 +50,9 @@ import {
   Carousel,
   CarouselResponsiveConfig,
   Slide,
-  SnapDom,
   TRANSITION_DURATION,
 } from '../../models/carousel.model';
 import {
-  deepEqual,
   generateRandomClassName,
   positiveModulo,
 } from '../../helpers/utils.helper';
@@ -71,7 +60,6 @@ import { CarouselStore } from '../../carousel.store';
 import { CarouselLoopService } from '../../services/carousel-loop.service';
 import { CarouselTransformService } from '../../services/carousel-transform.service';
 import { CAROUSEL_VIEW } from './view-adapter';
-import { CarouselSwipeService } from '../../services/carousel-swipe.service';
 import { CarouselNavigationService } from '../../services/carousel-navigation.service';
 import { CarouselPhysicsService } from '../../services/carousel-physics.service';
 import { CarouselDomService } from '../../services/carousel-dom.service';
@@ -94,7 +82,6 @@ import { CarouselBreakpointService } from '../../services/carousel-breakpoints.s
   encapsulation: ViewEncapsulation.None,
   providers: [
     CarouselStore,
-    CarouselSwipeService,
     CarouselTransformService,
     CarouselPhysicsService,
     CarouselLoopService,
@@ -112,7 +99,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly store = inject(CarouselStore);
   private readonly loopService = inject(CarouselLoopService);
   private readonly transformService = inject(CarouselTransformService);
-  private readonly swipeService = inject(CarouselSwipeService);
   private readonly navigationService = inject(CarouselNavigationService);
   private readonly physicsService = inject(CarouselPhysicsService);
   private readonly domService = inject(CarouselDomService);
@@ -544,14 +530,14 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * When user swipe or drag, we need to slide to nearest index.
+   * When we need to slide to nearest index.
    */
-  private swipeToNearest() {
-    const newPosition = this.swipeService.calculateTargetPositionAfterSwipe(
-      this.dragState().lastMoveTime,
-      this.isReachEnd(),
-      this.isReachStart()
-    );
+  private slideToNearest() {
+    const newPosition =
+      this.transformService.calculateTargetPositionAfterTranslation(
+        this.isReachEnd(),
+        this.isReachStart()
+      );
 
     this.slideTo(newPosition);
   }
@@ -646,7 +632,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('mousemove', ['$event'])
   @HostListener('touchmove', ['$event'])
   onMouseMove(event: MouseEvent | TouchEvent) {
-    if (!this.dragState().isDragging || !this.allSlides()) return;
+    if (!this.dragState().isDragging || !this.allSlides()) {
+      return;
+    }
 
     this.initTouched();
 
@@ -674,8 +662,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // 1. Calculer les différentiels finaux
-    // Note: Pour touchend, changedTouches contient la position où le doigt a quitté l'écran
     const xEnd =
       event instanceof MouseEvent
         ? event.pageX
@@ -686,36 +672,44 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const duration = timeEnd - this.gestureStart.time;
     const absDist = Math.abs(dist);
 
-    // Seuils
-    const SWIPE_THRESHOLD = 30; // px
-    const SWIPE_TIME_LIMIT = 300; // ms
+    const SWIPE_THRESHOLD = 15; // px
+    const SWIPE_TIME_LIMIT = 200; // ms
 
-    // CAS 1 : Clic (ou micro mouvement involontaire)
-    if (absDist < 5 && duration < 250) {
-      this.clickOnSlide(event); // Votre logique de clic existante
+    // Click
+    if (absDist < 5 && duration < SWIPE_TIME_LIMIT) {
+      this.clickOnSlide(event);
       this.resetDrag();
       return;
     }
 
-    // CAS 2 : SWIPE VIF (La priorité absolue)
-    // Si c'est rapide et qu'on a parcouru une distance minimale
-    if (duration < SWIPE_TIME_LIMIT && absDist > SWIPE_THRESHOLD) {
+    const isSwipe = duration < SWIPE_TIME_LIMIT && absDist > SWIPE_THRESHOLD;
+
+    // Freemode specific
+    if (this.freeMode()) {
+      if (isSwipe) {
+        this.physicsService.applyInertia(undefined, (translate) => {
+          this.updateTransform(translate);
+        });
+      } else if (this.dragState().hasExtraTranslation) {
+        this.slideToNearest();
+      }
+      this.resetDrag();
+      return;
+    }
+
+    // Swipe
+    if (isSwipe) {
       if (dist < 0) {
-        // Mouvement vers la gauche (doigt va à gauche) -> Slide Suivant
         this.slideToNext();
       } else {
-        // Mouvement vers la droite -> Slide Précédent
         this.slideToPrev();
       }
       this.resetDrag();
       return;
     }
 
-    // CAS 3 : DRAG LENT (Logique de position)
-    // Si on arrive ici, c'est que l'utilisateur a bougé lentement.
-    // On laisse votre service existant calculer le "snap" le plus proche.
-    this.swipeToNearest();
-
+    // CLassic translation
+    this.slideToNearest();
     this.resetDrag();
   }
 
@@ -727,34 +721,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
     this.domService.updateSlides();
   }
-
-  //   if (this.handleClickOnSlide(event)) {
-  //     return;
-  //   }
-
-  //   if (!this.dragState().isDragging) {
-  //     return;
-  //   }
-
-  //   this.dragState.update((state) => ({ ...state, isDragging: false }));
-
-  //   const isSwipe = new Date().getTime() - this.dragState().lastMoveTime < 200;
-
-  //   if (
-  //     (this.freeMode() && this.dragState().hasExtraTranslation) ||
-  //     (!this.freeMode() && this.dragState().hasMoved)
-  //   ) {
-  //     this.swipeToNearest();
-  //   } else if (this.freeMode() && isSwipe) {
-  //     // We apply inertia only if move was fast enough.
-  //     this.physicsService.applyInertia(undefined, (translate) => {
-  //       this.updateTransform(translate);
-  //     });
-  //   }
-
-  //   this.domService.updateSlides();
-  //   this.dragState.update((state) => ({ ...state, hasMoved: false }));
-  // }
 
   // Accessibility
   @HostListener('keydown', ['$event'])

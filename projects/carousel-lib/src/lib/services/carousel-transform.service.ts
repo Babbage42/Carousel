@@ -1,11 +1,9 @@
 import { inject, Injectable, Injector, Renderer2 } from '@angular/core';
 import { CarouselStore } from '../carousel.store';
-import { positiveModulo } from '../helpers/utils.helper';
 import {
   CAROUSEL_VIEW,
   CarouselViewActions,
 } from '../components/carousel/view-adapter';
-import { calculateTranslateValueFromIndex } from '../helpers/calculations.helper';
 
 @Injectable()
 export class CarouselTransformService {
@@ -17,29 +15,8 @@ export class CarouselTransformService {
   }
   constructor() {}
 
-  public getNewPositionFromTranslate(velocity = false) {
-    if (!this.store.state().loop) {
-      this.store.patch({
-        currentTranslate: Math.max(
-          this.store.state().maxTranslate,
-          Math.min(
-            this.store.currentTranslate() +
-              (velocity ? this.store.state().velocity : 0),
-            this.store.state().minTranslate
-          )
-        ),
-      });
-    } else {
-      this.store.patch({
-        currentTranslate:
-          this.store.currentTranslate() +
-          (velocity ? this.store.state().velocity : 0),
-      });
-    }
-
-    const currentTranslate =
-      this.store.currentTranslate() +
-      (velocity ? this.store.state().velocity : 0);
+  public getNewPositionFromTranslate() {
+    const currentTranslate = this.store.currentTranslate();
     let closestIndex = 0;
     let smallestDiff = Infinity;
 
@@ -81,31 +58,7 @@ export class CarouselTransformService {
   public getTranslateFromPosition(
     index = this.store.currentRealPosition()
   ): number {
-    const realIndexFromPosition = this.store
-      .slidesIndexOrder()
-      .findIndex((element) => element === index);
-
-    // For centering without centering at bounds.
-    if (this.store.center() && this.store.notCenterBounds()) {
-      const isBefore =
-        realIndexFromPosition < (this.store.slidesPerView() as number) / 2;
-      const isAfter =
-        realIndexFromPosition >
-        this.store.totalSlides() - (this.store.slidesPerView() as number) / 2;
-      if (isBefore || isAfter) {
-        return isBefore ? this.store.minTranslate() : this.store.maxTranslate();
-      }
-
-      const centerValue =
-        this.store.fullWidth() / 2 -
-        this.store.slidesWidths()[realIndexFromPosition] / 2;
-
-      const posX = this.calculateTranslateValueFromIndex(index) + centerValue;
-      return this.clampTranslateValue(posX);
-    }
-
-    // Calculate position from slides widths and space between.
-    const posX = this.calculateTranslateValueFromIndex(index);
+    const posX = this.store.slideTranslates()[index];
 
     if (this.store.loop()) {
       // Authorize any translation without restriction.
@@ -114,18 +67,6 @@ export class CarouselTransformService {
 
     // If not loop, we restrict translation to min and max.
     return this.clampTranslateValue(posX);
-  }
-
-  private calculateTranslateValueFromIndex(index: number) {
-    return calculateTranslateValueFromIndex(index, {
-      minTranslate: this.store.minTranslate(),
-      marginStart: this.store.marginStart(),
-      marginEnd: this.store.marginEnd(),
-      spaceBetween: this.store.spaceBetween(),
-      slidesWidths: this.store.slidesWidths(),
-      totalSlides: this.store.totalSlides(),
-      slidesIndexOrder: this.store.slidesIndexOrder(),
-    });
   }
 
   private clampTranslateValue(posX: number) {
@@ -154,5 +95,85 @@ export class CarouselTransformService {
         false
       );
     }
+  }
+
+  public calculateTargetPositionAfterTranslation(
+    isReachEnd: boolean,
+    isReachStart: boolean
+  ): number {
+    const { position, exactPosition } = this.getNewPositionFromTranslate();
+
+    const realPosition = this.getVirtualPositionFromExactPosition(
+      position ?? this.store.currentPosition()
+    );
+
+    const virtualPosition =
+      this.getVirtualPositionFromExactPosition(exactPosition);
+    const currentVirtualPosition = this.getVirtualPositionFromExactPosition(
+      this.store.currentPosition()
+    );
+
+    if (isReachEnd) {
+      return this.handleEndReached(
+        realPosition,
+        exactPosition,
+        virtualPosition,
+        currentVirtualPosition
+      );
+    }
+
+    if (isReachStart) {
+      return this.handleStartReached(
+        realPosition,
+        exactPosition,
+        virtualPosition,
+        currentVirtualPosition
+      );
+    }
+
+    return realPosition;
+  }
+
+  private handleEndReached(
+    position: number | undefined,
+    exactPosition: number,
+    virtualPosition: number,
+    currentVirtualPosition: number
+  ): number {
+    if (virtualPosition > currentVirtualPosition) {
+      // Maximum reached.
+      if (this.store.state().rewind) {
+        return 0;
+      }
+      return Math.ceil(exactPosition);
+    }
+    return position ?? this.store.currentPosition();
+  }
+
+  private handleStartReached(
+    position: number | undefined,
+    exactPosition: number,
+    virtualPosition: number,
+    currentVirtualPosition: number
+  ): number {
+    if (virtualPosition < currentVirtualPosition) {
+      // Minimum reached.
+      if (this.store.state().rewind) {
+        return this.store.totalSlides() - 1;
+      }
+      return Math.floor(exactPosition);
+    }
+    return position ?? this.store.currentPosition();
+  }
+
+  private getVirtualPositionFromExactPosition(position: number) {
+    const roundPosition = Math.round(position);
+    const virtualPosition = this.store
+      .slidesIndexOrder()
+      .indexOf(roundPosition);
+    // We keep exact decimal part of position and add it to real position.
+    const decimalPart = position - roundPosition;
+    position = virtualPosition + decimalPart;
+    return position;
   }
 }

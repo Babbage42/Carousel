@@ -10,10 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { Carousel, Slide, SnapDom } from './models/carousel.model';
-import {
-  calculateTranslateValueFromIndex,
-  extractVisibleSlides,
-} from './helpers/calculations.helper';
+import { extractVisibleSlides } from './helpers/calculations.helper';
 
 @Injectable()
 export class CarouselStore {
@@ -196,6 +193,7 @@ export class CarouselStore {
     return 0;
   });
   readonly slidesWidths = computed(() => {
+    console.log('lsideide', this.slidesElements());
     const slidesWidths = [];
     for (const slide of this.slidesElements()) {
       if (slide.nativeElement.getBoundingClientRect) {
@@ -225,24 +223,42 @@ export class CarouselStore {
   });
 
   readonly slideTranslates = computed(() => {
-    this.slidesWidths();
-    this.slidesIndexOrder();
-    this.totalSlides();
-
-    const snaps: number[] = [];
+    const slidesWidths = this.slidesWidths();
+    const slidesIndexOrder = this.slidesIndexOrder();
+    const snaps: number[] = new Array(this.totalSlides()).fill(0);
 
     untracked(() => {
-      for (let i = 0; i < this.totalSlides(); i++) {
-        const pos = calculateTranslateValueFromIndex(i, {
-          minTranslate: this.minTranslate(),
-          marginStart: this.marginStart(),
-          marginEnd: this.marginEnd(),
-          spaceBetween: this.spaceBetween(),
-          slidesIndexOrder: this.slidesIndexOrder(),
-          slidesWidths: this.slidesWidths(),
-          totalSlides: this.totalSlides(),
-        });
-        snaps.push(pos);
+      let currentTranslate = this.minTranslate();
+
+      for (let domIndex = 0; domIndex < this.totalSlides(); domIndex++) {
+        const logicalIndex = slidesIndexOrder[domIndex];
+        const slideWidth = slidesWidths[logicalIndex];
+
+        let snapPosition = currentTranslate;
+
+        if (this.notCenterBounds()) {
+          if (domIndex <= this.firstSlideAnchor()) {
+            snapPosition = this.minTranslate();
+          } else if (domIndex >= this.lastSlideAnchor()) {
+            snapPosition = this.maxTranslate();
+          }
+        }
+
+        if (domIndex !== 0) {
+          snapPosition -= this.marginStart();
+        }
+
+        if (domIndex === this.totalSlides() - 1) {
+          snapPosition -= this.marginEnd();
+        }
+
+        snaps[logicalIndex] = snapPosition;
+
+        currentTranslate -= slideWidth + this.spaceBetween();
+
+        if (this.notCenterBounds() && domIndex === this.firstSlideAnchor()) {
+          currentTranslate += this.fullWidth() / 2 - slidesWidths[domIndex] / 2;
+        }
       }
     });
 
