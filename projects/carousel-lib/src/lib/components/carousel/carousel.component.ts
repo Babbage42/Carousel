@@ -280,12 +280,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     lazyLoading: this.lazyLoading(),
   }));
 
-  // @todo
-  // Handle first display of center (and margin/initial slide) via purcent
-  // in style
-  //  add lazyPreloadPrevNext	number	0
-  // Number of next and previous slides to preload. Only applicable if using lazy loading.
-
   @Output() slideUpdate = new EventEmitter();
   @Output() slideNext = new EventEmitter();
   @Output() slidePrev = new EventEmitter();
@@ -818,27 +812,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.updatePositionOnMouseMove(newTranslate, xPosition);
-  }
-
-  /**
-   * Direct click on slide.
-   * @param event
-   * @returns
-   */
-  private handleClickOnSlide(event: MouseEvent | TouchEvent): boolean {
-    const isClick =
-      !this.dragState().hasMoved &&
-      new Date().getTime() - this.dragState().lastClickTime < 250;
-    if (isClick && this.slideOnClick()) {
-      this.clickOnSlide(event);
-      this.dragState.update((state) => ({
-        ...state,
-        hasMoved: false,
-        isDragging: false,
-      }));
-      return true;
-    }
-    return false;
   }
 
   /**

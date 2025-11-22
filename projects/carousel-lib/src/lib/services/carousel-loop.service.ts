@@ -48,13 +48,13 @@ export class CarouselLoopService {
         return undefined;
       }
       try {
-        container.removeChild(elementToInsert);
-        container.insertBefore(elementToInsert, firstReal);
+        this.renderer.removeChild(container, elementToInsert);
+        this.renderer.insertBefore(container, elementToInsert, firstReal);
       } catch (e) {
-        container.insertBefore(elementToInsert, firstReal);
+        this.renderer.insertBefore(container, elementToInsert, firstReal);
       }
     } else {
-      container.appendChild(elementToInsert);
+      this.renderer.appendChild(container, elementToInsert);
     }
 
     const slidesIndexOrder = this.store.slidesIndexOrder();
@@ -83,17 +83,23 @@ export class CarouselLoopService {
 
   /**
    * When moving slides manually.
-   * @todo handle next
    */
   private insertLoopSlidesByTranslation() {
-    const leftmostDom = this.firstVisibleSlide;
-    const order = this.store.slidesIndexOrder();
-    const realLeftPos = order.indexOf(leftmostDom.logicalIndex);
-    const movedLeft =
-      realLeftPos === 0 &&
-      leftmostDom.translate < this.store.currentTranslate();
-    if (movedLeft) {
+    const [leftEdge, rightEdge] = [
+      this.store.currentTranslate(),
+      this.store.currentTranslate() + this.store.scrollWidth(),
+    ];
+
+    const viewportWidth = this.store.fullWidth();
+
+    const buffer = 50;
+
+    if (leftEdge > -buffer) {
       this.insertElement(true);
+    }
+
+    if (rightEdge < viewportWidth + buffer) {
+      this.insertElement(false);
     }
   }
 
@@ -215,7 +221,7 @@ export class CarouselLoopService {
     indexSlided: number | undefined = undefined,
     before?: boolean
   ) {
-    if (!this.store.state().loop) {
+    if (!this.store.loop()) {
       return;
     }
 

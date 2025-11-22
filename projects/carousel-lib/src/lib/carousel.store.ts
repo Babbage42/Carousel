@@ -193,7 +193,6 @@ export class CarouselStore {
     return 0;
   });
   readonly slidesWidths = computed(() => {
-    console.log('lsideide', this.slidesElements());
     const slidesWidths = [];
     for (const slide of this.slidesElements()) {
       if (slide.nativeElement.getBoundingClientRect) {
@@ -203,7 +202,6 @@ export class CarouselStore {
     }
     return slidesWidths;
   });
-
   readonly snapsDom = computed(() =>
     this.slidesIndexOrder().map((logicalIndex, domIndex) => {
       const translate = this.slideTranslates()[logicalIndex];
