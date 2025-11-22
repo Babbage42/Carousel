@@ -148,6 +148,8 @@ const TemplateProjected = (args: any) => ({
       [marginStart]="marginStart"
       [lazyLoading]="lazyLoading"
       [autoplay]="autoplay"
+      [resistance]="resistance"
+      [initialSlide]="initialSlide"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -195,6 +197,8 @@ const TemplateWithSlides = (args: any) => ({
       [marginStart]="marginStart"
       [lazyLoading]="lazyLoading"
       [autoplay]="autoplay"
+      [resistance]="resistance"
+      [initialSlide]="initialSlide"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -235,6 +239,28 @@ export const StepBy3: Story = {
   },
 };
 
+export const NoResistance: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    loop: false,
+    resistance: false,
+  },
+};
+
+export const NoResistanceFreeMode: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(20),
+    slidesPerView: '3',
+    freeMode: true,
+    mouseWheel: true,
+    loop: false,
+    resistance: false,
+  },
+};
+
 export const FreeMode: Story = {
   render: TemplateWithSlides,
   args: { slides: buildSlides(12), slidesPerView: '3', freeMode: true },
@@ -256,6 +282,37 @@ export const FreeModeNoSpace: Story = {
     slidesPerView: '3',
     freeMode: true,
     spaceBetween: 0,
+  },
+};
+
+export const InitialSlideMiddle: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    initialSlide: 4,
+    loop: false,
+  },
+};
+
+export const InitialSlideWithCenter: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    loop: false,
+    center: true,
+    initialSlide: 7,
+  },
+};
+
+export const InitialSlideWithLoop: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    loop: true,
+    initialSlide: 7,
   },
 };
 
@@ -408,6 +465,71 @@ export const AutoPlay: Story = {
   },
 };
 
+export const FewSlidesLessThanSlidesPerView: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(2),
+    slidesPerView: '4',
+    freeMode: false,
+    loop: false,
+  },
+};
+
+export const FewSlidesLoop: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(3),
+    slidesPerView: '3',
+    loop: true,
+    rewind: false,
+    freeMode: false,
+  },
+};
+
+export const LoopAndCenter: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    loop: true,
+    center: true,
+    notCenterBounds: false,
+    freeMode: false,
+  },
+};
+
+export const CenterWithSpaceBetween: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    center: true,
+    spaceBetween: 30,
+    freeMode: false,
+  },
+};
+
+export const CenterWithPartialSlidesPerView: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '2.5',
+    center: true,
+    freeMode: false,
+  },
+};
+
+export const CenterWithMargins: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    center: true,
+    marginStart: 40,
+    marginEnd: 40,
+  },
+};
+
 export const Interaction_NextPrev: Story = {
   render: TemplateWithSlides,
   args: {
@@ -429,11 +551,6 @@ export const Interaction_NextPrev: Story = {
     await step('Prev once', async () => {
       await userEvent.click(prevBtn);
     });
-
-    // si tu exposes un aria-selected sur le slide actif ou un aria-valuenow,
-    // tu peux ajouter une assertion ici (exemple):
-    // const active = await c.findByRole('option', { selected: true });
-    // expect(active).toHaveTextContent(/Slide 3|4/);
   },
 };
 
@@ -447,7 +564,6 @@ export const Interaction_ClickDots: Story = {
   },
   play: async ({ canvasElement, step }) => {
     const c = within(canvasElement);
-    // à adapter selon ton markup de dots (role="button" / "radio" / ".dot")
     const dots = await c
       .findAllByRole('button', { name: /dot/i })
       .catch(() => []);
