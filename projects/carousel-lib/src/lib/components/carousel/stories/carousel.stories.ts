@@ -96,6 +96,7 @@ const meta: Meta<CarouselComponent> = {
     autoplay: { control: 'object' },
     resistance: { control: 'boolean' },
     initialSlide: { control: 'number' },
+    draggable: { control: 'boolean' },
   },
   args: {
     slides: buildSlides(10),
@@ -265,6 +266,15 @@ export const NoResistanceFreeMode: Story = {
     mouseWheel: true,
     loop: false,
     resistance: false,
+  },
+};
+
+export const NoSlideOnClik: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(20),
+    slidesPerView: '3',
+    slideOnClick: false,
   },
 };
 

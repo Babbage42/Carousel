@@ -332,7 +332,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public layoutReady = signal(false); //this.isServerMode);
 
   private observer?: ResizeObserver;
-  private gestureStart = { x: 0, time: 0 };
+  private gestureStart = { x: 0, y: 0, time: 0 };
 
   constructor(
     private renderer: Renderer2,
@@ -562,6 +562,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * When we need to slide to nearest index.
    */
   private slideToNearest() {
+    console.log('SLIDING TO NEAREST');
     const newPosition =
       this.transformService.calculateTargetPositionAfterTranslation(
         this.isReachEnd(),
@@ -604,6 +605,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     lastPageXPosition: 0,
   });
 
+  private suppressNextClick = false;
+
   @HostListener('transitionend', ['$event'])
   onHostTransitionEnd(event: TransitionEvent) {
     const slidesEl = this.allSlides()?.nativeElement;
@@ -618,8 +621,12 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const xPosition =
       event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
 
+    const yPosition =
+      event instanceof MouseEvent ? event.pageY : event.touches[0].pageY;
+
     this.gestureStart = {
       x: xPosition,
+      y: yPosition,
       time: Date.now(),
     };
 
@@ -706,12 +713,16 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const SWIPE_THRESHOLD = 15; // px
     const SWIPE_TIME_LIMIT = 200; // ms
+    const MIN_DRAG_DIST = 5; // px
 
-    // Click
-    if (absDist < 5 && duration < SWIPE_TIME_LIMIT) {
-      this.clickOnSlide(event);
+    // Will be a click, we do nothing.
+    if (absDist < MIN_DRAG_DIST && !this.dragState().hasExtraTranslation) {
       this.resetDrag();
       return;
+    }
+
+    if (this.store.draggable()) {
+      this.suppressNextClick = true;
     }
 
     const isSwipe = duration < SWIPE_TIME_LIMIT && absDist > SWIPE_THRESHOLD;
@@ -743,6 +754,32 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     // CLassic translation
     this.slideToNearest();
     this.resetDrag();
+  }
+
+  @HostListener('click', ['$event'])
+  onHostClick(event: MouseEvent) {
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      return;
+    }
+
+    if (this.dragState().hasMoved) {
+      return;
+    }
+
+    const CLICK_MAX_DIST = 2; // px
+    const CLICK_MAX_TIME = 200; // ms
+
+    const dx = event.pageX - this.gestureStart.x;
+    const dy = event.pageY - this.gestureStart.y;
+    const dist = Math.hypot(dx, dy);
+    const dt = Date.now() - this.gestureStart.time;
+
+    if (dist > CLICK_MAX_DIST || dt > CLICK_MAX_TIME) {
+      return;
+    }
+
+    this.clickOnSlide(event);
   }
 
   private resetDrag() {
@@ -858,11 +895,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param xPosition
    */
   private updatePositionOnMouseMove(newTranslate: number, xPosition?: number) {
-    this.store.patch({ currentTranslate: newTranslate });
-
-    this.loopService.insertLoopSlides();
-
     this.store.patch({
+      currentTranslate: newTranslate,
       velocity: xPosition
         ? (xPosition - this.dragState().lastPageXPosition) *
           (this.freeMode()
@@ -870,6 +904,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
             : this.velocitySensitivity)
         : 0,
     });
+
+    this.loopService.insertLoopSlides();
 
     this.updateTransform();
   }
@@ -911,6 +947,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param event
    */
   private clickOnSlide(event: Event) {
+    if (!this.store.slideOnClick()) {
+      return;
+    }
+
     const slideElement = (event.target as HTMLElement).closest(
       '[class*="position-"]'
     );
@@ -924,6 +964,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
           const index = position - 1;
           this.loopService.insertLoopSlides(index);
 
+          console.log('SLIDING AFTER CLICK');
           this.slideTo(index);
         }
       }
@@ -1041,6 +1082,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param index
    */
   public slideTo(index = this.store.currentRealPosition(), animate = true) {
+    console.log('SLIDING TO ', index);
     this.store.patch({ currentRealPosition: index });
 
     index = this.clampToVisibleSlide(index);

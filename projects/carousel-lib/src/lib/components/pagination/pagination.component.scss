@@ -1,3 +1,7 @@
+:host {
+  user-select: none;
+}
+
 .dot-pagination {
   &.clickable {
     .dot {

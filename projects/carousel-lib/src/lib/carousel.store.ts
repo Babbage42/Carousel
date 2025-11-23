@@ -112,6 +112,7 @@ export class CarouselStore {
   readonly marginStart = computed(() => this._state().marginStart);
   readonly marginEnd = computed(() => this._state().marginEnd);
   readonly draggable = computed(() => this._state().draggable);
+  readonly slideOnClick = computed(() => this._state().slideOnClick);
 
   // Computed, need to update manually in state.
   readonly fullWidth = computed(
