@@ -49,6 +49,7 @@ import {
   AutoplayOptions,
   Carousel,
   CarouselResponsiveConfig,
+  PeekEdges,
   Slide,
   TRANSITION_DURATION,
 } from '../../models/carousel.model';
@@ -79,7 +80,8 @@ import { CarouselBreakpointService } from '../../services/carousel-breakpoints.s
   templateUrl: './carousel.component.html',
   styleUrl: './carousel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
+  // TODO what was the need ?
+  //encapsulation: ViewEncapsulation.None,
   providers: [
     CarouselStore,
     CarouselTransformService,
@@ -114,6 +116,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly totalSlidesVisible = this.store.totalSlidesVisible;
   readonly hasReachedStart = this.store.hasReachedStart;
   readonly hasReachedEnd = this.store.hasReachedEnd;
+  readonly peekEdgesOffset = this.store.peekOffset;
 
   projectedSlides = contentChildren(SlideDirective);
   @ContentChild(CarouselNavLeftDirective)
@@ -221,6 +224,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   });
   draggable = input(true);
+  /**
+   * Peek mode with non-center :
+   * slide percent to be visible at edges.
+   * absolute : in px
+   * relative : decimal 0.15 = 15% of slide width.
+   */
+  peekEdges = input<PeekEdges>(undefined);
 
   initialSlide = input<number>(0);
   realInitialSlide = computed(() => {
@@ -302,6 +312,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       autoplay: this.autoplay(),
       lazyLoading: this.lazyLoading(),
       draggable: this.draggable(),
+      peekEdges: this.peekEdges(),
     };
     return inputs;
   });

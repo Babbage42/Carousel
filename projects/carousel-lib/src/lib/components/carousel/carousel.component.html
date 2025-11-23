@@ -5,6 +5,8 @@
   class="carousel"
   [class.layout-ready]="layoutReady()"
   [class.carousel--center]="applyCenterAtInit()"
+  [style.padding-left.px]="peekEdgesOffset()"
+  [style.padding-right.px]="peekEdgesOffset()"
 >
   <span>total slides:{{ totalSlides() }}</span>
   <span>current anchor:{{ currentPosition() }}</span>

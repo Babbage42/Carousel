@@ -123,6 +123,7 @@ const meta: Meta<CarouselComponent> = {
     initialSlide: 0,
     resistance: true,
     draggable: true,
+    peekEdges: undefined,
   },
   tags: ['autodocs'],
 };
@@ -157,6 +158,7 @@ const TemplateProjected = (args: any) => ({
       [resistance]="resistance"
       [initialSlide]="initialSlide"
       [draggable]="draggable"
+      [peekEdges]="peekEdges"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -207,6 +209,7 @@ const TemplateWithSlides = (args: any) => ({
       [resistance]="resistance"
       [initialSlide]="initialSlide"
       [draggable]="draggable"
+      [peekEdges]="peekEdges"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -553,6 +556,17 @@ export const NonDraggable: Story = {
     slides: buildSlides(10),
     slidesPerView: '3',
     draggable: false,
+  },
+};
+
+export const WithRelativePeekEdges: Story = {
+  render: TemplateWithSlides,
+  args: {
+    peekEdges: {
+      relativeOffset: 0.25,
+    },
+    slides: buildSlides(10),
+    slidesPerView: '3',
   },
 };
 

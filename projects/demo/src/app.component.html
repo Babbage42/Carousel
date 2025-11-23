@@ -273,7 +273,7 @@
   ></app-carousel>
 </div>
 
-<div style="width: 80%; padding: 50px">
+<div style="width: 100%">
   <app-carousel
     [freeMode]="false"
     [slidesPerView]="2.5"
@@ -510,6 +510,9 @@
 
 <div style="width: 80%; padding: 50px">
   <app-carousel
+    [peekEdges]="{
+      relativeOffset: 0.25
+    }"
     [slidesPerView]="3"
     [spaceBetween]="0"
     [slides]="[

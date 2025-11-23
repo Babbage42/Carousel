@@ -64,6 +64,7 @@ export class CarouselStore {
     stepSlides: 1,
     autoplay: false,
     draggable: true,
+    peekEdges: undefined,
   });
 
   // Final state with all updated values.
@@ -114,6 +115,32 @@ export class CarouselStore {
   readonly draggable = computed(() => this._state().draggable);
   readonly slideOnClick = computed(() => this._state().slideOnClick);
 
+  /**
+   * TODO test with SSR
+   */
+  readonly peekEdges = computed(() => this._state().peekEdges);
+  readonly peekOffset = computed(() => {
+    if (this.center()) {
+      return 0;
+    }
+
+    const peek = this.peekEdges();
+    if (!peek) {
+      return 0;
+    }
+
+    if (peek.absoluteOffset) {
+      return peek.absoluteOffset;
+    }
+
+    const referenceSlideWidth = this.slidesWidths()?.[0];
+    if (referenceSlideWidth) {
+      return (peek.relativeOffset ?? 0) * referenceSlideWidth;
+    }
+
+    return 0;
+  });
+
   // Computed, need to update manually in state.
   readonly fullWidth = computed(
     () => this.allSlides()?.nativeElement?.clientWidth ?? 0
@@ -125,7 +152,9 @@ export class CarouselStore {
   });
   readonly maxTranslate = computed(() => {
     const maxTranslate =
-      -(this.scrollWidth() - this.fullWidth()) - this.marginEnd();
+      -(this.scrollWidth() - this.fullWidth()) -
+      this.marginEnd() -
+      this.peekOffset();
     if (this.center() && !this.notCenterBounds()) {
       return maxTranslate - this.fullWidth() / 2 - this.slidesWidths()[0] / 2;
     }
@@ -136,7 +165,7 @@ export class CarouselStore {
     if (this.center() && !this.notCenterBounds()) {
       return fullWidth / 2 - this.slidesWidths()[0] / 2;
     }
-    return this.marginStart();
+    return this.marginStart() - this.peekOffset();
   });
   readonly totalSlides = computed(() => {
     if (this.slides() && this.slides().length) {
@@ -247,11 +276,11 @@ export class CarouselStore {
         }
 
         if (domIndex !== 0) {
-          snapPosition -= this.marginStart();
+          snapPosition -= this.marginStart() - this.peekOffset();
         }
 
         if (domIndex === this.totalSlides() - 1) {
-          snapPosition -= this.marginEnd();
+          snapPosition -= this.marginEnd() - this.peekOffset();
         }
 
         snaps[logicalIndex] = snapPosition;

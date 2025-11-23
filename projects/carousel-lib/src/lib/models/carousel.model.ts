@@ -22,6 +22,13 @@ export interface CarouselResponsiveConfig {
   };
 }
 
+export type PeekEdges =
+  | undefined
+  | {
+      absoluteOffset?: number;
+      relativeOffset?: number;
+    };
+
 export interface SnapDom {
   domIndex: number;
   logicalIndex: number;
@@ -109,6 +116,8 @@ export interface Carousel {
   autoplay: boolean | AutoplayOptions;
 
   draggable: boolean;
+
+  peekEdges: PeekEdges;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';
