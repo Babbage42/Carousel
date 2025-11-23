@@ -80,8 +80,8 @@ export class CarouselDomService {
       return;
     }
 
-    const images = slide.querySelectorAll('img');
-    if (!images.length) {
+    const images = Array.from(slide.querySelectorAll('img'));
+    if (!images?.length) {
       return;
     }
 

@@ -94,6 +94,8 @@ const meta: Meta<CarouselComponent> = {
     touched: { action: 'touched' },
     imagesLoaded: { action: 'imagesLoaded' },
     autoplay: { control: 'object' },
+    resistance: { control: 'boolean' },
+    initialSlide: { control: 'number' },
   },
   args: {
     slides: buildSlides(10),
@@ -117,6 +119,9 @@ const meta: Meta<CarouselComponent> = {
     marginStart: 0,
     lazyLoading: true,
     autoplay: false,
+    initialSlide: 0,
+    resistance: true,
+    draggable: true,
   },
   tags: ['autodocs'],
 };
@@ -150,6 +155,7 @@ const TemplateProjected = (args: any) => ({
       [autoplay]="autoplay"
       [resistance]="resistance"
       [initialSlide]="initialSlide"
+      [draggable]="draggable"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -199,6 +205,7 @@ const TemplateWithSlides = (args: any) => ({
       [autoplay]="autoplay"
       [resistance]="resistance"
       [initialSlide]="initialSlide"
+      [draggable]="draggable"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -527,6 +534,15 @@ export const CenterWithMargins: Story = {
     center: true,
     marginStart: 40,
     marginEnd: 40,
+  },
+};
+
+export const NonDraggable: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    draggable: false,
   },
 };
 

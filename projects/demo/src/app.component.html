@@ -1,5 +1,96 @@
+<div style="width: 100%">
+  <h1>NON DRAGGABLE</h1>
+  <app-carousel
+    [draggable]="false"
+    [freeMode]="false"
+    [slidesPerView]="4.5"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  ></app-carousel>
+</div>
+
+<div style="width: 100%">
+  <h1>FORCE SLIDE TO</h1>
+  <input #value type="number" />
+  <button (click)="updateForceSlideTo(+value.value)">update slides</button>
+  <app-carousel
+    [stepSlides]="2"
+    [freeMode]="false"
+    [slidesPerView]="4.5"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+    [forceSlideTo]="slideTo()"
+  ></app-carousel>
+</div>
+
+<div style="width: 100%">
+  <h1>DYNAMIC SLIDES</h1>
+  <button (click)="updateRandomSlides()">update slides</button>
+  <app-carousel
+    [stepSlides]="2"
+    [freeMode]="false"
+    [slidesPerView]="4.5"
+    [slides]="randomSlides()"
+  ></app-carousel>
+</div>
+
+<div style="width: 100%">
+  <h1>LOOP</h1>
+  <app-carousel
+    [stepSlides]="2"
+    [loop]="true"
+    [freeMode]="false"
+    [slidesPerView]="4.5"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  ></app-carousel>
+</div>
+
 <!-- [initialSlide]="2" -->
 <div style="width: 100%">
+  <h1>LOOP CENTER</h1>
   <app-carousel
     [stepSlides]="3"
     [center]="true"
@@ -24,6 +115,31 @@
       300 | randomSrc : 200
     ]"
   ></app-carousel>
+</div>
+
+<div style="width: 80%; padding: 50px">
+  <app-carousel
+    [center]="true"
+    [notCenterBounds]="true"
+    [freeMode]="false"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  >
+  </app-carousel>
 </div>
 
 <div style="width: 80%; padding: 50px">
@@ -139,6 +255,7 @@
 </div>
 
 <div style="width: 80%; padding: 50px">
+  <h1>FREEMODE</h1>
   <app-carousel
     [freeMode]="true"
     [slides]="[
@@ -176,6 +293,7 @@
 </div>
 
 <div style="width: 80%; padding: 50px">
+  <h1>BREAKPOINTS</h1>
   <app-carousel
     [freeMode]="false"
     [breakpoints]="{

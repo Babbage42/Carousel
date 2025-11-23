@@ -105,6 +105,10 @@ export interface Carousel {
   lastSlideAnchor: number;
 
   stepSlides: number;
+
+  autoplay: boolean | AutoplayOptions;
+
+  draggable: boolean;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

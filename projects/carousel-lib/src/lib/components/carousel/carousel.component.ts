@@ -197,8 +197,30 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return opts;
     },
   });
-
   loop = input<boolean>(false);
+  forceSlideTo = input(undefined, {
+    transform: (
+      value:
+        | undefined
+        | number
+        | {
+            position: number;
+            animated: boolean;
+          }
+    ) => {
+      if (value === undefined) {
+        return undefined;
+      }
+      if (typeof value === 'number') {
+        return {
+          position: value,
+          animated: true,
+        };
+      }
+      return value;
+    },
+  });
+  draggable = input(true);
 
   initialSlide = input<number>(0);
   realInitialSlide = computed(() => {
@@ -254,31 +276,35 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }px) / ${slidesPerView})`;
   });
 
-  private inputsSnapshot = computed<Partial<Carousel>>(() => ({
-    marginStart: this.marginStart(),
-    marginEnd: this.marginEnd(),
-    resistance: this.resistance(),
-    showControls: this.showControls(),
-    alwaysShowControls: this.alwaysShowControls(),
-    iconSize: this.iconSize(),
-    slides: this.slides(),
-    initialSlide: this.initialSlide(),
-    freeMode: this.freeMode(),
-    mouseWheel: this.mouseWheel(),
-    deltaPosition: this.deltaPosition(),
-    showProgress: this.showProgress(),
-    dotsControl: this.dotsControl(),
-    slidesPerView: this.slidesPerView(),
-    spaceBetween: this.spaceBetween(),
-    loop: this.loop(),
-    rewind: this.rewind(),
-    center: this.center(),
-    notCenterBounds: this.notCenterBounds(),
-    slideOnClick: this.slideOnClick(),
-    stepSlides: this.stepSlides(),
-    autoplay: this.autoplay(),
-    lazyLoading: this.lazyLoading(),
-  }));
+  private inputsSnapshot = computed<Partial<Carousel>>(() => {
+    const inputs: Partial<Carousel> = {
+      marginStart: this.marginStart(),
+      marginEnd: this.marginEnd(),
+      resistance: this.resistance(),
+      showControls: this.showControls(),
+      alwaysShowControls: this.alwaysShowControls(),
+      iconSize: this.iconSize(),
+      slides: this.slides(),
+      initialSlide: this.initialSlide(),
+      freeMode: this.freeMode(),
+      mouseWheel: this.mouseWheel(),
+      deltaPosition: this.deltaPosition(),
+      showProgress: this.showProgress(),
+      dotsControl: this.dotsControl(),
+      slidesPerView: this.slidesPerView(),
+      spaceBetween: this.spaceBetween(),
+      loop: this.loop(),
+      rewind: this.rewind(),
+      center: this.center(),
+      notCenterBounds: this.notCenterBounds(),
+      slideOnClick: this.slideOnClick(),
+      stepSlides: this.stepSlides(),
+      autoplay: this.autoplay(),
+      lazyLoading: this.lazyLoading(),
+      draggable: this.draggable(),
+    };
+    return inputs;
+  });
 
   @Output() slideUpdate = new EventEmitter();
   @Output() slideNext = new EventEmitter();
@@ -382,6 +408,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       if (autoplay !== false && this.layoutReady()) {
         this.startAutoplay();
       }
+    });
+
+    effect(() => {
+      const slideTo = this.forceSlideTo();
+      untracked(() => {
+        if (slideTo) {
+          this.slideTo(slideTo.position, slideTo.animated);
+        }
+      });
     });
   }
 
@@ -646,7 +681,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
 
     const deltaX = (xPosition - state.startX) * this.sensitivity;
-    this.followUserMove(deltaX, false, xPosition);
+
+    if (this.store.draggable()) {
+      this.followUserMove(deltaX, false, xPosition);
+    }
   }
 
   @HostListener('document:mouseup', ['$event'])

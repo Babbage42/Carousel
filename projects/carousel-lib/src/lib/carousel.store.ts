@@ -62,6 +62,8 @@ export class CarouselStore {
     firstSlideAnchor: 0,
     lastSlideAnchor: 0,
     stepSlides: 1,
+    autoplay: false,
+    draggable: true,
   });
 
   // Final state with all updated values.
@@ -109,6 +111,7 @@ export class CarouselStore {
   readonly notCenterBounds = computed(() => this._state().notCenterBounds);
   readonly marginStart = computed(() => this._state().marginStart);
   readonly marginEnd = computed(() => this._state().marginEnd);
+  readonly draggable = computed(() => this._state().draggable);
 
   // Computed, need to update manually in state.
   readonly fullWidth = computed(
