@@ -226,6 +226,7 @@ export class CarouselStore {
     return 0;
   });
   readonly slidesWidths = computed(() => {
+    this.fullWidth();
     const slidesWidths = [];
     for (const slide of this.slidesElements()) {
       if (slide.nativeElement.getBoundingClientRect) {

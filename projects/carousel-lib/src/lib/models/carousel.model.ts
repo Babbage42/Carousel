@@ -118,6 +118,8 @@ export interface Carousel {
   draggable: boolean;
 
   peekEdges: PeekEdges;
+
+  dragIgnoreSelector?: string;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

@@ -231,6 +231,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * relative : decimal 0.15 = 15% of slide width.
    */
   peekEdges = input<PeekEdges>(undefined);
+  /**
+   * CSS selector for elements inside slides that should NOT start a drag.
+   * Typical default: interactive elements like buttons, links, inputs…
+   */
+  dragIgnoreSelector = input<string>(
+    '[data-carousel-no-drag], a, button, input, textarea, select, [role="button"]'
+  );
 
   initialSlide = input<number>(0);
   realInitialSlide = computed(() => {
@@ -313,6 +320,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       lazyLoading: this.lazyLoading(),
       draggable: this.draggable(),
       peekEdges: this.peekEdges(),
+      dragIgnoreSelector: this.dragIgnoreSelector(),
     };
     return inputs;
   });
@@ -343,7 +351,12 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public layoutReady = signal(false); //this.isServerMode);
 
   private observer?: ResizeObserver;
-  private gestureStart = { x: 0, y: 0, time: 0 };
+  private gestureStart: {
+    x: number;
+    y: number;
+    time: number;
+    event?: MouseEvent | TouchEvent;
+  } = { x: 0, y: 0, time: 0 };
 
   constructor(
     private renderer: Renderer2,
@@ -605,6 +618,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     lastMoveTime: number;
     lastClickTime: number;
     lastPageXPosition: number;
+    lockedAxis: 'x' | 'y' | null;
   }>({
     isDragging: false,
     hasMoved: false,
@@ -614,6 +628,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     lastMoveTime: 0,
     lastClickTime: 0,
     lastPageXPosition: 0,
+    lockedAxis: null,
   });
 
   private suppressNextClick = false;
@@ -629,16 +644,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('mousedown', ['$event'])
   @HostListener('touchstart', ['$event'])
   onMouseDown(event: MouseEvent | TouchEvent) {
-    const xPosition =
-      event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
-
-    const yPosition =
-      event instanceof MouseEvent ? event.pageY : event.touches[0].pageY;
+    const { x, y } = this.getPointerPosition(event);
 
     this.gestureStart = {
-      x: xPosition,
-      y: yPosition,
+      x,
+      y,
       time: Date.now(),
+      event,
     };
 
     this.store.patch({ lastTranslate: this.store.currentTranslate() });
@@ -648,9 +660,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       isDragging: true,
       hasMoved: false,
       hasExtraTranslation: false,
-      startX: xPosition,
-      lastPageXPosition: xPosition,
+      startX: x,
+      lastPageXPosition: y,
       lastClickTime: new Date().getTime(),
+      lockedAxis: null,
     }));
   }
 
@@ -679,29 +692,72 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('mousemove', ['$event'])
   @HostListener('touchmove', ['$event'])
   onMouseMove(event: MouseEvent | TouchEvent) {
-    if (!this.dragState().isDragging || !this.allSlides()) {
+    const dragState = this.dragState();
+
+    if (!dragState.isDragging || !this.allSlides()) {
       return;
     }
 
     this.initTouched();
 
-    const xPosition =
-      event instanceof MouseEvent ? event.pageX : event.touches[0].pageX;
+    const { x, y, isTouch } = this.getPointerPosition(event);
+
     const now = Date.now();
-    const state = this.dragState();
+    const gestureStart = this.gestureStart;
+    // Determine threshold for mobile scroll on page while sliding.
+    const AXIS_LOCK_THRESHOLD = 8;
+
+    if (isTouch && gestureStart) {
+      const { lockedAxis } = dragState;
+
+      if (!lockedAxis) {
+        const dx = x - gestureStart.x;
+        const dy = y - gestureStart.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        // Too little gesture to decide.
+        if (absDx < AXIS_LOCK_THRESHOLD && absDy < AXIS_LOCK_THRESHOLD) {
+          return;
+        }
+
+        if (absDy > absDx) {
+          // Vertical gesture => no drag
+          this.resetDrag();
+          return;
+        }
+
+        // Horizontal gesture.
+        this.dragState.update((s) => ({ ...s, lockedAxis: 'x' }));
+      } else if (lockedAxis === 'y') {
+        return;
+      }
+    }
+
+    // For mouse.
+    if (!isTouch && dragState.lockedAxis !== 'x') {
+      this.dragState.update((s) => ({ ...s, lockedAxis: 'x' }));
+    }
+
+    if (this.dragState().lockedAxis !== 'x') {
+      return;
+    }
+
+    if (isTouch) {
+      event.preventDefault();
+    }
 
     this.dragState.update((s) => ({
       ...s,
       hasMoved: true,
       lastMoveTime: now,
-      lastPageXPosition:
-        now - s.lastMoveTime > 50 ? xPosition : s.lastPageXPosition,
+      lastPageXPosition: now - s.lastMoveTime > 50 ? x : s.lastPageXPosition,
     }));
 
-    const deltaX = (xPosition - state.startX) * this.sensitivity;
+    const deltaX = (x - dragState.startX) * this.sensitivity;
 
-    if (this.store.draggable()) {
-      this.followUserMove(deltaX, false, xPosition);
+    if (this.shouldStartDrag(gestureStart.event ?? event)) {
+      this.followUserMove(deltaX, false, x);
     }
   }
 
@@ -712,13 +768,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const xEnd =
-      event instanceof MouseEvent
-        ? event.pageX
-        : (event as TouchEvent).changedTouches[0].pageX;
+    const { x } = this.getPointerPosition(event);
     const timeEnd = Date.now();
 
-    const dist = xEnd - this.gestureStart.x;
+    const dist = x - this.gestureStart.x;
     const duration = timeEnd - this.gestureStart.time;
     const absDist = Math.abs(dist);
 
@@ -798,6 +851,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       ...state,
       isDragging: false,
       hasMoved: false,
+      lockedAxis: null,
     }));
     this.domService.updateSlides();
   }
@@ -1116,5 +1170,42 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const translate =
       this.transformService.getTranslateFromPosition(currentPosition);
     this.store.patch({ currentTranslate: translate });
+  }
+
+  private shouldStartDrag(event: MouseEvent | TouchEvent): boolean {
+    if (!this.store.draggable()) {
+      return false;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (!target) {
+      return true;
+    }
+
+    const selector = this.store.state().dragIgnoreSelector;
+    if (!selector) {
+      return true;
+    }
+
+    const ignoreCandidate = target.closest(selector);
+    return !ignoreCandidate;
+  }
+
+  private getPointerPosition(event: MouseEvent | TouchEvent): {
+    x: number;
+    y: number;
+    isTouch: boolean;
+  } {
+    if (event instanceof MouseEvent) {
+      return { x: event.pageX, y: event.pageY, isTouch: false };
+    }
+
+    const touch = event.touches[0] ?? (event as TouchEvent).changedTouches[0];
+
+    return {
+      x: touch.pageX,
+      y: touch.pageY,
+      isTouch: true,
+    };
   }
 }
