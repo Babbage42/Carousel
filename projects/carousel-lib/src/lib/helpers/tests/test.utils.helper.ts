@@ -159,3 +159,10 @@ export class CarouselStoreFake {
     this._lastTranslate = value;
   }
 }
+
+export function createSlideElement(width: number): ElementRef<HTMLElement> {
+  const nativeElement = {
+    getBoundingClientRect: () => ({ width }),
+  } as any;
+  return new ElementRef(nativeElement);
+}

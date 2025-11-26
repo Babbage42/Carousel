@@ -65,6 +65,7 @@ export class CarouselStore {
     autoplay: false,
     draggable: true,
     peekEdges: undefined,
+    keyboardNavigation: true,
   });
 
   // Final state with all updated values.
@@ -92,10 +93,24 @@ export class CarouselStore {
 
   // Expose common values.
   // This values are calculated and updated from carousel component (inputs or dom).
-  readonly currentRealPosition = computed(
-    () => this._state().currentRealPosition
-  );
-  readonly currentPosition = computed(() => this._state().currentPosition);
+  readonly currentRealPosition = computed(() => {
+    const { currentRealPosition } = this._state();
+    const total = this.totalSlides();
+    if (total <= 0) {
+      return currentRealPosition;
+    }
+
+    return this.clampPosition(currentRealPosition, total);
+  });
+  readonly currentPosition = computed(() => {
+    const { currentPosition } = this._state();
+    const total = this.totalSlides();
+    if (total <= 0) {
+      return currentPosition;
+    }
+    return this.clampPosition(currentPosition, total);
+  });
+
   readonly hasReachedStart = computed(() => this._state().hasReachedStart);
   readonly hasReachedEnd = computed(() => this._state().hasReachedEnd);
   readonly currentTranslate = computed(() => this._state().currentTranslate);
@@ -120,12 +135,12 @@ export class CarouselStore {
    */
   readonly peekEdges = computed(() => this._state().peekEdges);
   readonly peekOffset = computed(() => {
-    if (this.center()) {
+    const peek = this.peekEdges();
+    if (!peek) {
       return 0;
     }
 
-    const peek = this.peekEdges();
-    if (!peek) {
+    if (this.center()) {
       return 0;
     }
 
@@ -133,12 +148,30 @@ export class CarouselStore {
       return peek.absoluteOffset;
     }
 
-    const referenceSlideWidth = this.slidesWidths()?.[0];
-    if (referenceSlideWidth) {
-      return (peek.relativeOffset ?? 0) * referenceSlideWidth;
+    const scrollWidth = this.scrollWidth();
+
+    const widths = untracked(() => this.slidesWidths());
+    const totalSlides = this.totalSlides();
+    let baseWidth = widths[0] ?? 0;
+
+    // Fallback
+    if (!baseWidth) {
+      const spv = this.slidesPerView();
+      if (
+        typeof spv === 'number' &&
+        spv > 0 &&
+        totalSlides > 0 &&
+        scrollWidth > 0
+      ) {
+        baseWidth = scrollWidth / totalSlides;
+      }
     }
 
-    return 0;
+    if (!baseWidth) {
+      return 0;
+    }
+
+    return baseWidth * (peek.relativeOffset ?? 0);
   });
 
   // Computed, need to update manually in state.
@@ -301,10 +334,10 @@ export class CarouselStore {
     this._state.update((curr) => ({ ...curr, ...partial }));
   }
 
-  constructor() {
-    // effect(() => {
-    //   const state = this.state();
-    //   console.log('--------------- State udated:', { ...state });
-    // });
+  private clampPosition(position: number, totalSlides: number) {
+    if (totalSlides <= 0) {
+      return -1;
+    }
+    return Math.min(Math.max(0, position), totalSlides - 1);
   }
 }

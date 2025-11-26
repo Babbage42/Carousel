@@ -239,6 +239,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     '[data-carousel-no-drag], a, button, input, textarea, select, [role="button"]'
   );
 
+  keyboardNavigation = input(true);
+
   initialSlide = input<number>(0);
   realInitialSlide = computed(() => {
     const initial = this.initialSlide();
@@ -321,6 +323,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       draggable: this.draggable(),
       peekEdges: this.peekEdges(),
       dragIgnoreSelector: this.dragIgnoreSelector(),
+      keyboardNavigation: this.keyboardNavigation(),
     };
     return inputs;
   });
@@ -859,6 +862,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   // Accessibility
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
+    if (!this.keyboardNavigation()) {
+      return;
+    }
     if (event.key === 'ArrowRight') {
       this.slideToNext();
       this.focusOnCurrentSlide();
@@ -870,7 +876,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (event.key === 'Home') {
       this.slideTo(0);
       this.focusOnCurrentSlide();
-
       event.preventDefault();
     } else if (event.key === 'End') {
       this.slideTo(this.store.totalSlides() - 1);

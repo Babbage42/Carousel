@@ -120,6 +120,8 @@ export interface Carousel {
   peekEdges: PeekEdges;
 
   dragIgnoreSelector?: string;
+
+  keyboardNavigation: boolean;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

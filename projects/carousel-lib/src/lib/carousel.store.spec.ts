@@ -1,17 +1,11 @@
 import { ElementRef } from '@angular/core';
 import { CarouselStore } from './carousel.store';
 import * as CalculationsHelper from './helpers/calculations.helper';
+import { createSlideElement } from './helpers/tests/test.utils.helper';
 
 describe('CarouselStore', () => {
   let store: CarouselStore;
   let consoleSpy: jest.SpyInstance;
-
-  function createSlideElement(width: number): ElementRef<HTMLElement> {
-    const nativeElement = {
-      getBoundingClientRect: () => ({ width }),
-    } as any;
-    return new ElementRef(nativeElement);
-  }
 
   function setAllSlidesSize(fullWidth: number, scrollWidth: number) {
     const nativeElement = {

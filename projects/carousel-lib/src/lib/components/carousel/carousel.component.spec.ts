@@ -7,8 +7,9 @@ import { CarouselNavigationService } from '../../services/carousel-navigation.se
 import { CarouselLoopService } from '../../services/carousel-loop.service';
 import { CarouselTransformService } from '../../services/carousel-transform.service';
 import { CarouselBreakpointService } from '../../services/carousel-breakpoints.service';
-import { Renderer2 } from '@angular/core';
+import { Renderer2, signal } from '@angular/core';
 import { CarouselDomService } from '../../services/carousel-dom.service';
+import { createSlideElement } from '../../helpers/tests/test.utils.helper';
 
 describe('CarouselComponent', () => {
   let fixture: ComponentFixture<CarouselComponent>;
@@ -37,11 +38,24 @@ describe('CarouselComponent', () => {
 
   it('should initialize uniqueCarouselId and patch store in ngOnInit', () => {
     fixture.componentRef.setInput('initialSlide', 2);
-    fixture.detectChanges();
 
     const store = component.store as CarouselStore;
+
+    fixture.detectChanges();
+
+    store.patch({
+      slidesElements: [
+        createSlideElement(100),
+        createSlideElement(100),
+        createSlideElement(100),
+        createSlideElement(100),
+        createSlideElement(100),
+      ],
+    });
+
     const state = store.state();
 
+    expect(state.currentPosition).toBe(2);
     expect(state.currentRealPosition).toBe(2);
     expect(state.uniqueCarouselId).toBeTruthy();
   });
