@@ -140,7 +140,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   debug = input(true);
 
-  slides = input<Slide[]>([]);
+  slides = input([], {
+    transform: (v: Slide[] | string[]): Slide[] => {
+      return v.map((el: string | Slide) =>
+        typeof el === 'string' ? { image: el } : el
+      );
+    },
+  });
   slidesPerView = input(4.5, {
     transform: (v: number | string): number | 'auto' => {
       if (v === 'auto') {
@@ -1212,5 +1218,30 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       y: touch.pageY,
       isTouch: true,
     };
+  }
+
+  /**
+   * Slide to the slide whose id matches the given key.
+   */
+  public slideToKey(id: string, animate = true) {
+    let index = -1;
+
+    const slides = this.slides();
+    const projected = this.projectedSlides?.() ?? [];
+
+    if (slides && slides.length > 0) {
+      index = slides.findIndex((slide) => slide?.id === id);
+    }
+
+    if (index === -1 && projected.length > 0) {
+      index = projected.findIndex((dir) => dir.slideId === id);
+    }
+    if (index === -1) {
+      return;
+    }
+
+    this.loopService.insertLoopSlides(index);
+
+    this.slideTo(index, animate);
   }
 }

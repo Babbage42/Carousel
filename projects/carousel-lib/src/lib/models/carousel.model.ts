@@ -4,7 +4,10 @@ import { ElementRef } from '@angular/core';
 
 export const TRANSITION_DURATION = 400; // ms
 
-export interface Slide {}
+export type Slide = {
+  image: string;
+  id?: string;
+};
 
 export type AutoplayOptions = {
   delay?: number; // ms entre 2 avances (par défaut 2500)

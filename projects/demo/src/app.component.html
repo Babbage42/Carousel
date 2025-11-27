@@ -565,3 +565,42 @@
     </div>
   </app-carousel>
 </div>
+
+<div style="width: 80%; padding: 50px">
+  <h1>BY KEY</h1>
+  <input #valueKey type="string" />
+  <button (click)="carousel.slideToKey(valueKey.value)">GO</button>
+  <app-carousel
+    #carousel
+    [dragIgnoreSelector]="'[data-carousel-no-drag], button'"
+  >
+    <div *slide>
+      <span>teST</span>
+    </div>
+    <div *slide>
+      <img src="https://picsum.photos/300/200?random=5" width="50" />
+    </div>
+    <div *slide="'test-id'">
+      <span data-carousel-no-drag>teST</span>
+    </div>
+    <div *slide>
+      <span>teST</span>
+      <button>button</button>
+    </div>
+    <div *slide>
+      <span>teST</span>
+    </div>
+    <div *slide>
+      <span>teST</span>
+    </div>
+    <div *slide>
+      <span>teST</span>
+    </div>
+    <div *slide>
+      <span>teST</span>
+    </div>
+    <div *slide>
+      <span>teST</span>
+    </div>
+  </app-carousel>
+</div>
