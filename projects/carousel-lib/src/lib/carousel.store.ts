@@ -64,6 +64,7 @@ export class CarouselStore {
     stepSlides: 1,
     autoplay: false,
     draggable: true,
+    canSwipe: true,
     peekEdges: undefined,
     keyboardNavigation: true,
   });
@@ -128,6 +129,7 @@ export class CarouselStore {
   readonly marginStart = computed(() => this._state().marginStart);
   readonly marginEnd = computed(() => this._state().marginEnd);
   readonly draggable = computed(() => this._state().draggable);
+  readonly canSwipe = computed(() => this._state().canSwipe);
   readonly slideOnClick = computed(() => this._state().slideOnClick);
 
   /**

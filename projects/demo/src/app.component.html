@@ -88,7 +88,6 @@
   ></app-carousel>
 </div>
 
-<!-- [initialSlide]="2" -->
 <div style="width: 100%">
   <h1>LOOP CENTER</h1>
   <app-carousel
@@ -473,25 +472,6 @@
 
 <div style="width: 80%; padding: 50px">
   <app-carousel
-    [slidesPerView]="'auto'"
-    [marginStart]="0"
-    [marginEnd]="0"
-    [initialSlide]="0"
-    [slides]="[
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200
-    ]"
-  ></app-carousel>
-</div>
-
-<div style="width: 80%; padding: 50px">
-  <app-carousel
     [slidesPerView]="7"
     [marginStart]="0"
     [marginEnd]="0"
@@ -603,4 +583,22 @@
       <span>teST</span>
     </div>
   </app-carousel>
+</div>
+
+<div style="width: 80%; padding: 50px">
+  <app-carousel
+    [slidesPerView]="'auto'"
+    [marginStart]="0"
+    [marginEnd]="0"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  ></app-carousel>
 </div>

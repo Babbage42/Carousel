@@ -39,7 +39,9 @@ export class ImagesReadyDirective implements AfterViewInit, OnDestroy {
 
     const visibleOrEagerImages = imgs.filter((img) => {
       const loading = img.getAttribute("loading");
-      if (loading === "eager") return true;
+      if (loading === "eager") {
+        return true;
+      }
 
       const rect = img.getBoundingClientRect();
       return (
@@ -83,7 +85,9 @@ export class ImagesReadyDirective implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
 
     this.waitAllCurrentImages().then(() => {
       this.zone.run(() => this.imagesReady.emit());

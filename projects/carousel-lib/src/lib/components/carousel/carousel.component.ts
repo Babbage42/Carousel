@@ -65,6 +65,7 @@ import { CarouselNavigationService } from '../../services/carousel-navigation.se
 import { CarouselPhysicsService } from '../../services/carousel-physics.service';
 import { CarouselDomService } from '../../services/carousel-dom.service';
 import { CarouselBreakpointService } from '../../services/carousel-breakpoints.service';
+import { rafThrottle } from '../../helpers/raf-throttle.helper';
 
 @Component({
   selector: 'app-carousel',
@@ -230,6 +231,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   });
   draggable = input(true);
+  canSwipe = input(true);
   /**
    * Peek mode with non-center :
    * slide percent to be visible at edges.
@@ -289,6 +291,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly transitionDuration = this._transitionDuration.asReadonly();
 
   public readonly slidesGap = computed(() => `${this.store.spaceBetween()}px`);
+  private initialResizeObserverAttached = false;
+  private layoutInitialized = false;
+  private slideResizeObserver?: ResizeObserver;
 
   public readonly slidesGridColumns = computed(() => {
     const slidesPerView = this.store.slidesPerView();
@@ -327,6 +332,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       autoplay: this.autoplay(),
       lazyLoading: this.lazyLoading(),
       draggable: this.draggable(),
+      canSwipe: this.canSwipe(),
       peekEdges: this.peekEdges(),
       dragIgnoreSelector: this.dragIgnoreSelector(),
       keyboardNavigation: this.keyboardNavigation(),
@@ -406,18 +412,22 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     afterRenderEffect(() => {
-      const slides = this.slidesElements();
+      const slidesEls = this.slidesElements();
+      if (!slidesEls.length) {
+        return;
+      }
 
-      if (this.areImagesReady()) {
-        untracked(() => {
-          this.store.patch({
-            slidesElements: [...this.slidesElements()],
-            slidesIndexOrder: slides.map((_, index) => index),
-          });
-          this.transformService.calculateInitialTranslations();
-          this.loopService.initializeLoopCenter();
-          this.layoutReady.set(true);
-        });
+      if (!this.areImagesReady()) {
+        return;
+      }
+
+      if (!this.initialResizeObserverAttached) {
+        this.initialResizeObserverAttached = true;
+        this.setupSlidesResizeObserver();
+      }
+
+      if (!this.layoutInitialized) {
+        this.updateLayoutFromDom();
       }
     });
 
@@ -469,7 +479,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.applyUniqueId();
     this.initProjectedSlides();
-    this.refresh();
+    this.refresh(false);
     this.setupResizeObserver();
   }
 
@@ -495,14 +505,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     effect(() => {
       console.log('--------------- State udated:', this.store.state());
-
-      //   {
-      //   position: this.currentPosition(),
-      //   realPosition: this.currentRealPosition(),
-      //   translate: this.store.currentTranslate(),
-      //   hasReachedStart: this.hasReachedStart(),
-      //   hasReachedEnd: this.hasReachedEnd(),
-      // });
     });
   }
 
@@ -521,8 +523,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  private refresh() {
-    this.store.patch({ slidesElements: [...this.slidesElements()] });
+  private refresh(updateSlides = true) {
+    if (updateSlides) {
+      this.store.patch({ slidesElements: [...this.slidesElements()] });
+    }
     this.domService.updateSlides();
     this.refreshTranslate();
   }
@@ -568,13 +572,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   public slideToNext() {
     let indexSlided = undefined;
-    // if (this.store.state().stepSlides > 1) {
-    //   indexSlided =
-    //     this.store.state().currentPosition +
-    //     (this.store.state().stepSlides - 1) +
-    //     1;
-    //   indexSlided = positiveModulo(indexSlided, this.totalSlides());
-    // }
     this.loopService.insertLoopSlides(indexSlided, false);
 
     const hasReachedEnd = this.store.hasReachedEnd();
@@ -814,7 +811,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Swipe
-    if (isSwipe) {
+    if (isSwipe && this.store.canSwipe()) {
       if (dist < 0) {
         this.slideToNext();
       } else {
@@ -825,7 +822,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // CLassic translation
-    this.slideToNearest();
+    if (this.store.draggable()) {
+      this.slideToNearest();
+    }
     this.resetDrag();
   }
 
@@ -1243,5 +1242,60 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loopService.insertLoopSlides(index);
 
     this.slideTo(index, animate);
+  }
+
+  private updateLayoutFromDom() {
+    const slidesEls = this.slidesElements();
+    if (!slidesEls.length) {
+      return;
+    }
+
+    const firstWidth = slidesEls[0]?.nativeElement?.clientWidth ?? 0;
+    if (!firstWidth) {
+      return;
+    }
+
+    untracked(() => {
+      this.store.patch({
+        slidesElements: [...slidesEls],
+        slidesIndexOrder: slidesEls.map((_, index) => index),
+      });
+
+      this.transformService.calculateInitialTranslations();
+      this.loopService.initializeLoopCenter();
+      this.layoutReady.set(true);
+    });
+
+    this.layoutInitialized = true;
+  }
+
+  private setupSlidesResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const slidesEls = this.slidesElements();
+    if (!slidesEls.length) {
+      return;
+    }
+
+    if (!this.slideResizeObserver) {
+      const callback = rafThrottle(() => {
+        if (!this.areImagesReady()) {
+          return;
+        }
+        this.updateLayoutFromDom();
+      });
+
+      this.slideResizeObserver = new ResizeObserver(() => {
+        callback();
+      });
+    }
+
+    this.slideResizeObserver.disconnect();
+
+    slidesEls.forEach((el) =>
+      this.slideResizeObserver!.observe(el.nativeElement)
+    );
   }
 }
