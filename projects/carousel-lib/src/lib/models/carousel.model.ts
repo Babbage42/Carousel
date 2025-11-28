@@ -7,6 +7,7 @@ export const TRANSITION_DURATION = 400; // ms
 export type Slide = {
   image: string;
   id?: string;
+  disabled?: boolean;
 };
 
 export type AutoplayOptions = {
@@ -119,6 +120,8 @@ export interface Carousel {
   autoplay: boolean | AutoplayOptions;
 
   draggable: boolean;
+
+  canSwipe: boolean;
 
   peekEdges: PeekEdges;
 

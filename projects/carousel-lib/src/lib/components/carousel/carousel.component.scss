@@ -83,10 +83,10 @@
     transform: translate3d(0, 0, 0);
 
     .slide {
-      // &.clone {
-      //   display: none;
-      // }
-
+      &.slide--disabled {
+        opacity: 0.4;
+        pointer-events: none;
+      }
       will-change: transform;
       transform: translateZ(0);
       backface-visibility: hidden;

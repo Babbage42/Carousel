@@ -561,6 +561,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       newPosition =
         this.navigationService.calculateNewPositionAfterNavigation(false);
     }
+
+    newPosition = this.isSlideDisabled(newPosition)
+      ? this.findNextEnabledIndex(this.store.currentPosition(), -1)
+      : newPosition;
+
     this.slidePrev.emit();
 
     this.slideTo(newPosition);
@@ -583,6 +588,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         this.navigationService.calculateNewPositionAfterNavigation(true);
     }
 
+    newPosition = this.isSlideDisabled(newPosition)
+      ? this.findNextEnabledIndex(this.store.currentPosition(), +1)
+      : newPosition;
+
     this.slideNext.emit();
 
     this.slideTo(newPosition);
@@ -599,7 +608,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isReachStart()
       );
 
-    this.slideTo(newPosition);
+    const target = !this.isSlideDisabled(newPosition)
+      ? newPosition
+      : this.store.currentPosition();
+
+    this.slideTo(target);
   }
 
   private focusOnCurrentSlide() {
@@ -879,11 +892,14 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.focusOnCurrentSlide();
       event.preventDefault();
     } else if (event.key === 'Home') {
-      this.slideTo(0);
+      const firstEnabled = this.findNextEnabledIndex(-1, +1) ?? 0;
+      this.slideTo(firstEnabled);
       this.focusOnCurrentSlide();
       event.preventDefault();
     } else if (event.key === 'End') {
-      this.slideTo(this.store.totalSlides() - 1);
+      const lastIndex = this.store.totalSlides() - 1;
+      const lastEnabled = this.findNextEnabledIndex(0, -1) ?? lastIndex;
+      this.slideTo(lastEnabled);
       this.focusOnCurrentSlide();
       event.preventDefault();
     }
@@ -1038,6 +1054,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!isNaN(position)) {
           const index = position - 1;
           this.loopService.insertLoopSlides(index);
+
+          if (this.isSlideDisabled(index)) {
+            return;
+          }
 
           console.log('SLIDING AFTER CLICK');
           this.slideTo(index);
@@ -1297,5 +1317,40 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     slidesEls.forEach((el) =>
       this.slideResizeObserver!.observe(el.nativeElement)
     );
+  }
+
+  public isSlideDisabled(index: number): boolean {
+    const slidesInput = this.slides();
+    if (slidesInput && slidesInput.length) {
+      return !!slidesInput[index]?.disabled;
+    }
+
+    const projected = this.projectedSlides?.() ?? [];
+    if (projected.length) {
+      return !!projected[index]?.slideDisabled;
+    }
+
+    return false;
+  }
+
+  private findNextEnabledIndex(
+    from: number,
+    direction: 1 | -1
+  ): number | undefined {
+    const total = this.totalSlides();
+    if (!total) {
+      return undefined;
+    }
+
+    let idx = from;
+
+    for (let i = 0; i < total; i++) {
+      idx = (idx + direction + total) % total;
+      if (!this.isSlideDisabled(idx)) {
+        return idx;
+      }
+    }
+
+    return undefined;
   }
 }

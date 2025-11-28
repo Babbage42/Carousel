@@ -570,6 +570,17 @@ export const WithRelativePeekEdges: Story = {
   },
 };
 
+export const DisabledSlides: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10).map((el, index) => ({
+      image: el,
+      disabled: index === 2 || index === 5,
+    })),
+    slidesPerView: '3',
+  },
+};
+
 export const Interaction_NextPrev: Story = {
   render: TemplateWithSlides,
   args: {

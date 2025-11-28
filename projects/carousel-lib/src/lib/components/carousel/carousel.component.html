@@ -48,14 +48,22 @@
       (imagesChanged)="onImagesChanged()"
     >
       @if (slides().length) { @for (slide of slides(); track $index) {
-      <div #slide class="slide position-{{ $index + 1 }}">
+      <div
+        #slide
+        class="slide position-{{ $index + 1 }}"
+        [class.slide--disabled]="isSlideDisabled($index)"
+      >
         <img src="{{ slide.image }}" alt="" />
         <span>{{ $index + 1 }}</span>
       </div>
       } } @else if (projectedSlides().length) { @for (slide of
       projectedSlides(); track $index) {
       <ng-container>
-        <div #slide class="slide position-{{ $index + 1 }}">
+        <div
+          #slide
+          class="slide position-{{ $index + 1 }}"
+          [class.slide--disabled]="isSlideDisabled($index)"
+        >
           <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
         </div>
       </ng-container>
