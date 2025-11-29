@@ -102,7 +102,7 @@ describe('CarouselStore', () => {
       setAllSlidesSize(300, 900);
 
       const baseMax = -(900 - 300 - 0); // -(600) = -600
-      const expectedMax = baseMax - 300 / 2 - 100 / 2; // -600 - 150 - 50 = -800
+      const expectedMax = baseMax - 300 / 2 + 100 / 2; // -600 - 150 + 50 = -700
       const expectedMin = 300 / 2 - 100 / 2; // 150 - 50 = 100
 
       expect(store.maxTranslate()).toBe(expectedMax);

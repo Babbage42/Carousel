@@ -191,7 +191,8 @@ export class CarouselStore {
       this.marginEnd() -
       this.peekOffset();
     if (this.center() && !this.notCenterBounds()) {
-      return maxTranslate - this.fullWidth() / 2 - this.slidesWidths()[0] / 2;
+      // @todo imprive slide width calculation ?
+      return maxTranslate - this.fullWidth() / 2 + this.slidesWidths()[0] / 2;
     }
     return maxTranslate;
   });
