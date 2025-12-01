@@ -114,4 +114,16 @@
       }
     }
   }
+
+  .carousel-thumb-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: var(--carousel-thumb-indicator-height, 3px);
+    border-radius: var(--carousel-thumb-indicator-radius, 999px);
+    background: var(--carousel-thumb-indicator-color, #000);
+
+    pointer-events: none;
+    transition: transform ease-out, width ease-out;
+  }
 }

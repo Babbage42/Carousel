@@ -8,10 +8,11 @@
   [style.padding-left.px]="peekEdgesOffset()"
   [style.padding-right.px]="peekEdgesOffset()"
 >
+  @if(debug()) {
   <span>total slides:{{ totalSlides() }}</span>
   <span>current anchor:{{ currentPosition() }}</span>
   <span>real position:{{ currentRealPosition() }}</span>
-  <span>total visible:{{ totalSlidesVisible() }}</span>
+  }
 
   <div class="slides-wrapper">
     @if (showControls()) {
@@ -25,8 +26,6 @@
       [loop]="loop()"
       [rewind]="rewind()"
       [currentPosition]="currentPosition()"
-      [hasReachedStart]="hasReachedStart()"
-      [hasReachedEnd]="hasReachedEnd()"
       [totalSlides]="totalSlides()"
       [iconSize]="iconSize()"
     >
@@ -54,7 +53,10 @@
         [class.slide--disabled]="isSlideDisabled($index)"
       >
         <img src="{{ slide.image }}" alt="" />
+
+        @if(debug()) {
         <span>{{ $index + 1 }}</span>
+        }
       </div>
       } } @else if (projectedSlides().length) { @for (slide of
       projectedSlides(); track $index) {
@@ -71,15 +73,24 @@
       <ng-content></ng-content>
       }
     </div>
+
+    @if(thumbsFor() && thumbsOptions().selectionBar) {
+    <div
+      class="carousel-thumb-indicator"
+      [style.transform]="'translateX(' + thumbIndicatorLeft() + 'px)'"
+      [style.transition-duration.ms]="thumbsTransitionDuration()"
+      [style.width.px]="thumbIndicatorWidth()"
+    ></div>
+    }
   </div>
 
-  @if (pagination() && !pagination()!.external) {
+  @if (store.pagination() && !store.pagination()!.external) {
   <ng-container *ngTemplateOutlet="paginationTemplate"></ng-container>
   }
 </div>
 
 <ng-template #paginationTemplate>
-  @if (pagination()) {
+  @if (store.pagination()) {
   <app-pagination
     (goToSlide)="slideTo($event)"
     [currentPosition]="currentPosition()"

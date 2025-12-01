@@ -11,6 +11,13 @@ export class CarouselNavigationService {
    * @returns
    */
   public calculateNewPositionAfterNavigation(isSlidingNext = true) {
+    if (this.store.navigateSlideBySlide()) {
+      const newIndex = isSlidingNext
+        ? this.store.currentRealPosition() + this.store.state().stepSlides
+        : this.store.currentRealPosition() - this.store.state().stepSlides;
+      return Math.max(0, Math.min(newIndex, this.store.totalSlides() - 1));
+    }
+
     const newIndex = isSlidingNext
       ? this.store.currentPosition() + this.store.state().stepSlides
       : this.store.currentPosition() - this.store.state().stepSlides;

@@ -51,6 +51,7 @@ import {
   CarouselResponsiveConfig,
   PeekEdges,
   Slide,
+  THUMBS_TRANSITION_DURATION_MS,
   TRANSITION_DURATION,
 } from '../../models/carousel.model';
 import {
@@ -255,6 +256,38 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const firstSlideAnchor = this.firstSlideAnchor();
     return Math.max(firstSlideAnchor, initial);
   });
+  /**
+   * By default, navigate prev or next will move page by page.
+   * With this option, you can force carousel to really slide to prev or next slide.
+   * Useful when you want to highligh the currently selected slide.
+   * Useful in thumbs mode.
+   */
+  navigateSlideBySlide = input(false);
+  /**
+   * Can pass ref of master carousel.
+   * Current carousel will serve as thumbnails pilote.
+   */
+  thumbsFor = input<CarouselComponent>();
+  /**
+   * Thumbs custom options.
+   */
+  thumbsOptions = input({
+    selectionBar: true,
+  });
+
+  /**
+   * Subscribe to master positions.
+   */
+  readonly masterActiveIndex = computed(() => {
+    const master = this.thumbsFor();
+    if (!master) {
+      return undefined;
+    }
+    return {
+      currentPosition: master.currentPosition(),
+      currentRealPosition: master.currentRealPosition(),
+    };
+  });
 
   public fixSubPixelIssue = computed(
     () =>
@@ -289,6 +322,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly _transitionDuration = signal(0);
   readonly transitionDuration = this._transitionDuration.asReadonly();
+  public readonly thumbsTransitionDuration = signal(0);
 
   public readonly slidesGap = computed(() => `${this.store.spaceBetween()}px`);
   private initialResizeObserverAttached = false;
@@ -334,8 +368,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       draggable: this.draggable(),
       canSwipe: this.canSwipe(),
       peekEdges: this.peekEdges(),
+      pagination: this.pagination(),
       dragIgnoreSelector: this.dragIgnoreSelector(),
       keyboardNavigation: this.keyboardNavigation(),
+      navigateSlideBySlide: this.navigateSlideBySlide(),
+      thumbsOptions: this.thumbsOptions(),
     };
     return inputs;
   });
@@ -346,6 +383,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @Output() touched = new EventEmitter();
   @Output() reachEnd = new EventEmitter();
   @Output() reachStart = new EventEmitter();
+  indexSelected = output<number>();
   imagesLoaded = output<void>();
 
   firstTouch = false;
@@ -373,10 +411,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     event?: MouseEvent | TouchEvent;
   } = { x: 0, y: 0, time: 0 };
 
+  /**
+   * Thumb selection bar positionning.
+   */
+  thumbIndicatorLeft = signal(0);
+  thumbIndicatorWidth = signal(0);
+
   constructor(
     private renderer: Renderer2,
     private detectChanges: ChangeDetectorRef,
-    private ngZone: NgZone,
     private sanitizer: DomSanitizer,
     public carouselRegistry: CarouselRegistryService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -461,6 +504,102 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     });
+
+    effect(() => {
+      if (this.thumbsFor()) {
+        // Apply default configuration.
+        this.updateCarouselState({
+          slidesPerView: 7,
+          center: false,
+          loop: false,
+          draggable: true,
+          canSwipe: true,
+          showControls: true,
+          pagination: undefined,
+          slideOnClick: true,
+          navigateSlideBySlide: true,
+          resistance: false,
+          peekEdges: {
+            relativeOffset: 0.5,
+          },
+        });
+      }
+    });
+
+    /**
+     * Force thumb to follow the master currentIndex.
+     */
+    effect(() => {
+      const master = this.thumbsFor();
+      if (!master) {
+        return;
+      }
+
+      const masterActiveIndex = this.masterActiveIndex();
+      if (!masterActiveIndex) {
+        return;
+      }
+
+      const { currentPosition, currentRealPosition } = masterActiveIndex;
+      if (currentPosition === undefined || currentPosition < 0) {
+        return;
+      }
+
+      untracked(() => {
+        this.slideTo(currentRealPosition, true, true);
+      });
+    });
+
+    effect(() => {
+      this.indexSelected.emit(this.store.currentRealPosition());
+    });
+
+    /**
+     * Positionning of thumb selection bar.
+     */
+    afterRenderEffect(() => {
+      const master = this.thumbsFor();
+      if (!master) {
+        return;
+      }
+
+      if (!this.thumbsOptions()?.selectionBar) {
+        return;
+      }
+
+      const index = this.currentRealPosition();
+      if (index === undefined || index < 0) {
+        return;
+      }
+
+      if (index === undefined || index < 0) {
+        return;
+      }
+
+      // To follow user move.
+      this.store.currentTranslate();
+
+      const slides = this.slidesElements();
+      const container = this.allSlides()?.nativeElement as HTMLElement;
+      const active = slides[index]?.nativeElement as HTMLElement | undefined;
+
+      if (!container || !active) {
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+
+      const offset = untracked(
+        () =>
+          activeRect.left - containerRect.left + this.store.currentTranslate()
+      );
+
+      untracked(() => {
+        this.thumbIndicatorLeft.set(offset);
+        this.thumbIndicatorWidth.set(activeRect.width);
+      });
+    });
   }
 
   ngOnInit(): void {
@@ -504,7 +643,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     effect(() => {
-      console.log('--------------- State udated:', this.store.state());
+      if (this.debug()) {
+        console.log('--------------- State udated:', this.store.state());
+      }
     });
   }
 
@@ -543,6 +684,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * From navigation or accessibility.
    */
   public slideToPrev() {
+    this.slidePrev.emit();
+
+    this.loopService.insertLoopSlides(undefined, true);
+
     let indexSlided = undefined;
     if (this.store.state().stepSlides > 1) {
       indexSlided =
@@ -551,11 +696,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         1;
       indexSlided = positiveModulo(indexSlided, this.totalSlides());
     }
-    this.loopService.insertLoopSlides(undefined, true);
 
     const hasReachedStart = this.store.hasReachedStart();
     let newPosition: number | undefined = undefined;
-    if (hasReachedStart && this.rewind()) {
+    if (hasReachedStart && this.store.rewind()) {
       newPosition = this.store.totalSlides() - 1;
     } else {
       newPosition =
@@ -565,8 +709,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     newPosition = this.isSlideDisabled(newPosition)
       ? this.findNextEnabledIndex(this.store.currentPosition(), -1)
       : newPosition;
-
-    this.slidePrev.emit();
 
     this.slideTo(newPosition);
   }
@@ -581,7 +723,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const hasReachedEnd = this.store.hasReachedEnd();
     let newPosition: number | undefined = undefined;
-    if (hasReachedEnd && this.rewind()) {
+    if (hasReachedEnd && this.store.rewind()) {
       newPosition = 0;
     } else {
       newPosition =
@@ -598,15 +740,16 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * When we need to slide to nearest index.
+   * When we need to slide to nearest index after translation.
    */
   private slideToNearest() {
-    console.log('SLIDING TO NEAREST');
     const newPosition =
       this.transformService.calculateTargetPositionAfterTranslation(
         this.isReachEnd(),
         this.isReachStart()
       );
+
+    console.log('SLIDING TO NEAREST', newPosition);
 
     const target = !this.isSlideDisabled(newPosition)
       ? newPosition
@@ -632,8 +775,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     isDragging: boolean;
     hasMoved: boolean;
     hasExtraTranslation: boolean;
-    startX: number;
     lastX: number;
+    currentX: number;
     lastMoveTime: number;
     lastClickTime: number;
     lastPageXPosition: number;
@@ -642,8 +785,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     isDragging: false,
     hasMoved: false,
     hasExtraTranslation: false,
-    startX: 0,
     lastX: 0,
+    currentX: 9,
     lastMoveTime: 0,
     lastClickTime: 0,
     lastPageXPosition: 0,
@@ -679,7 +822,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       isDragging: true,
       hasMoved: false,
       hasExtraTranslation: false,
-      startX: x,
+      currentX: x,
       lastPageXPosition: y,
       lastClickTime: new Date().getTime(),
       lockedAxis: null,
@@ -766,14 +909,15 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       event.preventDefault();
     }
 
+    const deltaX = (x - dragState.currentX) * this.sensitivity;
+
     this.dragState.update((s) => ({
       ...s,
       hasMoved: true,
       lastMoveTime: now,
+      currentX: this.dragState().currentX + deltaX,
       lastPageXPosition: now - s.lastMoveTime > 50 ? x : s.lastPageXPosition,
     }));
-
-    const deltaX = (x - dragState.startX) * this.sensitivity;
 
     if (this.shouldStartDrag(gestureStart.event ?? event)) {
       this.followUserMove(deltaX, false, x);
@@ -811,13 +955,21 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const isSwipe = duration < SWIPE_TIME_LIMIT && absDist > SWIPE_THRESHOLD;
 
     // Freemode specific
-    if (this.freeMode()) {
+    if (this.store.freeMode() || this.store.navigateSlideBySlide()) {
       if (isSwipe) {
         this.physicsService.applyInertia(undefined, (translate) => {
           this.updateTransform(translate);
         });
-      } else if (this.dragState().hasExtraTranslation) {
+        this.resetDrag();
+        return;
+      }
+      if (
+        this.dragState().hasExtraTranslation &&
+        !this.store.navigateSlideBySlide()
+      ) {
         this.slideToNearest();
+        this.resetDrag();
+        return;
       }
       this.resetDrag();
       return;
@@ -942,12 +1094,19 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.store.currentTranslate() >= this.store.state().minTranslate;
   }
 
+  /**
+   * @todo should alos update position ???
+   * @param deltaX
+   * @param noExtraTranslation
+   * @param xPosition
+   */
   private followUserMove(
     deltaX: number,
     noExtraTranslation = false,
     xPosition?: number
   ) {
-    let newTranslate = this.store.lastTranslate() + deltaX;
+    let newTranslate =
+      this.store.currentTranslate() + deltaX / this.sensitivity;
 
     const isOutOfBounds =
       !this.store.state().loop &&
@@ -955,11 +1114,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         newTranslate > this.store.state().minTranslate);
 
     if (isOutOfBounds) {
-      if (!this.resistance() || noExtraTranslation) {
+      if (!this.store.resistance() || noExtraTranslation) {
         // If we are out of bounds, we don't want to apply extra translation.
         newTranslate = Math.max(
-          this.store.state().maxTranslate,
-          Math.min(newTranslate, this.store.state().minTranslate)
+          this.store.maxTranslate(),
+          Math.min(newTranslate, this.store.minTranslate())
         );
       } else {
         this.dragState.update((state) => ({
@@ -967,7 +1126,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
           hasExtraTranslation: true,
         }));
         newTranslate =
-          this.store.lastTranslate() +
+          this.store.currentTranslate() +
           (deltaX / this.sensitivity) * this.velocityBounds;
       }
     } else {
@@ -1024,7 +1183,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private initProjectedSlides() {
     const isProjected =
-      this.slides().length === 0 &&
+      this.store.slides().length === 0 &&
       this.projectedSlides() &&
       this.projectedSlides().length > 0;
 
@@ -1059,7 +1218,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
           }
 
-          console.log('SLIDING AFTER CLICK');
+          console.log('SLIDING AFTER CLICK', index);
           this.slideTo(index);
         }
       }
@@ -1137,6 +1296,23 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this._transitionDuration.set(0);
   }
 
+  private enableThumbsTransition(customTransition?: number) {
+    if (!this.thumbsOptions()?.selectionBar) {
+      return;
+    }
+    this.thumbsTransitionDuration.set(
+      customTransition ?? THUMBS_TRANSITION_DURATION_MS
+    );
+    setTimeout(
+      () => this.disableThumbsTransition(),
+      customTransition ?? THUMBS_TRANSITION_DURATION_MS
+    );
+  }
+
+  private disableThumbsTransition() {
+    this.thumbsTransitionDuration.set(0);
+  }
+
   /**
    * Move slides.
    * From arrows or by mouse / touch.
@@ -1156,7 +1332,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.handleReachEvents();
 
-    if (!this.store.state().freeMode || !updatePosition) {
+    if (!updatePosition || this.store.navigateSlideBySlide()) {
       this.domService.updateSlides();
       return;
     }
@@ -1165,9 +1341,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.transformService.getNewPositionFromTranslate().position;
     if (newPosition !== undefined) {
       const position = positiveModulo(newPosition, this.store.totalSlides());
-      this.store.setCurrentPosition(this.clampToVisibleSlide(position));
-      this.store.patch({ currentRealPosition: position });
-      this.domService.updateSlides();
+      if (position !== this.store.currentPosition()) {
+        this.store.setCurrentPosition(this.clampToVisibleSlide(position));
+        this.store.patch({ currentRealPosition: position });
+        this.domService.updateSlides();
+      }
     }
   }
 
@@ -1176,8 +1354,17 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * If index is not provided, it will slide to the current position.
    * @param index
    */
-  public slideTo(index = this.store.currentRealPosition(), animate = true) {
-    console.log('SLIDING TO ', index);
+  public slideTo(
+    index = this.store.currentRealPosition(),
+    animate = true,
+    force = false
+  ) {
+    console.log('**** SLIDING TO ', index);
+    if (!force && this.thumbsFor()) {
+      this.thumbsFor()?.slideTo(index, animate);
+      return;
+    }
+
     this.store.patch({ currentRealPosition: index });
 
     index = this.clampToVisibleSlide(index);
@@ -1188,6 +1375,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (animate) {
       this.enableTransition();
+    }
+
+    if (this.thumbsFor()) {
+      this.enableThumbsTransition();
     }
 
     const translateToApply =
@@ -1245,7 +1436,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public slideToKey(id: string, animate = true) {
     let index = -1;
 
-    const slides = this.slides();
+    const slides = this.store.slides();
     const projected = this.projectedSlides?.() ?? [];
 
     if (slides && slides.length > 0) {
@@ -1320,7 +1511,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public isSlideDisabled(index: number): boolean {
-    const slidesInput = this.slides();
+    const slidesInput = this.store.slides();
     if (slidesInput && slidesInput.length) {
       return !!slidesInput[index]?.disabled;
     }

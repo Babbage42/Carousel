@@ -1,6 +1,6 @@
 <ng-template #leftControl>
   @if (alwaysShowControls || loop || rewind || (currentPosition > 0 &&
-  !hasReachedStart)) {
+  !hasReachedStart())) {
   <button
     tabindex="0"
     [style.left.px]="carouselRegistry.hasExternalControls() ? null : 0"
@@ -34,7 +34,7 @@
 
 <ng-template #rightControl>
   @if (alwaysShowControls || loop || rewind || (currentPosition < totalSlides -
-  1 && !hasReachedEnd)) {
+  1 && !hasReachedEnd())) {
   <button
     tabindex="0"
     [style.right.px]="carouselRegistry.hasExternalControls() ? null : 0"

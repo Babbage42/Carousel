@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
   ContentChild,
   effect,
   EventEmitter,
+  inject,
   Input,
   OnInit,
   Output,
@@ -12,14 +14,17 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CarouselRegistryService } from '../carousel/carousel-registry.service';
+import { CarouselStore } from '../../carousel.store';
 
 @Component({
-    selector: 'app-navigation',
-    imports: [CommonModule],
-    templateUrl: './navigation.component.html',
-    styleUrl: './navigation.component.scss'
+  selector: 'app-navigation',
+  imports: [CommonModule],
+  templateUrl: './navigation.component.html',
+  styleUrl: './navigation.component.scss',
 })
 export class NavigationComponent {
+  public store = inject(CarouselStore);
+
   @Input() customLeftArrow?: TemplateRef<any>;
   @Input() customRightArrow?: TemplateRef<any>;
 
@@ -31,10 +36,22 @@ export class NavigationComponent {
   @Input() loop = false;
   @Input() rewind = false;
   @Input() currentPosition = 0;
-  @Input() hasReachedStart = false;
-  @Input() hasReachedEnd = false;
   @Input() totalSlides = 0;
   @Input() iconSize = 0;
+
+  public readonly hasReachedStart = computed(() => {
+    if (this.store.navigateSlideBySlide()) {
+      return this.store.currentRealPosition() === 0;
+    }
+    return this.store.hasReachedStart();
+  });
+
+  public readonly hasReachedEnd = computed(() => {
+    if (this.store.navigateSlideBySlide()) {
+      return this.store.currentRealPosition() === this.store.totalSlides() - 1;
+    }
+    return this.store.hasReachedEnd();
+  });
 
   public leftControl = viewChild<TemplateRef<any>>('leftControl');
   public rightControl = viewChild<TemplateRef<any>>('rightControl');

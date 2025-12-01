@@ -602,3 +602,19 @@
     ]"
   ></app-carousel>
 </div>
+
+<div style="width: 80%; padding: 50px">
+  @let slides = [ 300 | randomSrc : 200, 300 | randomSrc : 200, 300 | randomSrc
+  : 200, 300 | randomSrc : 200, 300 | randomSrc : 200, 300 | randomSrc : 200,
+  300 | randomSrc : 200, 300 | randomSrc : 200, 300 | randomSrc : 200, 300 |
+  randomSrc : 200, 300 | randomSrc : 200 ];
+  <app-carousel #master [slidesPerView]="3" [slides]="slides"></app-carousel>
+  <div style="width: 50%; justify-self: center">
+    <app-carousel
+      [slidesPerView]="3"
+      [thumbsFor]="master"
+      [slides]="slides"
+      [debug]="false"
+    ></app-carousel>
+  </div>
+</div>

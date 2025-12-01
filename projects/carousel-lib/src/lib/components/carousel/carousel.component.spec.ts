@@ -30,6 +30,7 @@ describe('CarouselComponent', () => {
 
     fixture = TestBed.createComponent(CarouselComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('debug', false);
   });
 
   it('should create', () => {

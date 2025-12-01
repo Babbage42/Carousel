@@ -128,6 +128,16 @@ export interface Carousel {
   dragIgnoreSelector?: string;
 
   keyboardNavigation: boolean;
+
+  navigateSlideBySlide: boolean;
+
+  thumbsOptions:
+    | {
+        selectionBar: boolean;
+      }
+    | undefined;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';
+
+export const THUMBS_TRANSITION_DURATION_MS = 200;

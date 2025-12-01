@@ -86,6 +86,7 @@ const meta: Meta<CarouselComponent> = {
     lazyLoading: { control: 'boolean' },
     breakpoints: { control: 'object' },
     // outputs -> actions
+    indexSelected: { action: 'indexSelected' },
     slideUpdate: { action: 'slideUpdate' },
     slideNext: { action: 'slideNext' },
     slidePrev: { action: 'slidePrev' },
@@ -124,6 +125,7 @@ const meta: Meta<CarouselComponent> = {
     resistance: true,
     draggable: true,
     peekEdges: undefined,
+    debug: false,
   },
   tags: ['autodocs'],
 };
@@ -166,7 +168,8 @@ const TemplateProjected = (args: any) => ({
       (reachEnd)="reachEnd($event)"
       (reachStart)="reachStart($event)"
       (imagesLoaded)="imagesLoaded()"
-    >
+      (indexSelected)="indexSelected($event)"
+      [debug]="debug">
       <div *slide><img [src]="300 | randomSrc:200" /></div>
       <div *slide><img [src]="300 | randomSrc:200" /></div>
       <div *slide><img [src]="300 | randomSrc:200" /></div>
@@ -217,8 +220,80 @@ const TemplateWithSlides = (args: any) => ({
       (reachEnd)="reachEnd($event)"
       (reachStart)="reachStart($event)"
       (imagesLoaded)="imagesLoaded()"
-      [slides]="slides">
+      (indexSelected)="indexSelected($event)"
+      [slides]="slides"
+      [debug]="debug">
     </app-carousel>
+  `,
+  moduleMetadata: modules,
+});
+
+const TemplateWithThumbs = (args: any) => ({
+  props: args,
+  template: `
+    <div
+      style="
+        width: 80%;
+        margin: 40px auto;
+        padding: 24px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      "
+    >
+      <app-carousel
+        #master
+        [slides]="slides"
+        [slidesPerView]="3"
+        [stepSlides]="3"
+        [spaceBetween]="16"
+        [showControls]="true"
+        [alwaysShowControls]="false"
+        [loop]="false"
+        [center]="false"
+        [freeMode]="false"
+        [pagination]="null"
+        [dotsControl]="false"
+        [slideOnClick]="true"
+        [debug]="debug"
+        (touched)="touched($event)"
+        (slideUpdate)="slideUpdate($event)"
+        (slidePrev)="slidePrev($event)"
+        (slideNext)="slideNext($event)"
+        (reachEnd)="reachEnd($event)"
+        (reachStart)="reachStart($event)"
+        (imagesLoaded)="imagesLoaded()"
+        (indexSelected)="indexSelected($event)"
+      >
+      </app-carousel>
+
+      <div style="width: 50%; margin: 0 auto;">
+        <app-carousel
+          [slides]="slides"
+          [slidesPerView]="5"
+          [spaceBetween]="8"
+          [thumbsFor]="master"
+          [showControls]="true"
+          [alwaysShowControls]="false"
+          [loop]="false"
+          [center]="false"
+          [freeMode]="false"
+          [pagination]="null"
+          [dotsControl]="false"
+          [slideOnClick]="true"
+          [debug]="debug"
+          (touched)="touched($event)"
+          (slideUpdate)="slideUpdate($event)"
+          (slidePrev)="slidePrev($event)"
+          (slideNext)="slideNext($event)"
+          (reachEnd)="reachEnd($event)"
+          (reachStart)="reachStart($event)"
+          (imagesLoaded)="imagesLoaded()"
+          (indexSelected)="indexSelected($event)"
+        >
+        </app-carousel>
+      </div>
+    </div>
   `,
   moduleMetadata: modules,
 });
@@ -578,6 +653,13 @@ export const DisabledSlides: Story = {
       disabled: index === 2 || index === 5,
     })),
     slidesPerView: '3',
+  },
+};
+
+export const Thumbs: Story = {
+  render: TemplateWithThumbs,
+  args: {
+    slides: buildSlides(16),
   },
 };
 

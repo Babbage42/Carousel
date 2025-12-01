@@ -67,6 +67,8 @@ export class CarouselStore {
     canSwipe: true,
     peekEdges: undefined,
     keyboardNavigation: true,
+    navigateSlideBySlide: false,
+    thumbsOptions: undefined,
   });
 
   // Final state with all updated values.
@@ -121,7 +123,10 @@ export class CarouselStore {
   readonly slidesIndexOrder = computed(() => this._state().slidesIndexOrder);
   readonly slidesElements = computed(() => this._state().slidesElements);
 
+  readonly pagination = computed(() => this._state().pagination);
   readonly loop = computed(() => this._state().loop);
+  readonly freeMode = computed(() => this._state().freeMode);
+  readonly rewind = computed(() => this._state().rewind);
   readonly slidesPerView = computed(() => this._state().slidesPerView);
   readonly spaceBetween = computed(() => this._state().spaceBetween);
   readonly center = computed(() => this._state().center);
@@ -130,7 +135,11 @@ export class CarouselStore {
   readonly marginEnd = computed(() => this._state().marginEnd);
   readonly draggable = computed(() => this._state().draggable);
   readonly canSwipe = computed(() => this._state().canSwipe);
+  readonly resistance = computed(() => this._state().resistance);
   readonly slideOnClick = computed(() => this._state().slideOnClick);
+  readonly navigateSlideBySlide = computed(
+    () => this._state().navigateSlideBySlide
+  );
 
   /**
    * TODO test with SSR

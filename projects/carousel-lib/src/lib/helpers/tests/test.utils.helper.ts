@@ -26,6 +26,7 @@ export class CarouselStoreFake {
   private _snapsDom: any[] = [];
   private _currentTranslate = 0;
   private _lastTranslate = 0;
+  private _navigateSlideBySlide = false;
 
   currentPosition = () => this._currentPosition;
 
@@ -40,6 +41,7 @@ export class CarouselStoreFake {
       spaceBetween: this._spaceBetween,
       initialSlide: this._initialSlide,
       allSlides: this._allSlides,
+      navigateSlideBySlide: this._navigateSlideBySlide,
     } as any);
 
   loop = () => this._loop;
@@ -60,6 +62,7 @@ export class CarouselStoreFake {
   snapsDom = () => this._snapsDom;
   currentTranslate = () => this._currentTranslate;
   lastTranslate = () => this._lastTranslate;
+  navigateSlideBySlide = () => this._navigateSlideBySlide;
 
   patch(partial: any) {
     if (partial.slidesIndexOrder) {
