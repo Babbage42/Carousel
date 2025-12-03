@@ -18,18 +18,28 @@ export class CarouselTransformService {
   public getNewPositionFromTranslate() {
     const currentTranslate = this.store.currentTranslate();
     let closestIndex = 0;
-    let smallestDiff = Infinity;
 
-    const snapPoints = this.store.slideTranslates();
+    if (
+      (this.store.currentPosition() >= this.store.lastSlideAnchor() &&
+        currentTranslate <= this.store.maxTranslate()) ||
+      (this.store.currentPosition() <= this.store.firstSlideAnchor() &&
+        currentTranslate >= this.store.minTranslate())
+    ) {
+      // We have extra translation to left or right.
+      closestIndex = this.store.currentPosition();
+    } else {
+      let smallestDiff = Infinity;
+      const snapPoints = this.store.slideTranslates();
 
-    for (let i = 0; i < snapPoints.length; i++) {
-      const diff = Math.abs(currentTranslate - snapPoints[i]);
-      if (diff < smallestDiff) {
-        smallestDiff = diff;
-        closestIndex = i;
+      for (let i = 0; i < snapPoints.length; i++) {
+        const diff = Math.abs(currentTranslate - snapPoints[i]);
+        if (diff < smallestDiff) {
+          smallestDiff = diff;
+          closestIndex = i;
+        }
       }
+      closestIndex = this.getRealPositionFromExactPosition(closestIndex);
     }
-    closestIndex = this.getRealPositionFromExactPosition(closestIndex);
 
     const isNewPosition =
       Math.abs(this.store.currentPosition() - closestIndex) >
@@ -100,7 +110,7 @@ export class CarouselTransformService {
   public calculateTargetPositionAfterTranslation(
     isReachEnd: boolean,
     isReachStart: boolean
-  ): number {
+  ): { position: number; exactPosition: number } {
     const { position, exactPosition } = this.getNewPositionFromTranslate();
 
     const realPosition = this.getVirtualPositionFromExactPosition(
@@ -131,7 +141,10 @@ export class CarouselTransformService {
       );
     }
 
-    return realPosition;
+    return {
+      position: realPosition,
+      exactPosition: realPosition,
+    };
   }
 
   private handleEndReached(
@@ -139,15 +152,24 @@ export class CarouselTransformService {
     exactPosition: number,
     virtualPosition: number,
     currentVirtualPosition: number
-  ): number {
+  ): { position: number; exactPosition: number } {
     if (virtualPosition > currentVirtualPosition) {
       // Maximum reached.
       if (this.store.state().rewind) {
-        return 0;
+        return {
+          position: 0,
+          exactPosition: 0,
+        };
       }
-      return Math.ceil(exactPosition);
+      return {
+        position: Math.ceil(exactPosition),
+        exactPosition: this.store.currentRealPosition(),
+      };
     }
-    return position ?? this.store.currentPosition();
+    return {
+      position: position ?? this.store.currentPosition(),
+      exactPosition: this.store.currentRealPosition(),
+    };
   }
 
   private handleStartReached(
@@ -155,15 +177,24 @@ export class CarouselTransformService {
     exactPosition: number,
     virtualPosition: number,
     currentVirtualPosition: number
-  ): number {
+  ): { position: number; exactPosition: number } {
     if (virtualPosition < currentVirtualPosition) {
       // Minimum reached.
       if (this.store.state().rewind) {
-        return this.store.totalSlides() - 1;
+        return {
+          position: this.store.totalSlides() - 1,
+          exactPosition: this.store.totalSlides() - 1,
+        };
       }
-      return Math.floor(exactPosition);
+      return {
+        position: Math.floor(exactPosition),
+        exactPosition: this.store.currentRealPosition(),
+      };
     }
-    return position ?? this.store.currentPosition();
+    return {
+      position: position ?? this.store.currentPosition(),
+      exactPosition: this.store.currentRealPosition(),
+    };
   }
 
   private getVirtualPositionFromExactPosition(position: number) {

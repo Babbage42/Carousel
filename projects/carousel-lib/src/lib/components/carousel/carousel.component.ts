@@ -476,7 +476,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     effect(() => {
       const currentPosition = this.store.currentPosition();
-      console.log('CURRENT POSITION UPDATED', currentPosition);
+
       this.initTouched();
       console.log('*** Position changed (slideUpdate) ***', currentPosition);
       this.slideUpdate.emit(currentPosition);
@@ -546,7 +546,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       untracked(() => {
-        this.slideTo(currentRealPosition, true, true);
+        this.slideTo(currentRealPosition, true, true, true);
       });
     });
 
@@ -743,19 +743,19 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * When we need to slide to nearest index after translation.
    */
   private slideToNearest() {
-    const newPosition =
+    const { position, exactPosition } =
       this.transformService.calculateTargetPositionAfterTranslation(
         this.isReachEnd(),
         this.isReachStart()
       );
 
-    console.log('SLIDING TO NEAREST', newPosition);
+    console.log('SLIDING TO NEAREST', position, exactPosition);
 
-    const target = !this.isSlideDisabled(newPosition)
-      ? newPosition
+    const target = !this.isSlideDisabled(position)
+      ? position
       : this.store.currentPosition();
 
-    this.slideTo(target);
+    this.slideTo(target, true, exactPosition === target);
   }
 
   private focusOnCurrentSlide() {
@@ -1109,9 +1109,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.store.currentTranslate() + deltaX / this.sensitivity;
 
     const isOutOfBounds =
-      !this.store.state().loop &&
-      (newTranslate < this.store.state().maxTranslate ||
-        newTranslate > this.store.state().minTranslate);
+      !this.store.loop() &&
+      (newTranslate < this.store.maxTranslate() ||
+        newTranslate > this.store.minTranslate());
 
     if (isOutOfBounds) {
       if (!this.store.resistance() || noExtraTranslation) {
@@ -1226,7 +1226,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private clampToVisibleSlide(index: number) {
-    if (this.store.state().loop) {
+    if (this.store.loop()) {
       return index;
     }
 
@@ -1357,6 +1357,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public slideTo(
     index = this.store.currentRealPosition(),
     animate = true,
+    updateRealPosition = true,
     force = false
   ) {
     console.log('**** SLIDING TO ', index);
@@ -1365,7 +1366,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.store.patch({ currentRealPosition: index });
+    if (updateRealPosition) {
+      this.store.patch({ currentRealPosition: index });
+    }
 
     index = this.clampToVisibleSlide(index);
 
