@@ -69,6 +69,7 @@ export class CarouselStore {
     keyboardNavigation: true,
     navigateSlideBySlide: false,
     thumbsOptions: undefined,
+    direction: 'ltr',
   });
 
   // Final state with all updated values.
@@ -140,6 +141,7 @@ export class CarouselStore {
   readonly navigateSlideBySlide = computed(
     () => this._state().navigateSlideBySlide
   );
+  readonly isRtl = computed(() => this._state().direction === 'rtl');
 
   /**
    * TODO test with SSR
@@ -351,5 +353,16 @@ export class CarouselStore {
       return -1;
     }
     return Math.min(Math.max(0, position), totalSlides - 1);
+  }
+
+  resetSlidesIndexOrder() {
+    const total = this.totalSlides();
+    if (!total) {
+      this.patch({ slidesIndexOrder: [] });
+      return;
+    }
+
+    const order = Array.from({ length: total }, (_, i) => i);
+    this.patch({ slidesIndexOrder: order });
   }
 }

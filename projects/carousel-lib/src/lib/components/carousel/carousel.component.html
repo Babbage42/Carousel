@@ -50,7 +50,7 @@
       <div
         #slide
         class="slide position-{{ $index + 1 }}"
-        [class.slide--disabled]="isSlideDisabled($index)"
+        [class.slide--disabled]="navigationService.isSlideDisabled($index)"
       >
         <img src="{{ slide.image }}" alt="" />
 
@@ -64,7 +64,7 @@
         <div
           #slide
           class="slide position-{{ $index + 1 }}"
-          [class.slide--disabled]="isSlideDisabled($index)"
+          [class.slide--disabled]="navigationService.isSlideDisabled($index)"
         >
           <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
         </div>

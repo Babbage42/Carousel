@@ -1,8 +1,10 @@
 import { SafeHtml } from '@angular/platform-browser';
-import { Pagination } from '../../public-api';
+import { Pagination, SlideDirective } from '../../public-api';
 import { ElementRef } from '@angular/core';
 
 export const TRANSITION_DURATION = 400; // ms
+
+export type CarouselDirection = 'ltr' | 'rtl';
 
 export type Slide = {
   image: string;
@@ -136,6 +138,10 @@ export interface Carousel {
         selectionBar: boolean;
       }
     | undefined;
+
+  projectedSlides?: SlideDirective[];
+
+  direction: CarouselDirection;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

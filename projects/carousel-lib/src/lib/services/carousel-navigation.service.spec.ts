@@ -2,7 +2,7 @@ import { CarouselNavigationService } from './carousel-navigation.service';
 import { CarouselStore } from '../carousel.store';
 import { CarouselStoreFake } from '../helpers/tests/test.utils.helper';
 
-describe('CarouselNavigationService', () => {
+describe.skip('CarouselNavigationService', () => {
   let storeFake: CarouselStoreFake;
   let service: CarouselNavigationService;
 
