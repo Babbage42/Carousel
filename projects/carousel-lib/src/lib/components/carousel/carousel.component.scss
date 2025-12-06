@@ -127,3 +127,9 @@
     transition: transform ease-out, width ease-out;
   }
 }
+
+.carousel.carousel--rtl {
+  .slides {
+    direction: rtl;
+  }
+}

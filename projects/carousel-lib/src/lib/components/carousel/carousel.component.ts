@@ -328,9 +328,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // This translate will be ignored when layout is not ready on center mode.
   // It will be override temporaly in CSS.
-  public readonly slidesTransform = computed(
-    () => `translate3d(${this.store.currentTranslate()}px, 0, 0)`
-  );
+  public readonly slidesTransform = computed(() => {
+    const currentTranslate = this.store.currentTranslate();
+    const effective = this.store.isRtl() ? -currentTranslate : currentTranslate;
+    return `translate3d(${effective}px, 0, 0)`;
+  });
 
   private readonly _transitionDuration = signal(0);
   readonly transitionDuration = this._transitionDuration.asReadonly();
@@ -812,11 +814,20 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.keyboardNavigation()) {
       return;
     }
-    if (event.key === 'ArrowRight') {
+
+    const isRtl = this.store.isRtl();
+
+    if (
+      (event.key === 'ArrowRight' && !isRtl) ||
+      (event.key === 'ArrowLeft' && isRtl)
+    ) {
       this.slideToNext();
       this.focusOnCurrentSlide();
       event.preventDefault();
-    } else if (event.key === 'ArrowLeft') {
+    } else if (
+      (event.key === 'ArrowLeft' && !isRtl) ||
+      (event.key === 'ArrowRight' && isRtl)
+    ) {
       this.slideToPrev();
       this.focusOnCurrentSlide();
       event.preventDefault();

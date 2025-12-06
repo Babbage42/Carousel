@@ -87,8 +87,10 @@ export class CarouselInteractionService {
     noExtraTranslation = false,
     xPosition?: number
   ) {
+    const effectiveDeltaX = this.store.isRtl() ? -deltaX : deltaX;
+
     let newTranslate =
-      this.store.currentTranslate() + deltaX / this.sensitivity;
+      this.store.currentTranslate() + effectiveDeltaX / this.sensitivity;
 
     const isOutOfBounds =
       !this.store.loop() &&
@@ -109,7 +111,7 @@ export class CarouselInteractionService {
         }));
         newTranslate =
           this.store.currentTranslate() +
-          (deltaX / this.sensitivity) * this.velocityBounds;
+          (effectiveDeltaX / this.sensitivity) * this.velocityBounds;
       }
     } else {
       this.dragState.update((state) => ({
@@ -127,14 +129,18 @@ export class CarouselInteractionService {
    * @param xPosition
    */
   private updatePositionOnMouseMove(newTranslate: number, xPosition?: number) {
+    const rawVelocity = xPosition
+      ? (xPosition - this.dragState().lastPageXPosition) *
+        (this.store.freeMode()
+          ? this.velocitySensitivityFreeMode
+          : this.velocitySensitivity)
+      : 0;
+
+    const velocity = this.store.isRtl() ? -rawVelocity : rawVelocity;
+
     this.store.patch({
       currentTranslate: newTranslate,
-      velocity: xPosition
-        ? (xPosition - this.dragState().lastPageXPosition) *
-          (this.store.freeMode()
-            ? this.velocitySensitivityFreeMode
-            : this.velocitySensitivity)
-        : 0,
+      velocity,
     });
 
     this.loopService.insertLoopSlides();
@@ -315,12 +321,17 @@ export class CarouselInteractionService {
       return;
     }
 
+    const isRtl = this.store.isRtl
+      ? this.store.isRtl()
+      : this.store.state().direction === 'rtl';
+    const swipeToLeft = dist < 0;
+
     // Swipe
     if (isSwipe && this.store.canSwipe()) {
-      if (dist < 0) {
-        this.view.slideToNext();
+      if (!isRtl) {
+        swipeToLeft ? this.view.slideToNext() : this.view.slideToPrev();
       } else {
-        this.view.slideToPrev();
+        swipeToLeft ? this.view.slideToPrev() : this.view.slideToNext();
       }
       this.resetDrag();
       return;

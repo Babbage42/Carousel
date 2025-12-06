@@ -53,36 +53,33 @@ export class NavigationComponent {
     return this.store.hasReachedEnd();
   });
 
+  public readonly showPrevControl = computed(() => {
+    return this.store.currentPosition() > 0 && !this.hasReachedStart();
+  });
+  public readonly showNextControl = computed(() => {
+    return (
+      this.store.currentPosition() < this.store.totalSlides() - 1 &&
+      !this.hasReachedEnd()
+    );
+  });
+
+  public readonly showLeftControl = computed(() => {
+    return this.store.isRtl() ? this.showNextControl() : this.showPrevControl();
+  });
+  public readonly showRightControl = computed(() => {
+    return this.store.isRtl() ? this.showPrevControl() : this.showNextControl();
+  });
+
   public leftControl = viewChild<TemplateRef<any>>('leftControl');
   public rightControl = viewChild<TemplateRef<any>>('rightControl');
 
   constructor(public readonly carouselRegistry: CarouselRegistryService) {}
 
   public slideToPrev() {
-    this.slidePrev.emit();
-    // let newPos = this.currentPosition;
-    // if (this.rewind || this.loop) {
-    //   newPos =
-    //     this.currentPosition - 1 < 0
-    //       ? this.totalSlides - 1
-    //       : this.currentPosition - 1;
-    // } else {
-    //   newPos = Math.max(0, this.currentPosition - 1);
-    // }
-    // this.slideTo.emit(newPos);
+    this.store.isRtl() ? this.slideNext.emit() : this.slidePrev.emit();
   }
 
   public slideToNext() {
-    this.slideNext.emit();
-    // let newPos = this.currentPosition;
-    // if (this.rewind || this.loop) {
-    //   newPos =
-    //     this.currentPosition + 1 > this.totalSlides - 1
-    //       ? 0
-    //       : this.currentPosition + 1;
-    // } else {
-    //   newPos = Math.min(this.totalSlides - 1, this.currentPosition + 1);
-    // }
-    // this.slideTo.emit(newPos);
+    this.store.isRtl() ? this.slidePrev.emit() : this.slideNext.emit();
   }
 }

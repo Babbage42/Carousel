@@ -31,6 +31,10 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem;
+
+    &.rtl {
+      flex-direction: row-reverse;
+    }
   }
 
   &.dynamic {

@@ -7,6 +7,8 @@
   [class.carousel--center]="applyCenterAtInit()"
   [style.padding-left.px]="peekEdgesOffset()"
   [style.padding-right.px]="peekEdgesOffset()"
+  [attr.dir]="direction()"
+  [class.carousel--rtl]="store.isRtl()"
 >
   @if(debug()) {
   <span>total slides:{{ totalSlides() }}</span>
@@ -91,14 +93,6 @@
 
 <ng-template #paginationTemplate>
   @if (store.pagination()) {
-  <app-pagination
-    (goToSlide)="slideTo($event)"
-    [currentPosition]="currentPosition()"
-    [firstSlideAnchor]="firstSlideAnchor()"
-    [lastSlideAnchor]="lastSlideAnchor()"
-    [totalSlides]="totalSlides()"
-    [totalSlidesVisible]="totalSlidesVisible()"
-    [pagination]="pagination()!"
-  ></app-pagination>
+  <app-pagination (goToSlide)="slideTo($event)"></app-pagination>
   }
 </ng-template>

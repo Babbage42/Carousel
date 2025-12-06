@@ -7,7 +7,9 @@ import {
   Output,
   computed,
   input,
+  inject,
 } from '@angular/core';
+import { CarouselStore } from '../../carousel.store';
 
 type PaginationType = 'number' | 'dot' | 'dynamic_dot' | 'fraction';
 export interface Pagination {
@@ -17,18 +19,13 @@ export interface Pagination {
 }
 
 @Component({
-    imports: [CommonModule],
-    selector: 'app-pagination',
-    templateUrl: './pagination.component.html',
-    styleUrls: ['./pagination.component.scss']
+  imports: [CommonModule],
+  selector: 'app-pagination',
+  templateUrl: './pagination.component.html',
+  styleUrls: ['./pagination.component.scss'],
 })
 export class PaginationComponent {
-  @Input() pagination!: Pagination;
-  @Input() currentPosition: number = 0;
-  @Input() firstSlideAnchor: number = 0;
-  @Input() lastSlideAnchor: number = 0;
-  @Input() totalSlides: number = 0;
-  totalSlidesVisible = input(0);
+  public readonly store = inject(CarouselStore);
 
   @Output() goToSlide: EventEmitter<number> = new EventEmitter<number>();
 
@@ -37,11 +34,11 @@ export class PaginationComponent {
   constructor() {}
 
   public readonly maxWidth = computed(() => {
-    if (this.totalSlidesVisible() >= 5) {
+    if (this.store.totalSlidesVisible() >= 5) {
       return 5 * 0.5 + 4 * 1;
     }
 
-    if (this.totalSlidesVisible() === 4) {
+    if (this.store.totalSlidesVisible() === 4) {
       return 4 * 0.5 + 3 * 1;
     }
 
@@ -52,25 +49,29 @@ export class PaginationComponent {
     this.goToSlide.emit(slide);
   }
 
-  get range(): number[] {
-    return Array.from({ length: this.totalSlidesVisible() }, (_, i) => i + 1);
-  }
-  get currentPositionVisible(): number {
+  public readonly range = computed(() =>
+    Array.from({ length: this.store.totalSlidesVisible() }, (_, i) => i + 1)
+  );
+  public readonly currentPositionVisible = computed(() => {
     const realPaginationPosition = Math.max(
       0,
-      this.currentPosition - this.firstSlideAnchor
+      this.store.currentPosition() - this.store.firstSlideAnchor()
     );
-    return Math.min(realPaginationPosition, this.totalSlidesVisible() - 1);
-  }
-  get dotLeftPosition(): number {
+    return Math.min(
+      realPaginationPosition,
+      this.store.totalSlidesVisible() - 1
+    );
+  });
+
+  private computedLeftPosition() {
     // maxwidth: 5 * 0.5rem + 4 * 1rem = 6.5
 
     // Default case : totalSlides >= 5
     // * - -   - * - -   - - * - -   - - * -  - - *
-    if (this.totalSlidesVisible() >= 5) {
+    if (this.store.totalSlidesVisible() >= 5) {
       return (
         (this.maxWidth() -
-          (this.currentPositionVisible * (this.maxWidth() - 0.5)) / 2 -
+          (this.currentPositionVisible() * (this.maxWidth() - 0.5)) / 2 -
           0.5) /
         2
       );
@@ -79,11 +80,11 @@ export class PaginationComponent {
     // maxwidth: 5
     // * - -   - * - -   - - * -   - - *
     // @todo
-    if (this.totalSlidesVisible() === 4) {
+    if (this.store.totalSlidesVisible() === 4) {
       const middle = this.maxWidth() / 2;
       const firstLeft = middle - this.dotWidth / 2;
       const step = 1.5;
-      return firstLeft - step * this.currentPositionVisible;
+      return firstLeft - step * this.currentPositionVisible();
       // (
       //   (this.maxWidth() -
       //     (this.currentPositionVisible * (this.maxWidth() - 0.5)) / 2 -
@@ -95,10 +96,10 @@ export class PaginationComponent {
     // totalSlides = 3
     // maxWidth: 3.5
     //  * -    - * -    - *
-    if (this.totalSlidesVisible() === 3) {
+    if (this.store.totalSlidesVisible() === 3) {
       return (
         (this.maxWidth() -
-          this.currentPositionVisible * (this.maxWidth() - 0.5) -
+          this.currentPositionVisible() * (this.maxWidth() - 0.5) -
           0.5) /
         2
       );
@@ -106,4 +107,9 @@ export class PaginationComponent {
 
     return 0;
   }
+
+  public readonly dotLeftPosition = computed(() => {
+    const left = this.computedLeftPosition();
+    return this.store.isRtl() ? -left : left;
+  });
 }

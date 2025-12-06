@@ -654,3 +654,23 @@
     ></app-carousel>
   </div>
 </div>
+
+<div style="width: 80%; padding: 50px">
+  <h1>RIGHT TO LEFT</h1>
+  <app-carousel
+    [slidesPerView]="3.5"
+    [marginStart]="0"
+    [marginEnd]="0"
+    [direction]="'rtl'"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  ></app-carousel>
+</div>
