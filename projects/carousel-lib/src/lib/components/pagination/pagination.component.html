@@ -7,6 +7,9 @@
 >
   @for (num of range(); track $index) {
   <span
+    role="button"
+    [attr.aria-label]="'Dot ' + num"
+    tabindex="0"
     (click)="pagination.clickable ? slideTo(num - 1) : null"
     class="dot"
     [class.selected]="store.currentPosition() === num - 1"
@@ -23,6 +26,9 @@
 >
   @for (num of range(); track $index) {
   <span
+    role="button"
+    [attr.aria-label]="'Dot ' + num"
+    tabindex="0"
     (click)="pagination.clickable ? slideTo(num - 1) : null"
     class="dot"
     [style.left.rem]="!store.isVertical() ? dotMainOffset() : null"

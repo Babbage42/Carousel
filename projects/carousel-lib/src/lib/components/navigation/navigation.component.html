@@ -2,6 +2,7 @@
   @if (alwaysShowControls || loop || rewind || showLeftControl()) {
   <button
     tabindex="0"
+    aria-label="Previous slide"
     [style.left]="leftLeftControl()"
     [style.top]="topLeftControl()"
     class="control-left"
@@ -32,6 +33,7 @@
   @if (alwaysShowControls || loop || rewind || showRightControl()) {
   <button
     tabindex="0"
+    aria-label="Next slide"
     [style.right]="rightRightControl()"
     [style.top]="topRightControl()"
     class="control-right"

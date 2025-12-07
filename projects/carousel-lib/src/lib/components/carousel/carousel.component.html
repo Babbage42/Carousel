@@ -55,6 +55,8 @@
         #slide
         class="slide position-{{ $index + 1 }}"
         [class.slide--disabled]="navigationService.isSlideDisabled($index)"
+        [class.slide--active]="store.currentPosition() === $index"
+        [attr.data-testid]="'slide-' + $index"
       >
         <img src="{{ slide.image }}" alt="" />
 
@@ -69,6 +71,8 @@
           #slide
           class="slide position-{{ $index + 1 }}"
           [class.slide--disabled]="navigationService.isSlideDisabled($index)"
+          [class.slide--active]="store.currentPosition() === $index"
+          [attr.data-testid]="'slide-' + $index"
         >
           <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
         </div>
