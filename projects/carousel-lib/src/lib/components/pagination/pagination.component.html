@@ -17,14 +17,16 @@
 {
 <div
   class="dot-pagination dynamic"
-  [style.width.rem]="maxWidth()"
+  [style.width.rem]="!store.isVertical() ? maxSpan() : null"
+  [style.height.rem]="store.isVertical() ? maxSpan() : null"
   [class.clickable]="pagination.clickable"
 >
   @for (num of range(); track $index) {
   <span
     (click)="pagination.clickable ? slideTo(num - 1) : null"
     class="dot"
-    [style.left.rem]="dotLeftPosition()"
+    [style.left.rem]="!store.isVertical() ? dotMainOffset() : null"
+    [style.top.rem]="store.isVertical() ? dotMainOffset() : null"
     [class.selected]="currentPositionVisible() === num - 1"
     [class.next]="currentPositionVisible() === num - 2"
     [class.next-next]="currentPositionVisible() === num - 3"

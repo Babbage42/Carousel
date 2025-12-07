@@ -98,6 +98,8 @@ const meta: Meta<CarouselComponent> = {
     resistance: { control: 'boolean' },
     initialSlide: { control: 'number' },
     draggable: { control: 'boolean' },
+    direction: { control: 'text' },
+    axis: { control: 'text' },
   },
   args: {
     slides: buildSlides(10),
@@ -126,6 +128,8 @@ const meta: Meta<CarouselComponent> = {
     draggable: true,
     peekEdges: undefined,
     debug: false,
+    direction: 'ltr',
+    axis: 'horizontal',
   },
   tags: ['autodocs'],
 };
@@ -161,6 +165,8 @@ const TemplateProjected = (args: any) => ({
       [initialSlide]="initialSlide"
       [draggable]="draggable"
       [peekEdges]="peekEdges"
+      [direction]="direction"
+      [axis]="axis"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -213,6 +219,8 @@ const TemplateWithSlides = (args: any) => ({
       [initialSlide]="initialSlide"
       [draggable]="draggable"
       [peekEdges]="peekEdges"
+      [direction]="direction"
+      [axis]="axis"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -293,6 +301,61 @@ const TemplateWithThumbs = (args: any) => ({
         >
         </app-carousel>
       </div>
+    </div>
+  `,
+  moduleMetadata: modules,
+});
+
+const TemplateVerticalWithSlides = (args: any) => ({
+  props: args,
+  template: `
+  <div
+      style="
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      "
+    >
+    <app-carousel
+      [slidesPerView]="slidesPerView"
+      [stepSlides]="stepSlides"
+      [spaceBetween]="spaceBetween"
+      [showControls]="showControls"
+      [alwaysShowControls]="alwaysShowControls"
+      [iconSize]="iconSize"
+      [pagination]="pagination"
+      [freeMode]="freeMode"
+      [mouseWheel]="mouseWheel"
+      [deltaPosition]="deltaPosition"
+      [showProgress]="showProgress"
+      [dotsControl]="dotsControl"
+      [rewind]="rewind"
+      [loop]="loop"
+      [center]="center"
+      [notCenterBounds]="notCenterBounds"
+      [slideOnClick]="slideOnClick"
+      [marginEnd]="marginEnd"
+      [marginStart]="marginStart"
+      [lazyLoading]="lazyLoading"
+      [autoplay]="autoplay"
+      [resistance]="resistance"
+      [initialSlide]="initialSlide"
+      [draggable]="draggable"
+      [peekEdges]="peekEdges"
+      [direction]="direction"
+      [axis]="axis"
+      (touched)="touched($event)"
+      (slideUpdate)="slideUpdate($event)"
+      (slidePrev)="slidePrev($event)"
+      (slideNext)="slideNext($event)"
+      (reachEnd)="reachEnd($event)"
+      (reachStart)="reachStart($event)"
+      (imagesLoaded)="imagesLoaded()"
+      (indexSelected)="indexSelected($event)"
+      [slides]="slides"
+      [debug]="debug">
+    </app-carousel>
     </div>
   `,
   moduleMetadata: modules,
@@ -652,6 +715,46 @@ export const DisabledSlides: Story = {
       image: el,
       disabled: index === 2 || index === 5,
     })),
+    slidesPerView: '3',
+  },
+};
+
+export const RightToLeftCarousel: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3.5',
+    direction: 'rtl',
+  },
+};
+
+export const VerticalCarousel: Story = {
+  render: TemplateVerticalWithSlides,
+  args: {
+    slides: buildSlides(10),
+    axis: 'vertical',
+    slidesPerView: '4',
+  },
+};
+
+export const VerticalCarouselWithPeek: Story = {
+  render: TemplateVerticalWithSlides,
+  args: {
+    slides: buildSlides(10),
+    axis: 'vertical',
+    peekEdges: {
+      relativeOffset: 0.25,
+    },
+    slidesPerView: '3',
+  },
+};
+
+export const VerticalCenterCarousel: Story = {
+  render: TemplateVerticalWithSlides,
+  args: {
+    slides: buildSlides(10),
+    axis: 'vertical',
+    center: true,
     slidesPerView: '3',
   },
 };

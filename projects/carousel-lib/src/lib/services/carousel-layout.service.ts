@@ -18,8 +18,10 @@ export class CarouselLayoutService {
       return false;
     }
 
-    const firstWidth = slidesEls[0]?.nativeElement?.clientWidth ?? 0;
-    if (!firstWidth) {
+    const firstSize = this.store
+      .axisConf()
+      .rectSize(slidesEls[0]?.nativeElement);
+    if (!firstSize) {
       return false;
     }
 

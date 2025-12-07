@@ -11,6 +11,11 @@ import {
 } from '@angular/core';
 import { Carousel, Slide, SnapDom } from './models/carousel.model';
 import { extractVisibleSlides } from './helpers/calculations.helper';
+import {
+  AxisConfig,
+  HORIZONTAL_AXIS_CONFIG,
+  VERTICAL_AXIS_CONFIG,
+} from './helpers/axis.helper';
 
 @Injectable()
 export class CarouselStore {
@@ -70,6 +75,7 @@ export class CarouselStore {
     navigateSlideBySlide: false,
     thumbsOptions: undefined,
     direction: 'ltr',
+    axis: 'horizontal',
   });
 
   // Final state with all updated values.
@@ -94,6 +100,10 @@ export class CarouselStore {
       this.patch({ currentPosition: newPos });
     }
   }
+
+  readonly axisConf = computed<AxisConfig>(() =>
+    this.isVertical() ? VERTICAL_AXIS_CONFIG : HORIZONTAL_AXIS_CONFIG
+  );
 
   // Expose common values.
   // This values are calculated and updated from carousel component (inputs or dom).
@@ -141,7 +151,10 @@ export class CarouselStore {
   readonly navigateSlideBySlide = computed(
     () => this._state().navigateSlideBySlide
   );
-  readonly isRtl = computed(() => this._state().direction === 'rtl');
+  readonly isRtl = computed(
+    () => this._state().direction === 'rtl' && !this.isVertical()
+  );
+  readonly isVertical = computed(() => this._state().axis === 'vertical');
 
   /**
    * TODO test with SSR
@@ -188,13 +201,17 @@ export class CarouselStore {
   });
 
   // Computed, need to update manually in state.
-  readonly fullWidth = computed(
-    () => this.allSlides()?.nativeElement?.clientWidth ?? 0
+  readonly fullWidth = computed(() =>
+    this.axisConf().getContainerSize(
+      this.allSlides()?.nativeElement as HTMLElement
+    )
   );
   readonly scrollWidth = computed(() => {
     // We must watch any slides update.
     this.slidesWidths();
-    return this.allSlides()?.nativeElement?.scrollWidth;
+    return this.axisConf().getScrollSize(
+      this.allSlides()?.nativeElement as HTMLElement
+    );
   });
   readonly maxTranslate = computed(() => {
     const maxTranslate =
@@ -276,9 +293,9 @@ export class CarouselStore {
     this.fullWidth();
     const slidesWidths = [];
     for (const slide of this.slidesElements()) {
-      if (slide.nativeElement.getBoundingClientRect) {
-        const slideWidth = slide.nativeElement.getBoundingClientRect().width;
-        slidesWidths.push(slideWidth);
+      const size = this.axisConf().rectSize(slide.nativeElement);
+      if (size) {
+        slidesWidths.push(size);
       }
     }
     return slidesWidths;

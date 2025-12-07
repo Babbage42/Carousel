@@ -1,6 +1,14 @@
 :host {
   user-select: none;
   margin-bottom: 1rem;
+  &.vertical {
+    margin-bottom: 0;
+  }
+}
+
+:host(.vertical) .dot-pagination.pagination-dot,
+:host(.vertical) .dot-pagination.dynamic {
+  flex-direction: column;
 }
 
 .dot-pagination {
@@ -45,7 +53,7 @@
 
     .dot {
       position: relative;
-      transition: left 0.2s;
+      transition: left 0.2s, top 0.2s;
       flex: 0 0 auto;
       transform: scale(1);
 

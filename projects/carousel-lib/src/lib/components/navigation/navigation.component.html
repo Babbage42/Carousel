@@ -2,12 +2,8 @@
   @if (alwaysShowControls || loop || rewind || showLeftControl()) {
   <button
     tabindex="0"
-    [style.left.px]="carouselRegistry.hasExternalControls() ? null : 0"
-    [style.top]="
-      carouselRegistry.hasExternalControls()
-        ? null
-        : 'calc(50% - ' + iconSize / 2 + 'px)'
-    "
+    [style.left]="leftLeftControl()"
+    [style.top]="topLeftControl()"
     class="control-left"
     (click)="slideToPrev()"
   >
@@ -15,8 +11,9 @@
     <ng-container *ngTemplateOutlet="customLeftArrow"></ng-container>
     }@else {
     <svg
-      [attr.width]="iconSize || '24'"
-      [attr.height]="iconSize || '24'"
+      class="default-icon"
+      [attr.width]="iconSize() || '24'"
+      [attr.height]="iconSize() || '24'"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       style="cursor: pointer"
@@ -35,12 +32,8 @@
   @if (alwaysShowControls || loop || rewind || showRightControl()) {
   <button
     tabindex="0"
-    [style.right.px]="carouselRegistry.hasExternalControls() ? null : 0"
-    [style.top]="
-      carouselRegistry.hasExternalControls()
-        ? null
-        : 'calc(50% - ' + iconSize / 2 + 'px)'
-    "
+    [style.right]="rightRightControl()"
+    [style.top]="topRightControl()"
     class="control-right"
     (click)="slideToNext()"
   >
@@ -48,8 +41,9 @@
     <ng-container *ngTemplateOutlet="customRightArrow"></ng-container>
     } @else {
     <svg
-      [attr.width]="iconSize || '24'"
-      [attr.height]="iconSize || '24'"
+      class="default-icon"
+      [attr.width]="iconSize() || '24'"
+      [attr.height]="iconSize() || '24'"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       style="cursor: pointer"
@@ -63,7 +57,7 @@
   }
 </ng-template>
 
-<div class="controls">
+<div class="controls" [class.carousel--vertical]="store.isVertical()">
   @if (!carouselRegistry.hasExternalControls()) {
   <ng-container *ngTemplateOutlet="leftControl"></ng-container>
   <ng-container *ngTemplateOutlet="rightControl"></ng-container>

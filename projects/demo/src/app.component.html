@@ -655,6 +655,26 @@
   </div>
 </div>
 
+<div style="height: 500px; width: 50%">
+  <h1>VERTICAL</h1>
+  <app-carousel
+    [slidesPerView]="3.5"
+    [marginStart]="0"
+    [marginEnd]="0"
+    [axis]="'vertical'"
+    [slides]="[
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200,
+      300 | randomSrc : 200
+    ]"
+  ></app-carousel>
+</div>
+
 <div style="width: 80%; padding: 50px">
   <h1>RIGHT TO LEFT</h1>
   <app-carousel

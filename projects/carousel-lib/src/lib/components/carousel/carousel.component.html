@@ -5,8 +5,8 @@
   class="carousel"
   [class.layout-ready]="layoutReady()"
   [class.carousel--center]="applyCenterAtInit()"
-  [style.padding-left.px]="peekEdgesOffset()"
-  [style.padding-right.px]="peekEdgesOffset()"
+  [class.carousel--vertical]="store.isVertical()"
+  [ngStyle]="store.axisConf().peekPadding(peekEdgesOffset())"
   [attr.dir]="direction()"
   [class.carousel--rtl]="store.isRtl()"
 >
@@ -37,13 +37,15 @@
     <div
       #allSlides
       class="slides"
+      [class.slides--vertical]="store.isVertical()"
       aria-live="polite"
       [class.slides-auto]="slidesPerView() === 'auto'"
       [class.fix-subpixel]="fixSubPixelIssue()"
       [style.transform]="slidesTransform()"
       [style.transition-duration.ms]="transitionDuration()"
       [style.gap]="slidesGap()"
-      [style.grid-auto-columns]="slidesGridColumns()"
+      [style.grid-auto-columns]="store.isVertical() ? null : slidesGridSize()"
+      [style.grid-auto-rows]="store.isVertical() ? slidesGridSize() : null"
       appImagesReady
       (imagesReady)="onImagesReady()"
       (imagesChanged)="onImagesChanged()"
@@ -93,6 +95,11 @@
 
 <ng-template #paginationTemplate>
   @if (store.pagination()) {
-  <app-pagination (goToSlide)="slideTo($event)"></app-pagination>
+  <div
+    class="carousel__pagination"
+    [class.carousel__pagination--vertical]="store.isVertical()"
+  >
+    <app-pagination (goToSlide)="slideTo($event)"></app-pagination>
+  </div>
   }
 </ng-template>

@@ -48,6 +48,7 @@ import { CarouselRegistryService } from './carousel-registry.service';
 import {
   AutoplayOptions,
   Carousel,
+  CarouselAxis,
   CarouselDirection,
   CarouselResponsiveConfig,
   PeekEdges,
@@ -284,6 +285,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   direction = input<CarouselDirection>('ltr');
+  axis = input<CarouselAxis>('horizontal');
 
   /**
    * Subscribe to master positions.
@@ -327,11 +329,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   // This translate will be ignored when layout is not ready on center mode.
-  // It will be override temporaly in CSS.
+  // It will be override temporary in CSS.
   public readonly slidesTransform = computed(() => {
     const currentTranslate = this.store.currentTranslate();
     const effective = this.store.isRtl() ? -currentTranslate : currentTranslate;
-    return `translate3d(${effective}px, 0, 0)`;
+    return this.store.axisConf().slidesTransform(effective);
   });
 
   private readonly _transitionDuration = signal(0);
@@ -343,7 +345,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private layoutInitialized = false;
   private slideResizeObserver?: ResizeObserver;
 
-  public readonly slidesGridColumns = computed(() => {
+  public readonly slidesGridSize = computed(() => {
     const slidesPerView = this.store.slidesPerView();
     if (slidesPerView === 'auto') {
       return 'max-content';
@@ -390,6 +392,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       navigateSlideBySlide: this.navigateSlideBySlide(),
       thumbsOptions: this.thumbsOptions(),
       direction: this.direction(),
+      axis: this.axis(),
     };
     return inputs;
   });
@@ -817,7 +820,20 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const isRtl = this.store.isRtl();
 
-    if (
+    if (this.store.isVertical()) {
+      if (event.key === 'ArrowDown') {
+        this.slideToNext();
+        this.focusOnCurrentSlide();
+        event.preventDefault();
+        return;
+      }
+      if (event.key === 'ArrowUp') {
+        this.slideToPrev();
+        this.focusOnCurrentSlide();
+        event.preventDefault();
+        return;
+      }
+    } else if (
       (event.key === 'ArrowRight' && !isRtl) ||
       (event.key === 'ArrowLeft' && isRtl)
     ) {

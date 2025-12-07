@@ -19,12 +19,12 @@ export type DragState = {
   isDragging: boolean;
   hasMoved: boolean;
   hasExtraTranslation: boolean;
-  lastX: number;
-  currentX: number;
+  lastMain: number;
+  currentMain: number;
   lastMoveTime: number;
   lastClickTime: number;
-  lastPageXPosition: number;
-  lockedAxis: 'x' | 'y' | null;
+  lastMainPosition: number;
+  lockedAxis: 'main' | 'cross' | null;
 };
 
 @Injectable()
@@ -47,21 +47,21 @@ export class CarouselInteractionService {
   public velocityBounds = 0.5;
 
   public gestureStart: {
-    x: number;
-    y: number;
+    main: number;
+    cross: number;
     time: number;
     event?: MouseEvent | TouchEvent;
-  } = { x: 0, y: 0, time: 0 };
+  } = { main: 0, cross: 0, time: 0 };
 
   private dragState = signal<DragState>({
     isDragging: false,
     hasMoved: false,
     hasExtraTranslation: false,
-    lastX: 0,
-    currentX: 0,
+    lastMain: 0,
+    currentMain: 0,
     lastMoveTime: 0,
     lastClickTime: 0,
-    lastPageXPosition: 0,
+    lastMainPosition: 0,
     lockedAxis: null,
   });
 
@@ -78,19 +78,19 @@ export class CarouselInteractionService {
 
   /**
    * Update translation as user is dragging.
-   * @param deltaX
+   * @param deltaMain
    * @param noExtraTranslation
-   * @param xPosition
+   * @param mainPosition
    */
   public followUserMove(
-    deltaX: number,
+    deltaMain: number,
     noExtraTranslation = false,
-    xPosition?: number
+    mainPosition?: number
   ) {
-    const effectiveDeltaX = this.store.isRtl() ? -deltaX : deltaX;
+    const effectiveDeltaMain = this.store.isRtl() ? -deltaMain : deltaMain;
 
     let newTranslate =
-      this.store.currentTranslate() + effectiveDeltaX / this.sensitivity;
+      this.store.currentTranslate() + effectiveDeltaMain / this.sensitivity;
 
     const isOutOfBounds =
       !this.store.loop() &&
@@ -111,7 +111,7 @@ export class CarouselInteractionService {
         }));
         newTranslate =
           this.store.currentTranslate() +
-          (effectiveDeltaX / this.sensitivity) * this.velocityBounds;
+          (effectiveDeltaMain / this.sensitivity) * this.velocityBounds;
       }
     } else {
       this.dragState.update((state) => ({
@@ -120,17 +120,20 @@ export class CarouselInteractionService {
       }));
     }
 
-    this.updatePositionOnMouseMove(newTranslate, xPosition);
+    this.updatePositionOnMouseMove(newTranslate, mainPosition);
   }
 
   /**
    * Update current translate and apply transform CSS.
    * @param newTranslate
-   * @param xPosition
+   * @param mainPosition
    */
-  private updatePositionOnMouseMove(newTranslate: number, xPosition?: number) {
-    const rawVelocity = xPosition
-      ? (xPosition - this.dragState().lastPageXPosition) *
+  private updatePositionOnMouseMove(
+    newTranslate: number,
+    mainPosition?: number
+  ) {
+    const rawVelocity = mainPosition
+      ? (mainPosition - this.dragState().lastMainPosition) *
         (this.store.freeMode()
           ? this.velocitySensitivityFreeMode
           : this.velocitySensitivity)
@@ -185,6 +188,8 @@ export class CarouselInteractionService {
     }
 
     const { x, y, isTouch } = getPointerPosition(event);
+    const main = this.store.axisConf().pointerMainPos({ x, y });
+    const cross = this.store.axisConf().pointerCrossPos({ x, y });
 
     const now = Date.now();
     const gestureStart = this.gestureStart;
@@ -195,35 +200,40 @@ export class CarouselInteractionService {
       const { lockedAxis } = dragState;
 
       if (!lockedAxis) {
-        const dx = x - gestureStart.x;
-        const dy = y - gestureStart.y;
-        const absDx = Math.abs(dx);
-        const absDy = Math.abs(dy);
+        const deltaMain = main - gestureStart.main;
+        const deltaCross = cross - gestureStart.cross;
+        const absDeltaMain = Math.abs(deltaMain);
+        const absDeltaCross = Math.abs(deltaCross);
 
         // Too little gesture to decide.
-        if (absDx < AXIS_LOCK_THRESHOLD && absDy < AXIS_LOCK_THRESHOLD) {
+        if (
+          absDeltaMain < AXIS_LOCK_THRESHOLD &&
+          absDeltaCross < AXIS_LOCK_THRESHOLD
+        ) {
           return;
         }
 
-        if (absDy > absDx) {
-          // Vertical gesture => no drag
+        if (absDeltaMain >= absDeltaCross) {
+          this.updateDragState({ lockedAxis: 'main' });
+        } else {
+          // Cross gesture => no drag
           this.resetDrag();
           return;
         }
 
-        // Horizontal gesture.
-        this.updateDragState({ lockedAxis: 'x' });
-      } else if (lockedAxis === 'y') {
+        // Main gesture.
+        this.updateDragState({ lockedAxis: 'main' });
+      } else if (lockedAxis === 'cross') {
         return;
       }
     }
 
     // For mouse.
-    if (!isTouch && dragState.lockedAxis !== 'x') {
-      this.updateDragState({ lockedAxis: 'x' });
+    if (!isTouch && dragState.lockedAxis !== 'main') {
+      this.updateDragState({ lockedAxis: 'main' });
     }
 
-    if (this.getDragState().lockedAxis !== 'x') {
+    if (this.getDragState().lockedAxis !== 'main') {
       return;
     }
 
@@ -231,30 +241,33 @@ export class CarouselInteractionService {
       event.preventDefault();
     }
 
-    const deltaX = (x - dragState.currentX) * this.sensitivity;
+    const deltaMain = (main - dragState.currentMain) * this.sensitivity;
 
     const currentState = this.getDragState();
     this.updateDragState({
       hasMoved: true,
       lastMoveTime: now,
-      currentX: currentState.currentX + deltaX,
-      lastPageXPosition:
+      currentMain: currentState.currentMain + deltaMain,
+      lastMainPosition:
         now - currentState.lastMoveTime > 50
-          ? x
-          : currentState.lastPageXPosition,
+          ? main
+          : currentState.lastMainPosition,
     });
 
     if (this.shouldStartDrag(gestureStart.event ?? event)) {
-      this.followUserMove(deltaX, false, x);
+      this.followUserMove(deltaMain, false, main);
     }
   }
 
   public handleStart(event: MouseEvent | TouchEvent) {
-    const { x, y } = getPointerPosition(event);
+    const position = getPointerPosition(event);
+
+    const main = this.store.axisConf().pointerMainPos(position);
+    const cross = this.store.axisConf().pointerCrossPos(position);
 
     this.gestureStart = {
-      x,
-      y,
+      main,
+      cross,
       time: Date.now(),
       event,
     };
@@ -265,8 +278,8 @@ export class CarouselInteractionService {
       isDragging: true,
       hasMoved: false,
       hasExtraTranslation: false,
-      currentX: x,
-      lastPageXPosition: y,
+      currentMain: main,
+      lastMainPosition: main,
       lastClickTime: new Date().getTime(),
       lockedAxis: null,
     });
@@ -277,10 +290,12 @@ export class CarouselInteractionService {
       return;
     }
 
-    const { x } = getPointerPosition(event);
+    const { x, y } = getPointerPosition(event);
+    const main = this.store.axisConf().pointerMainPos({ x, y });
+
     const timeEnd = Date.now();
 
-    const dist = x - this.gestureStart.x;
+    const dist = main - this.gestureStart.main;
     const duration = timeEnd - this.gestureStart.time;
     const absDist = Math.abs(dist);
 
@@ -321,14 +336,11 @@ export class CarouselInteractionService {
       return;
     }
 
-    const isRtl = this.store.isRtl
-      ? this.store.isRtl()
-      : this.store.state().direction === 'rtl';
     const swipeToLeft = dist < 0;
 
     // Swipe
     if (isSwipe && this.store.canSwipe()) {
-      if (!isRtl) {
+      if (!this.store.isRtl()) {
         swipeToLeft ? this.view.slideToNext() : this.view.slideToPrev();
       } else {
         swipeToLeft ? this.view.slideToPrev() : this.view.slideToNext();
@@ -357,9 +369,11 @@ export class CarouselInteractionService {
     const CLICK_MAX_DIST = 2; // px
     const CLICK_MAX_TIME = 200; // ms
 
-    const dx = event.pageX - this.gestureStart.x;
-    const dy = event.pageY - this.gestureStart.y;
-    const dist = Math.hypot(dx, dy);
+    const deltaMain =
+      this.store.axisConf().mouseMainPos(event) - this.gestureStart.main;
+    const deltaCross =
+      this.store.axisConf().mouseCrossPos(event) - this.gestureStart.cross;
+    const dist = Math.hypot(deltaMain, deltaCross);
     const dt = Date.now() - this.gestureStart.time;
 
     if (dist > CLICK_MAX_DIST || dt > CLICK_MAX_TIME) {
@@ -374,20 +388,23 @@ export class CarouselInteractionService {
     if (!mouseWheel) {
       return;
     }
-    let isWheel = false;
-    if (mouseWheel === true || mouseWheel.horizontal) {
-      isWheel = event.deltaX !== 0;
+    const wheelAllowed =
+      mouseWheel === true ||
+      (this.store.isVertical() && mouseWheel.vertical) ||
+      (!this.store.isVertical() && mouseWheel.horizontal);
+    if (!wheelAllowed) {
+      return;
     }
-    if (mouseWheel !== true && mouseWheel.vertical) {
-      isWheel = event.deltaY !== 0;
+    const delta = this.store.axisConf().wheelMainDelta(event);
+    if (!delta) {
+      return;
     }
-    if (isWheel) {
-      event.preventDefault();
-      this.store.patch({
-        lastTranslate: this.store.currentTranslate(),
-      });
-      const deltaX = -(event.deltaX || event.deltaY) * this.sensitivity;
-      this.followUserMove(deltaX, true);
-    }
+
+    event.preventDefault();
+    this.store.patch({
+      lastTranslate: this.store.currentTranslate(),
+    });
+    const deltaMain = -delta * this.sensitivity;
+    this.followUserMove(deltaMain, true);
   }
 }

@@ -6,6 +6,7 @@ import {
   effect,
   EventEmitter,
   inject,
+  input,
   Input,
   OnInit,
   Output,
@@ -23,7 +24,8 @@ import { CarouselStore } from '../../carousel.store';
   styleUrl: './navigation.component.scss',
 })
 export class NavigationComponent {
-  public store = inject(CarouselStore);
+  public readonly store = inject(CarouselStore);
+  public readonly carouselRegistry = inject(CarouselRegistryService);
 
   @Input() customLeftArrow?: TemplateRef<any>;
   @Input() customRightArrow?: TemplateRef<any>;
@@ -37,7 +39,7 @@ export class NavigationComponent {
   @Input() rewind = false;
   @Input() currentPosition = 0;
   @Input() totalSlides = 0;
-  @Input() iconSize = 0;
+  iconSize = input(0);
 
   public readonly hasReachedStart = computed(() => {
     if (this.store.navigateSlideBySlide()) {
@@ -70,10 +72,45 @@ export class NavigationComponent {
     return this.store.isRtl() ? this.showPrevControl() : this.showNextControl();
   });
 
+  public readonly topLeftControl = computed(() => {
+    if (this.carouselRegistry.hasExternalControls()) {
+      return null;
+    }
+    if (this.store.isVertical()) {
+      return 0;
+    }
+    return 'calc(50% - ' + this.iconSize() / 2 + 'px)';
+  });
+  public readonly topRightControl = computed(() => {
+    if (!this.store.isVertical()) {
+      return this.topLeftControl();
+    }
+    if (this.carouselRegistry.hasExternalControls()) {
+      return null;
+    }
+    return 'calc(100% - ' + this.iconSize() + 'px)';
+  });
+  public readonly leftLeftControl = computed(() => {
+    if (this.carouselRegistry.hasExternalControls()) {
+      return null;
+    }
+    if (this.store.isVertical()) {
+      return 'calc(50% - ' + this.iconSize() / 2 + 'px)';
+    }
+    return 0;
+  });
+  public readonly rightRightControl = computed(() => {
+    if (this.carouselRegistry.hasExternalControls()) {
+      return null;
+    }
+    if (this.store.isVertical()) {
+      return 'calc(50% - ' + this.iconSize() / 2 + 'px)';
+    }
+    return 0;
+  });
+
   public leftControl = viewChild<TemplateRef<any>>('leftControl');
   public rightControl = viewChild<TemplateRef<any>>('rightControl');
-
-  constructor(public readonly carouselRegistry: CarouselRegistryService) {}
 
   public slideToPrev() {
     this.store.isRtl() ? this.slideNext.emit() : this.slidePrev.emit();

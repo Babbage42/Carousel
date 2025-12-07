@@ -4,6 +4,7 @@ import { ElementRef } from '@angular/core';
 
 export const TRANSITION_DURATION = 400; // ms
 
+export type CarouselAxis = 'horizontal' | 'vertical';
 export type CarouselDirection = 'ltr' | 'rtl';
 
 export type Slide = {
@@ -142,6 +143,7 @@ export interface Carousel {
   projectedSlides?: SlideDirective[];
 
   direction: CarouselDirection;
+  axis: CarouselAxis;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';

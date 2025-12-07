@@ -27,6 +27,8 @@ export class CarouselStoreFake {
   private _currentTranslate = 0;
   private _lastTranslate = 0;
   private _navigateSlideBySlide = false;
+  private _isRtl = false;
+  private _isVertical = false;
 
   currentPosition = () => this._currentPosition;
 
@@ -63,6 +65,8 @@ export class CarouselStoreFake {
   currentTranslate = () => this._currentTranslate;
   lastTranslate = () => this._lastTranslate;
   navigateSlideBySlide = () => this._navigateSlideBySlide;
+  isRtl = () => this._isRtl;
+  isVertical = () => this._isVertical;
 
   patch(partial: any) {
     if (partial.slidesIndexOrder) {

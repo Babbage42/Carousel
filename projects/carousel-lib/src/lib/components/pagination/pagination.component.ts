@@ -23,6 +23,9 @@ export interface Pagination {
   selector: 'app-pagination',
   templateUrl: './pagination.component.html',
   styleUrls: ['./pagination.component.scss'],
+  host: {
+    '[class.vertical]': 'this.store.isVertical()',
+  },
 })
 export class PaginationComponent {
   public readonly store = inject(CarouselStore);
@@ -33,7 +36,7 @@ export class PaginationComponent {
 
   constructor() {}
 
-  public readonly maxWidth = computed(() => {
+  public readonly maxSpan = computed(() => {
     if (this.store.totalSlidesVisible() >= 5) {
       return 5 * 0.5 + 4 * 1;
     }
@@ -63,16 +66,17 @@ export class PaginationComponent {
     );
   });
 
-  private computedLeftPosition() {
+  private computedMainOffset() {
     // maxwidth: 5 * 0.5rem + 4 * 1rem = 6.5
 
     // Default case : totalSlides >= 5
     // * - -   - * - -   - - * - -   - - * -  - - *
     if (this.store.totalSlidesVisible() >= 5) {
       return (
-        (this.maxWidth() -
-          (this.currentPositionVisible() * (this.maxWidth() - 0.5)) / 2 -
-          0.5) /
+        (this.maxSpan() -
+          (this.currentPositionVisible() * (this.maxSpan() - this.dotWidth)) /
+            2 -
+          this.dotWidth) /
         2
       );
     }
@@ -81,7 +85,7 @@ export class PaginationComponent {
     // * - -   - * - -   - - * -   - - *
     // @todo
     if (this.store.totalSlidesVisible() === 4) {
-      const middle = this.maxWidth() / 2;
+      const middle = this.maxSpan() / 2;
       const firstLeft = middle - this.dotWidth / 2;
       const step = 1.5;
       return firstLeft - step * this.currentPositionVisible();
@@ -98,9 +102,9 @@ export class PaginationComponent {
     //  * -    - * -    - *
     if (this.store.totalSlidesVisible() === 3) {
       return (
-        (this.maxWidth() -
-          this.currentPositionVisible() * (this.maxWidth() - 0.5) -
-          0.5) /
+        (this.maxSpan() -
+          this.currentPositionVisible() * (this.maxSpan() - this.dotWidth) -
+          this.dotWidth) /
         2
       );
     }
@@ -108,8 +112,8 @@ export class PaginationComponent {
     return 0;
   }
 
-  public readonly dotLeftPosition = computed(() => {
-    const left = this.computedLeftPosition();
-    return this.store.isRtl() ? -left : left;
+  public readonly dotMainOffset = computed(() => {
+    const offset = this.computedMainOffset();
+    return this.store.isRtl() ? -offset : offset;
   });
 }
