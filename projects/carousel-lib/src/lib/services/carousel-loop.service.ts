@@ -265,7 +265,7 @@ export class CarouselLoopService {
   public initializeLoopCenter(): void {
     const state = this.store.state();
 
-    if (!state.loop || !state.center) {
+    if (!this.store.loop() || !this.store.center()) {
       return;
     }
 

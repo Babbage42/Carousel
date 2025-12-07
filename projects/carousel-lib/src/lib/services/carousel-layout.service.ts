@@ -29,9 +29,6 @@ export class CarouselLayoutService {
       slidesElements: [...slidesEls],
     });
 
-    this.store.resetSlidesIndexOrder();
-
-    this.transformService.calculateInitialTranslations();
     this.loopService.initializeLoopCenter();
 
     return true;

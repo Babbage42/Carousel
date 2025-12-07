@@ -40,7 +40,15 @@ export const HORIZONTAL_AXIS_CONFIG: AxisConfig = {
   }),
   mouseMainPos: (event) => event.pageX,
   mouseCrossPos: (event) => event.pageY,
-  wheelMainDelta: (event) => event.deltaX || event.deltaY,
+  wheelMainDelta: (event) => {
+    const { deltaX, deltaY } = event;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      return 0;
+    }
+
+    return deltaX;
+  },
   wheelCrossDelta: (event) => event.pageY,
 };
 
