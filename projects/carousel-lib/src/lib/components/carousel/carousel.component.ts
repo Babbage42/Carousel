@@ -636,6 +636,12 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         this.store.resetSlidesIndexOrder();
       }
     });
+
+    afterRenderEffect(() => {
+      if (this.breakpoints()) {
+        this.applyBreakpoints();
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -647,8 +653,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       currentRealPosition: this.initialSlide(),
       uniqueCarouselId: this.uniqueCarouselId,
     });
-
-    this.applyBreakpoints();
   }
 
   ngAfterViewInit(): void {
