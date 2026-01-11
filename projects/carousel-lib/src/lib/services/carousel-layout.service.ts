@@ -2,13 +2,14 @@ import { ElementRef, Injectable } from '@angular/core';
 import { CarouselStore } from '../carousel.store';
 import { CarouselTransformService } from './carousel-transform.service';
 import { CarouselLoopService } from './carousel-loop.service';
+import { CarouselVirtualService } from './carousel-virtual.service';
 
 @Injectable()
 export class CarouselLayoutService {
   constructor(
     private readonly store: CarouselStore,
-    private readonly transformService: CarouselTransformService,
-    private readonly loopService: CarouselLoopService
+    private readonly loopService: CarouselLoopService,
+    private readonly virtualService: CarouselVirtualService
   ) {}
 
   updateLayoutFromSlides(
@@ -30,6 +31,7 @@ export class CarouselLayoutService {
     });
 
     this.loopService.initializeLoopCenter();
+    this.virtualService.initVirtualWindow();
 
     return true;
   }

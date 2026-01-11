@@ -5,9 +5,11 @@ import {
   ElementRef,
   inject,
   Injectable,
+  linkedSignal,
   Signal,
   signal,
   untracked,
+  WritableSignal,
 } from '@angular/core';
 import { Carousel, Slide, SnapDom } from './models/carousel.model';
 import { extractVisibleSlides } from './helpers/calculations.helper';
@@ -16,6 +18,7 @@ import {
   HORIZONTAL_AXIS_CONFIG,
   VERTICAL_AXIS_CONFIG,
 } from './helpers/axis.helper';
+import { positiveModulo } from './helpers/utils.helper';
 
 @Injectable()
 export class CarouselStore {
@@ -76,24 +79,35 @@ export class CarouselStore {
     thumbsOptions: undefined,
     direction: 'ltr',
     axis: 'horizontal',
+    virtual: false,
+    virtualStart: 0,
+    virtualEnd: 0,
+    virtualLoopStart: 0,
   });
 
   // Final state with all updated values.
-  public readonly state: Signal<Carousel> = computed(() => ({
-    ...this._state(),
-    fullWidth: this.fullWidth(),
-    scrollWidth: this.scrollWidth(),
-    maxTranslate: this.maxTranslate(),
-    minTranslate: this.minTranslate(),
-    snapsDom: this.snapsDom(),
-    visibleDom: this.visibleDom(),
-    slideTranslates: this.slideTranslates(),
-    slidesWidths: this.slidesWidths(),
-    totalSlides: this.totalSlides(),
-    totalSlidesVisible: this.totalSlidesVisible(),
-    firstSlideAnchor: this.firstSlideAnchor(),
-    lastSlideAnchor: this.lastSlideAnchor(),
-  }));
+  public readonly state: Signal<Carousel> = computed(() => {
+    const update: Carousel = {
+      ...this._state(),
+      fullWidth: this.fullWidth(),
+      scrollWidth: this.scrollWidth(),
+      maxTranslate: this.maxTranslate(),
+      minTranslate: this.minTranslate(),
+      snapsDom: this.snapsDom(),
+      visibleDom: this.visibleDom(),
+      slideTranslates: this.slideTranslates(),
+      slidesWidths: this.slidesWidths(),
+      totalSlides: this.totalSlides(),
+      totalSlidesVisible: this.totalSlidesVisible(),
+      firstSlideAnchor: this.firstSlideAnchor(),
+      lastSlideAnchor: this.lastSlideAnchor(),
+      virtualRange: this.virtualRange(),
+      virtualStart: this.virtualStart(),
+      virtualEnd: this.virtualEnd(),
+      renderedIndices: this.renderedIndices(),
+    };
+    return update;
+  });
 
   setCurrentPosition(newPos: number) {
     if (newPos !== this.currentPosition()) {
@@ -148,6 +162,7 @@ export class CarouselStore {
   readonly canSwipe = computed(() => this._state().canSwipe);
   readonly resistance = computed(() => this._state().resistance);
   readonly slideOnClick = computed(() => this._state().slideOnClick);
+  readonly thumbsOptions = computed(() => this._state().thumbsOptions);
   readonly navigateSlideBySlide = computed(
     () => this._state().navigateSlideBySlide
   );
@@ -155,6 +170,11 @@ export class CarouselStore {
     () => this._state().direction === 'rtl' && !this.isVertical()
   );
   readonly isVertical = computed(() => this._state().axis === 'vertical');
+  readonly virtual = computed(() => this._state().virtual);
+  readonly virtualBuffer = computed(() => this._state().virtualBuffer);
+  readonly virtualStart = computed(() => this._state().virtualStart);
+  readonly virtualEnd = computed(() => this._state().virtualEnd);
+  readonly virtualLoopStart = computed(() => this._state().virtualLoopStart);
 
   /**
    * TODO test with SSR
@@ -213,21 +233,50 @@ export class CarouselStore {
       this.allSlides()?.nativeElement as HTMLElement
     );
   });
+  private sumWidths(from: number, to: number, fallback: number) {
+    let sum = 0;
+    const width = this.slidesWidths();
+    const gap = this.spaceBetween();
+    for (let i = from; i <= to; i++) {
+      sum += width[i] ?? fallback;
+      if (i < to - 1) {
+        sum += gap;
+      }
+    }
+    return sum;
+  }
+
   readonly maxTranslate = computed(() => {
+    if (this.virtual()) {
+      const renderedIndices = this.renderedIndices();
+      return (
+        -(
+          this.sumWidths(
+            renderedIndices[0],
+            renderedIndices[renderedIndices.length - 1],
+            0
+          ) - this.fullWidth()
+        ) -
+        this.marginEnd() -
+        this.peekOffset()
+      );
+    }
+
     const maxTranslate =
       -(this.scrollWidth() - this.fullWidth()) -
       this.marginEnd() -
       this.peekOffset();
     if (this.center() && !this.notCenterBounds()) {
-      // @todo imprive slide width calculation ?
-      return maxTranslate - this.fullWidth() / 2 + this.slidesWidths()[0] / 2;
+      const width = this.slidesWidths()[0] ?? this.getFallbackSlideWidth();
+      return maxTranslate - this.fullWidth() / 2 + width / 2;
     }
     return maxTranslate;
   });
   readonly minTranslate = computed(() => {
     const fullWidth = this.fullWidth();
     if (this.center() && !this.notCenterBounds()) {
-      return fullWidth / 2 - this.slidesWidths()[0] / 2;
+      const width = this.slidesWidths()[0] ?? this.getFallbackSlideWidth();
+      return fullWidth / 2 - width / 2;
     }
     return this.marginStart() - this.peekOffset();
   });
@@ -289,25 +338,64 @@ export class CarouselStore {
     }
     return 0;
   });
-  readonly slidesWidths = computed(() => {
-    this.fullWidth();
-    const slidesWidths = [];
-    for (const slide of this.slidesElements()) {
-      const size = this.axisConf().rectSize(slide.nativeElement);
-      if (size) {
-        slidesWidths.push(size);
+
+  private readonly slidesWidthsSource = computed(() => ({
+    total: this.totalSlides(),
+    start: this.virtual() ? this.currentVirtualRange().start : 0,
+    domCount: this.slidesElements().length,
+    virtual: this.virtual(),
+    loop: this.loop(),
+    order: this.slidesIndexOrder(),
+    rendered: this.virtual() ? this.renderedIndices() : [],
+  }));
+  readonly slidesWidths: WritableSignal<number[]> = linkedSignal({
+    source: () => this.slidesWidthsSource(),
+    computation: (src, previous) => {
+      const total = src.total;
+      if (!total || total <= 0) {
+        return [];
       }
-    }
-    return slidesWidths;
+      const prev = previous?.value;
+      const next =
+        Array.isArray(prev) && prev.length >= total
+          ? prev.slice(0, total)
+          : new Array(total);
+
+      const slidesEls = this.slidesElements();
+      for (let domIndex = 0; domIndex < slidesEls.length; domIndex++) {
+        const logicalIndex = src.virtual
+          ? src.loop
+            ? src.rendered[domIndex]
+            : src.start + domIndex
+          : src.order[domIndex] ?? domIndex;
+        if (logicalIndex < 0 || logicalIndex >= total) {
+          continue;
+        }
+
+        const size = this.axisConf().rectSize(
+          slidesEls[domIndex].nativeElement
+        );
+        if (size) {
+          next[logicalIndex] = size;
+        }
+      }
+
+      return next;
+    },
   });
-  readonly snapsDom = computed(() =>
-    this.slidesIndexOrder().map((logicalIndex, domIndex) => {
+
+  readonly snapsDom = computed(() => {
+    const order = this.virtual()
+      ? this.renderedIndices()
+      : this.slidesIndexOrder();
+
+    return order.map((logicalIndex, domIndex) => {
       const translate = this.slideTranslates()[logicalIndex];
       const left = -translate;
       const width = this.slidesWidths()[logicalIndex] ?? 0;
       return { domIndex, logicalIndex, left, width, translate };
-    })
-  );
+    });
+  });
   readonly visibleDom = computed(() => {
     return extractVisibleSlides(
       this.snapsDom(),
@@ -320,15 +408,19 @@ export class CarouselStore {
 
   readonly slideTranslates = computed(() => {
     const slidesWidths = this.slidesWidths();
-    const slidesIndexOrder = this.slidesIndexOrder();
-    const snaps: number[] = new Array(this.totalSlides()).fill(0);
+    const order = this.slidesIndexOrder();
+    const snaps: number[] = new Array(this.totalSlides()).fill(undefined);
+    const renderedIndices = this.renderedIndices();
 
     untracked(() => {
       let currentTranslate = this.minTranslate();
 
-      for (let domIndex = 0; domIndex < this.totalSlides(); domIndex++) {
-        const logicalIndex = slidesIndexOrder[domIndex];
-        const slideWidth = slidesWidths[logicalIndex];
+      for (let i = 0; i < renderedIndices.length; i++) {
+        const domIndex = renderedIndices[i];
+        const logicalIndex =
+          this.virtual() && this.loop() ? domIndex : order[domIndex];
+        const slideWidth =
+          slidesWidths[logicalIndex] ?? this.getFallbackSlideWidth();
 
         let snapPosition = currentTranslate;
 
@@ -361,8 +453,121 @@ export class CarouselStore {
     return snaps;
   });
 
+  readonly virtualRange = computed(() => {
+    if (!this.virtual()) {
+      return { start: 0, end: this.totalSlides() - 1 };
+    }
+
+    if (this.loop()) {
+      return { start: 0, end: this.totalSlides() - 1 };
+    }
+
+    const total = this.totalSlides();
+    const visible = this.visibleDom();
+
+    if (!total || !visible.length) {
+      return { start: 0, end: total ? total - 1 : 0 };
+    }
+
+    const buffer = this.virtualBuffer() ?? 1;
+
+    const minVisible = visible.reduce(
+      (min, s) => Math.min(min, s.logicalIndex),
+      Number.POSITIVE_INFINITY
+    );
+    const maxVisible = visible.reduce(
+      (max, s) => Math.max(max, s.logicalIndex),
+      Number.NEGATIVE_INFINITY
+    );
+
+    const slidePerView = this.slidesPerView();
+    const slidesPerViewToApply =
+      slidePerView === 'auto'
+        ? Math.max(1, this.totalSlidesVisible() || 1)
+        : Math.max(1, slidePerView as number);
+
+    let start = Math.floor(minVisible - buffer * slidesPerViewToApply);
+    let end = Math.ceil(maxVisible + buffer * slidesPerViewToApply);
+
+    start = Math.max(0, start);
+    end = Math.min(total - 1, end);
+
+    return { start, end };
+  });
+
+  public readonly virtualLength = computed(() => {
+    if (this.virtual()) {
+      return 0;
+    }
+    return positiveModulo(
+      this.virtualRange().end - this.virtualRange().start + 1,
+      this.totalSlides()
+    );
+  });
+  readonly renderedIndices = computed(() => {
+    const total = this.totalSlides();
+    if (!total) {
+      return [] as number[];
+    }
+    if (!this.virtual()) {
+      return Array.from({ length: total }, (_, i) => i);
+    }
+
+    if (this.virtual() && this.loop()) {
+      const slidesPerView =
+        this.slidesPerView() === 'auto'
+          ? Math.max(1, this.totalSlidesVisible() || 1)
+          : (this.slidesPerView() as number);
+
+      const buffer = this.virtualBuffer() ?? 1;
+      const windowSize = Math.min(
+        total,
+        Math.ceil(slidesPerView * (1 + 2 * buffer))
+      );
+
+      const start = this.virtualLoopStart();
+      return Array.from({ length: windowSize }, (_, i) =>
+        positiveModulo(start + i, total)
+      );
+    }
+
+    const { start, end } = this.currentVirtualRange();
+    const length = end - start + 1;
+    if (length <= 0) {
+      return [];
+    }
+
+    return Array.from({ length }, (_, i) => start + i);
+  });
+  readonly currentVirtualRange = computed(() => {
+    const total = this.totalSlides();
+    if (!this.virtual() || !total) {
+      return { start: 0, end: total ? total - 1 : 0 };
+    }
+
+    const start = Math.max(0, Math.min(this.virtualStart(), total - 1));
+    const end = Math.max(start, Math.min(this.virtualEnd(), total - 1));
+    return { start, end };
+  });
+
   patch(partial: Partial<Carousel>) {
     this._state.update((curr) => ({ ...curr, ...partial }));
+  }
+
+  private getFallbackSlideWidth(): number {
+    const widths = this.slidesWidths();
+    const known = widths.filter(
+      (w) => typeof w === 'number' && w > 0
+    ) as number[];
+    if (known.length) {
+      return known.reduce((a, b) => a + b, 0) / known.length;
+    }
+    const spv = this.slidesPerView();
+    const divider =
+      spv === 'auto'
+        ? Math.max(1, this.totalSlidesVisible() || 1)
+        : (spv as number);
+    return this.fullWidth() / Math.max(1, divider);
   }
 
   private clampPosition(position: number, totalSlides: number) {

@@ -168,6 +168,7 @@ const TemplateProjected = (args: any) => ({
       [direction]="direction"
       [axis]="axis"
       [breakpoints]="breakpoints"
+      [virtual]="virtual"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -223,6 +224,7 @@ const TemplateWithSlides = (args: any) => ({
       [direction]="direction"
       [axis]="axis"
       [breakpoints]="breakpoints"
+      [virtual]="virtual"
       (touched)="touched($event)"
       (slideUpdate)="slideUpdate($event)"
       (slidePrev)="slidePrev($event)"
@@ -767,6 +769,55 @@ export const Thumbs: Story = {
   render: TemplateWithThumbs,
   args: {
     slides: buildSlides(16),
+  },
+};
+
+export const VirtualMode: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(30),
+    slidesPerView: '3.5',
+    virtual: true,
+  },
+};
+
+export const VirtualLoopMode: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(30),
+    slidesPerView: '3.5',
+    virtual: true,
+    loop: true,
+  },
+};
+
+export const VirtualLoopAutoSlidesPerView: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(30),
+    slidesPerView: 'auto',
+    virtual: true,
+    loop: true,
+  },
+};
+
+export const VirtualLoopSmallTotal: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(7),
+    slidesPerView: '3.5',
+    virtual: true,
+    loop: true,
+  },
+};
+
+export const VirtualLoopLargeSPV: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(30),
+    slidesPerView: '6',
+    virtual: true,
+    loop: true,
   },
 };
 

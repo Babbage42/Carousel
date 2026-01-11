@@ -44,120 +44,6 @@ describe('CarouselLoopService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('insertLoopSlides – strategy selection', () => {
-    it('does nothing when loop is disabled', () => {
-      store.setLoop(false);
-      store.setVisibleDom([{ domIndex: 0 } as any]);
-
-      const translationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByTranslation')
-        .mockImplementation(() => {});
-      const slidingToSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesBySlidingTo')
-        .mockImplementation(() => {});
-      const navigationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByNavigation')
-        .mockImplementation(() => {});
-
-      service.insertLoopSlides();
-
-      expect(translationSpy).not.toHaveBeenCalled();
-      expect(slidingToSpy).not.toHaveBeenCalled();
-      expect(navigationSpy).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when there is no visible SnapDom', () => {
-      store.setLoop(true);
-      store.setVisibleDom([]);
-
-      const translationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByTranslation')
-        .mockImplementation(() => {});
-      const slidingToSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesBySlidingTo')
-        .mockImplementation(() => {});
-      const navigationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByNavigation')
-        .mockImplementation(() => {});
-
-      service.insertLoopSlides();
-
-      expect(translationSpy).not.toHaveBeenCalled();
-      expect(slidingToSpy).not.toHaveBeenCalled();
-      expect(navigationSpy).not.toHaveBeenCalled();
-    });
-
-    it('uses the "translation" strategy for manual movement (no parameters)', () => {
-      store.setLoop(true);
-      store.setVisibleDom([{ domIndex: 0 }]);
-
-      const translationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByTranslation')
-        .mockImplementation(() => {});
-      const slidingToSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesBySlidingTo')
-        .mockImplementation(() => {});
-      const navigationSpy = jest
-        .spyOn<any>(service, 'insertLoopSlidesByNavigation')
-        .mockImplementation(() => {});
-
-      service.insertLoopSlides();
-
-      expect(translationSpy).toHaveBeenCalledTimes(1);
-      expect(slidingToSpy).not.toHaveBeenCalled();
-      expect(navigationSpy).not.toHaveBeenCalled();
-    });
-
-    it('uses the "slidingTo" strategy when indexSlided is provided', () => {
-      store.setLoop(true);
-      store.setVisibleDom([{ domIndex: 0 } as any]);
-      store.setSlideTranslates([0, 100, 200]);
-      store.setCurrentTranslate(0);
-
-      const translationSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesByTranslation')
-        .mockImplementation(() => {});
-      const slidingToSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesBySlidingTo')
-        .mockImplementation(() => {});
-      const navigationSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesByNavigation')
-        .mockImplementation(() => {});
-
-      service.insertLoopSlides(2);
-
-      expect(slidingToSpy).toHaveBeenCalledTimes(1);
-      expect(slidingToSpy).toHaveBeenCalledWith(2);
-      expect(translationSpy).not.toHaveBeenCalled();
-      expect(navigationSpy).not.toHaveBeenCalled();
-    });
-
-    it('uses the navigation strategy when "before" is provided and indexSlided is undefined', () => {
-      store.setLoop(true);
-      store.setVisibleDom([{ domIndex: 0 } as any]);
-
-      const translationSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesByTranslation')
-        .mockImplementation(() => {});
-      const slidingToSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesBySlidingTo')
-        .mockImplementation(() => {});
-      const navigationSpy = jest
-        .spyOn<any>(service as any, 'insertLoopSlidesByNavigation')
-        .mockImplementation(() => {});
-
-      service.insertLoopSlides(undefined, true);
-      service.insertLoopSlides(undefined, false);
-
-      expect(translationSpy).not.toHaveBeenCalled();
-      expect(slidingToSpy).not.toHaveBeenCalled();
-
-      expect(navigationSpy).toHaveBeenCalledTimes(2);
-      expect(navigationSpy.mock.calls[0][0]).toBe(true);
-      expect(navigationSpy.mock.calls[1][0]).toBe(false);
-    });
-  });
-
   describe('insertLoopSlidesByTranslation', () => {
     it('inserts one slide before when left edge is close to the start', () => {
       store.setLoop(true);
@@ -173,7 +59,7 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides();
+      service.insertLoopSlidesByTranslation();
 
       expect(insertElementSpy).toHaveBeenCalledTimes(1);
       expect(insertElementSpy.mock.calls[0][0]).toBe(true);
@@ -192,7 +78,7 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides();
+      service.insertLoopSlidesByTranslation();
 
       expect(insertElementSpy).toHaveBeenCalledTimes(1);
       expect(insertElementSpy.mock.calls[0][0]).toBe(false);
@@ -211,7 +97,7 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides();
+      service.insertLoopSlidesByTranslation();
 
       expect(insertElementSpy).not.toHaveBeenCalled();
     });
@@ -233,7 +119,7 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides(undefined, true);
+      service.insertLoopSlidesByNavigation(true);
 
       expect(insertElementSpy).toHaveBeenCalledTimes(2);
       insertElementSpy.mock.calls.forEach(([before]) =>
@@ -256,7 +142,7 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides(undefined, false);
+      service.insertLoopSlidesByNavigation(false);
 
       expect(insertElementSpy).toHaveBeenCalledTimes(2);
       insertElementSpy.mock.calls.forEach(([before]) =>
@@ -281,8 +167,8 @@ describe('CarouselLoopService', () => {
         .spyOn<any>(service as any, 'insertElement')
         .mockImplementation(() => undefined as any);
 
-      service.insertLoopSlides(undefined, true);
-      service.insertLoopSlides(undefined, false);
+      service.insertLoopSlidesByNavigation(true);
+      service.insertLoopSlidesByNavigation(false);
 
       expect(insertElementSpy).not.toHaveBeenCalled();
     });
@@ -302,7 +188,7 @@ describe('CarouselLoopService', () => {
         .mockImplementation(() => undefined as any);
 
       // act
-      service.insertLoopSlides(1);
+      service.insertLoopSlidesBySlidingTo(1);
 
       // assert: nothing is recalculated / inserted
       expect(insertElementSpy).not.toHaveBeenCalled();
@@ -338,7 +224,7 @@ describe('CarouselLoopService', () => {
         .mockImplementation(() => ({ width: 80, offset: 0 }));
 
       // act
-      service.insertLoopSlides(1);
+      service.insertLoopSlidesBySlidingTo(1);
 
       // assert: we have inserted both before AND after
       const beforeCalls = insertElementSpy.mock.calls.filter(
@@ -383,7 +269,7 @@ describe('CarouselLoopService', () => {
         .mockImplementation(() => ({ width: 80, offset: 0 }));
 
       // act
-      service.insertLoopSlides(1);
+      service.insertLoopSlidesBySlidingTo(1);
 
       const beforeCalls = insertElementSpy.mock.calls.filter(
         ([before]) => before === true

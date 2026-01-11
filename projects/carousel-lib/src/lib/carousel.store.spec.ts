@@ -274,7 +274,7 @@ describe('CarouselStore', () => {
       expect(store.slidesWidths()).toEqual([120, 80]);
     });
 
-    it('ignore les éléments sans getBoundingClientRect', () => {
+    it('set undefined for element not rendered', () => {
       const nativeElement = {} as any;
       const badSlide = new ElementRef(nativeElement);
 
@@ -282,7 +282,7 @@ describe('CarouselStore', () => {
 
       store.patch({ slidesElements });
 
-      expect(store.slidesWidths()).toEqual([50]);
+      expect(store.slidesWidths()).toEqual([undefined, 50]);
     });
   });
 

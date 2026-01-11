@@ -21,9 +21,10 @@ export class CarouselDomService {
       this.store
         .slidesElements()
         ?.forEach((slide: ElementRef<HTMLElement>, index: number) => {
-          this.resetPositions(slide.nativeElement, index);
-          this.setAccessibility(slide.nativeElement, index);
-          this.setLazyLoading(slide.nativeElement, index);
+          const logicalIndex = this.getLogicalIndex(index);
+          this.resetPositions(slide.nativeElement, logicalIndex);
+          this.setAccessibility(slide.nativeElement, logicalIndex);
+          this.setLazyLoading(slide.nativeElement, logicalIndex);
         });
 
       this.setSlidesPositions();
@@ -128,6 +129,12 @@ export class CarouselDomService {
   }
 
   private resetPositions(slide: HTMLElement, index: number) {
+    // Remove any existing position-* class before setting the new one
+    slide.classList.forEach((cls) => {
+      if (cls.startsWith('position-')) {
+        this.renderer.removeClass(slide, cls);
+      }
+    });
     this.renderer.removeClass(slide, 'prev');
     this.renderer.removeClass(slide, 'curr');
     this.renderer.removeClass(slide, 'next');
@@ -152,5 +159,12 @@ export class CarouselDomService {
       'tabindex',
       index === this.store.currentPosition() ? '0' : '-1'
     );
+  }
+
+  private getLogicalIndex(domIndex: number): number {
+    if (this.store.virtual()) {
+      return this.store.renderedIndices()?.[domIndex] ?? domIndex;
+    }
+    return this.store.slidesIndexOrder()?.[domIndex] ?? domIndex;
   }
 }

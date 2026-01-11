@@ -8,6 +8,7 @@ import {
   CarouselViewActions,
 } from '../components/carousel/view-adapter';
 import { getPointerPosition } from '../helpers/event.helper';
+import { CarouselVirtualService } from './carousel-virtual.service';
 
 export type PointerCoords = {
   x: number;
@@ -33,6 +34,8 @@ export class CarouselInteractionService {
   private readonly physicsService = inject(CarouselPhysicsService);
   private readonly loopService = inject(CarouselLoopService);
   private readonly domService = inject(CarouselDomService);
+  private readonly virtualService = inject(CarouselVirtualService);
+
   private readonly injector = inject(Injector);
 
   private suppressNextClick = false;
@@ -146,7 +149,8 @@ export class CarouselInteractionService {
       velocity,
     });
 
-    this.loopService.insertLoopSlides();
+    this.loopService.insertLoopSlidesByTranslation();
+    this.virtualService.syncVirtualSlides();
 
     this.view.updateTransform();
   }

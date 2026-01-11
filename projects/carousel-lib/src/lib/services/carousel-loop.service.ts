@@ -84,7 +84,11 @@ export class CarouselLoopService {
   /**
    * When moving slides manually.
    */
-  private insertLoopSlidesByTranslation() {
+  public insertLoopSlidesByTranslation() {
+    if (!this.isLooping()) {
+      return;
+    }
+
     const [leftEdge, rightEdge] = [
       this.store.currentTranslate(),
       this.store.currentTranslate() + this.store.scrollWidth(),
@@ -107,7 +111,11 @@ export class CarouselLoopService {
    * By prev or next button. Handle stepslides.
    * @param before
    */
-  private insertLoopSlidesByNavigation(before = true) {
+  public insertLoopSlidesByNavigation(before = true) {
+    if (!this.isLooping()) {
+      return;
+    }
+
     const leftmostDom = this.firstVisibleSlide;
     const rightmostDom = this.lastVisibleSlide;
     const leftMostIndex = leftmostDom.domIndex;
@@ -143,7 +151,10 @@ export class CarouselLoopService {
    * Direct click on slide.
    * @param indexSlided
    */
-  private insertLoopSlidesBySlidingTo(indexSlided: number) {
+  public insertLoopSlidesBySlidingTo(indexSlided: number) {
+    if (!this.isLooping()) {
+      return;
+    }
     const state = this.store.state();
     const futureTranslate = this.store.slideTranslates()[indexSlided];
     const currentTranslate = this.store.currentTranslate();
@@ -209,40 +220,21 @@ export class CarouselLoopService {
     }
   }
 
-  /**
-   * Determine if we must insert slide before or after.
-   * 3 cases :
-   * - From prev next action : insert as many slides as necessary (by step)
-   * - From click on slide : insert as many slides as necessary (by space)
-   * - From manual move : insert one slide at start or end
-   * @returns
-   */
-  public insertLoopSlides(
-    indexSlided: number | undefined = undefined,
-    before?: boolean
-  ) {
+  private isLooping() {
     if (!this.store.loop()) {
-      return;
+      return false;
     }
 
     if (this.store.visibleDom().length === 0) {
-      return;
+      return false;
     }
 
-    // By manuel move.
-    if (indexSlided === undefined && before === undefined) {
-      this.insertLoopSlidesByTranslation();
-      return;
+    // Handle direclty in virtual service.
+    if (this.store.virtual()) {
+      return false;
     }
 
-    // We slide to specific slide so we need to guess the future state of translation.
-    if (indexSlided !== undefined) {
-      this.insertLoopSlidesBySlidingTo(indexSlided);
-      return;
-    }
-
-    // By clicking next or prev.
-    this.insertLoopSlidesByNavigation(before);
+    return true;
   }
 
   private forceReflow() {

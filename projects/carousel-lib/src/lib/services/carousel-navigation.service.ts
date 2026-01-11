@@ -2,11 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { CarouselStore } from '../carousel.store';
 import { positiveModulo } from '../helpers/utils.helper';
 import { CarouselLoopService } from './carousel-loop.service';
+import { CarouselVirtualService } from './carousel-virtual.service';
 
 @Injectable()
 export class CarouselNavigationService {
   private readonly loopService = inject(CarouselLoopService);
   private readonly store = inject(CarouselStore);
+  private readonly virtualService = inject(CarouselVirtualService);
 
   /**
    * Calculate new index after prev or next action.
@@ -73,8 +75,8 @@ export class CarouselNavigationService {
   }
 
   public getNextIndex() {
-    let indexSlided = undefined;
-    this.loopService.insertLoopSlides(indexSlided, false);
+    this.loopService.insertLoopSlidesByNavigation(false);
+    this.virtualService.syncVirtualSlides();
 
     const hasReachedEnd = this.store.hasReachedEnd();
     let newPosition: number | undefined = undefined;
@@ -92,7 +94,8 @@ export class CarouselNavigationService {
   }
 
   public getPrevIndex() {
-    this.loopService.insertLoopSlides(undefined, true);
+    this.loopService.insertLoopSlidesByNavigation(true);
+    this.virtualService.syncVirtualSlides();
 
     let indexSlided = undefined;
     if (this.store.state().stepSlides > 1) {

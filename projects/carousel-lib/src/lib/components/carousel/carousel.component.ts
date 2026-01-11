@@ -72,6 +72,7 @@ import { rafThrottle } from '../../helpers/raf-throttle.helper';
 import { CarouselLayoutService } from '../../services/carousel-layout.service';
 import { CarouselInteractionService } from '../../services/carousel-interaction.service';
 import { getPointerPosition } from '../../helpers/event.helper';
+import { CarouselVirtualService } from '../../services/carousel-virtual.service';
 
 @Component({
   selector: 'app-carousel',
@@ -99,6 +100,7 @@ import { getPointerPosition } from '../../helpers/event.helper';
     CarouselLayoutService,
     CarouselBreakpointService,
     CarouselInteractionService,
+    CarouselVirtualService,
     { provide: CarouselRegistryService, useClass: CarouselRegistryService },
     {
       provide: CAROUSEL_VIEW,
@@ -114,6 +116,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly domService = inject(CarouselDomService);
   private readonly layoutService = inject(CarouselLayoutService);
   private readonly interactionService = inject(CarouselInteractionService);
+  private readonly virtualService = inject(CarouselVirtualService);
 
   private readonly breakpointService = inject(CarouselBreakpointService);
   private readonly document = inject(DOCUMENT);
@@ -128,6 +131,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly hasReachedStart = this.store.hasReachedStart;
   readonly hasReachedEnd = this.store.hasReachedEnd;
   readonly peekEdgesOffset = this.store.peekOffset;
+  readonly virtualStart = this.store.virtualStart;
 
   projectedSlides = contentChildren(SlideDirective);
   @ContentChild(CarouselNavLeftDirective)
@@ -280,12 +284,17 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Thumbs custom options.
    */
-  thumbsOptions = input({
-    selectionBar: true,
-  });
+  thumbsOptions = input<
+    | {
+        selectionBar: boolean;
+      }
+    | undefined
+  >();
 
   direction = input<CarouselDirection>('ltr');
   axis = input<CarouselAxis>('horizontal');
+  virtual = input(false);
+  virtualBuffer = input(1);
 
   /**
    * Subscribe to master positions.
@@ -393,6 +402,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       thumbsOptions: this.thumbsOptions(),
       direction: this.direction(),
       axis: this.axis(),
+      virtual: this.virtual(),
+      virtualBuffer: this.virtualBuffer(),
     };
     return inputs;
   });
@@ -545,6 +556,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
           peekEdges: {
             relativeOffset: 0.5,
           },
+          thumbsOptions: {
+            selectionBar: true,
+          },
         });
       }
     });
@@ -586,7 +600,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
 
-      if (!this.thumbsOptions()?.selectionBar) {
+      if (!this.store.thumbsOptions()?.selectionBar) {
         return;
       }
 
@@ -712,7 +726,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
     this.domService.updateSlides();
-    this.refreshTranslate();
+
+    // Unwanted if a translation is in progress.
+    if (!this.interactionService.getDragState().isDragging) {
+      this.refreshTranslate();
+    }
   }
 
   private initTouched() {
@@ -962,7 +980,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     const index = position - 1;
-    this.loopService.insertLoopSlides(index);
+    this.loopService.insertLoopSlidesBySlidingTo(index);
+    this.virtualService.syncVirtualSlides(index);
 
     if (this.navigationService.isSlideDisabled(index)) {
       return;
@@ -1044,7 +1063,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private enableThumbsTransition(customTransition?: number) {
-    if (!this.thumbsOptions()?.selectionBar) {
+    if (!this.store.thumbsOptions()?.selectionBar) {
       return;
     }
     this.thumbsTransitionDuration.set(
@@ -1166,7 +1185,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.loopService.insertLoopSlides(index);
+    this.loopService.insertLoopSlidesBySlidingTo(index);
+    this.virtualService.syncVirtualSlides(index);
 
     this.slideTo(index, animate);
   }

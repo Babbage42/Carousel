@@ -31,8 +31,17 @@ export class CarouselTransformService {
       let smallestDiff = Infinity;
       const snapPoints = this.store.slideTranslates();
 
+      let base = 0;
+      if (this.store.virtual()) {
+        const startIndex = this.store.loop()
+          ? this.store.virtualLoopStart()
+          : this.store.currentVirtualRange().start;
+        base = snapPoints[startIndex] ?? 0;
+      }
+
       for (let i = 0; i < snapPoints.length; i++) {
-        const diff = Math.abs(currentTranslate - snapPoints[i]);
+        const snap = (snapPoints[i] ?? 0) - base;
+        const diff = Math.abs(currentTranslate - snap);
         if (diff < smallestDiff) {
           smallestDiff = diff;
           closestIndex = i;
@@ -68,7 +77,17 @@ export class CarouselTransformService {
   public getTranslateFromPosition(
     index = this.store.currentRealPosition()
   ): number {
-    const posX = this.store.slideTranslates()[index];
+    const snaps = this.store.slideTranslates();
+    let posX = snaps[index];
+
+    if (this.store.virtual()) {
+      const startIndex = this.store.loop()
+        ? this.store.virtualLoopStart()
+        : this.store.currentVirtualRange().start;
+
+      const base = snaps[startIndex] ?? 0;
+      posX = (posX ?? 0) - base;
+    }
 
     if (this.store.loop()) {
       // Authorize any translation without restriction.

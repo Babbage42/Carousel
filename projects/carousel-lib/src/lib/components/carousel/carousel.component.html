@@ -50,18 +50,19 @@
       (imagesReady)="onImagesReady()"
       (imagesChanged)="onImagesChanged()"
     >
-      @if (slides().length) { @for (slide of slides(); track $index) {
+      @if (slides().length) { @for (index of store.renderedIndices(); track
+      $index) { @let slideElement = slides()[index]; @let realIndex = index;
       <div
         #slide
-        class="slide position-{{ $index + 1 }}"
-        [class.slide--disabled]="navigationService.isSlideDisabled($index)"
-        [class.slide--active]="store.currentPosition() === $index"
-        [attr.data-testid]="'slide-' + $index"
+        class="slide"
+        [class.slide--disabled]="navigationService.isSlideDisabled(realIndex)"
+        [class.slide--active]="store.currentPosition() === realIndex"
+        [attr.data-testid]="'slide-' + realIndex"
       >
-        <img src="{{ slide.image }}" alt="" />
+        <img src="{{ slideElement.image }}" alt="" />
 
         @if(debug()) {
-        <span>{{ $index + 1 }}</span>
+        <span>{{ realIndex + 1 }}</span>
         }
       </div>
       } } @else if (projectedSlides().length) { @for (slide of
@@ -82,7 +83,7 @@
       }
     </div>
 
-    @if(thumbsFor() && thumbsOptions().selectionBar) {
+    @if(thumbsFor() && store.thumbsOptions()?.selectionBar) {
     <div
       class="carousel-thumb-indicator"
       [style.transform]="'translateX(' + thumbIndicatorLeft() + 'px)'"

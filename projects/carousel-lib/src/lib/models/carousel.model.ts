@@ -144,6 +144,17 @@ export interface Carousel {
 
   direction: CarouselDirection;
   axis: CarouselAxis;
+
+  virtual: boolean;
+  virtualStart: number;
+  virtualRange?: {
+    start: number;
+    end: number;
+  };
+  virtualEnd: number;
+  virtualBuffer?: number;
+  renderedIndices?: number[];
+  virtualLoopStart: number;
 }
 
 export const CAROUSEL_SLIDE_CLASS = 'slide';
