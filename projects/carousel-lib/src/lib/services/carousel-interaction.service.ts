@@ -357,6 +357,7 @@ export class CarouselInteractionService {
     if (this.store.draggable()) {
       this.view.slideToNearest();
     }
+
     this.resetDrag();
   }
 

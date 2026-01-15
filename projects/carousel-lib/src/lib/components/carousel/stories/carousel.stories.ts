@@ -485,7 +485,6 @@ export const Looping: Story = {
   args: {
     slides: buildSlides(8),
     slidesPerView: '3',
-    stepSlides: 2,
     loop: true,
     freeMode: false,
   },
@@ -818,6 +817,13 @@ export const VirtualLoopLargeSPV: Story = {
     slidesPerView: '6',
     virtual: true,
     loop: true,
+  },
+};
+
+export const ManySlides: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(150),
   },
 };
 

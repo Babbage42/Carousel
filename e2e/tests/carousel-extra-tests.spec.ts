@@ -87,23 +87,23 @@ test.describe('Keyboard Navigation', () => {
     await waitCarouselReady(page);
 
     const carousel = firstCarousel(page);
+
     const initial = await getActiveSlideIndex(carousel);
 
     await carousel.press('Tab');
 
-    // En RTL, ArrowRight devrait aller à prev
-    await carousel.press('ArrowRight');
-    await page.waitForTimeout(600);
-
-    const afterRight = await getActiveSlideIndex(carousel);
-    expect(afterRight).not.toBe(initial);
-
-    // ArrowLeft devrait revenir
     await carousel.press('ArrowLeft');
     await page.waitForTimeout(600);
 
     const afterLeft = await getActiveSlideIndex(carousel);
-    expect(afterLeft).toBe(initial);
+    expect(afterLeft).toBeGreaterThan(initial);
+
+    // ArrowRight devrait revenir
+    await carousel.press('ArrowRight');
+    await page.waitForTimeout(600);
+
+    const afterRight = await getActiveSlideIndex(carousel);
+    expect(afterRight).toBe(initial);
   });
 
   test('keyboard navigation in vertical mode', async ({ page }) => {
