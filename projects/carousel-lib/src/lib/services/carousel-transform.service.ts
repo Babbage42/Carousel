@@ -20,10 +20,11 @@ export class CarouselTransformService {
     let closestIndex = 0;
 
     if (
-      (this.store.currentPosition() >= this.store.lastSlideAnchor() &&
+      !this.store.loop() &&
+      ((this.store.currentPosition() >= this.store.lastSlideAnchor() &&
         currentTranslate <= this.store.maxTranslate()) ||
-      (this.store.currentPosition() <= this.store.firstSlideAnchor() &&
-        currentTranslate >= this.store.minTranslate())
+        (this.store.currentPosition() <= this.store.firstSlideAnchor() &&
+          currentTranslate >= this.store.minTranslate()))
     ) {
       // We have extra translation to left or right.
       closestIndex = this.store.currentPosition();
