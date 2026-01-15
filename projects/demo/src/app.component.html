@@ -194,18 +194,13 @@
 </div>
 
 <div style="width: 80%; padding: 50px">
+  <h1>REWIND</h1>
   <app-carousel
     #myCarousel
-    [center]="true"
     [rewind]="true"
     [freeMode]="false"
+    [slidesPerView]="3"
     [slides]="[
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
-      300 | randomSrc : 200,
       300 | randomSrc : 200,
       300 | randomSrc : 200,
       300 | randomSrc : 200,

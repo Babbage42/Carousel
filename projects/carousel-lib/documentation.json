@@ -5215,12 +5215,12 @@
     "classes": [
         {
             "name": "CarouselStoreFake",
-            "id": "class-CarouselStoreFake-9bcc087336da9b6afade1d7dba9d861231cd26cc4898bf30060245bdbd29aa96bbbe0a76a8fadfc0b1859f9d3aa145740e752b464089f0c3d7680e360ff75624",
+            "id": "class-CarouselStoreFake-9151caf0a8fee51d94c921dbd3c4747d18221a7539ea8e588fab1833c050e810e3fd0a25893e301a7d11337fbeafac4df6d9a32ef25ce87dd42083ac9a366273",
             "file": "projects/carousel-lib/src/lib/helpers/tests/test.utils.helper.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "class",
-            "sourceCode": "import { ElementRef } from '@angular/core';\n\nexport class CarouselStoreFake {\n  private _currentPosition = 0;\n  private _stepSlides = 1;\n  private _loop = false;\n  private _totalSlides = 0;\n  private _lastSlideAnchor = 0;\n  private _spaceBetween = 0;\n\n  private _allSlides?: ElementRef<HTMLElement>;\n  private _slidesElements?: ElementRef<HTMLElement>[];\n\n  private _lazyLoading = false;\n  private _slidesPerView: number | 'auto' = 1;\n  private _center = false;\n\n  private _fullWidth = 0;\n  private _marginStart = 0;\n  private _initialSlide = 0;\n\n  private _visibleDom: any[] = [];\n  private _slidesIndexOrder: number[] = [];\n  private _slidesWidths: number[] = [];\n  private _slideTranslates: number[] = [];\n  private _snapsDom: any[] = [];\n  private _currentTranslate = 0;\n  private _lastTranslate = 0;\n  private _navigateSlideBySlide = false;\n  private _isRtl = false;\n  private _isVertical = false;\n\n  currentPosition = () => this._currentPosition;\n\n  state = () =>\n    ({\n      stepSlides: this._stepSlides,\n      loop: this._loop,\n      lazyLoading: this._lazyLoading,\n      center: this._center,\n      fullWidth: this._fullWidth,\n      marginStart: this._marginStart,\n      spaceBetween: this._spaceBetween,\n      initialSlide: this._initialSlide,\n      allSlides: this._allSlides,\n      navigateSlideBySlide: this._navigateSlideBySlide,\n    } as any);\n\n  loop = () => this._loop;\n  totalSlides = () => this._totalSlides;\n  lastSlideAnchor = () => this._lastSlideAnchor;\n\n  allSlides = () => this._allSlides;\n  slidesElements = () => this._slidesElements;\n  slidesPerView = () => this._slidesPerView;\n  spaceBetween = () => this._spaceBetween;\n  center = () => this._center;\n\n  visibleDom = () => this._visibleDom;\n  slidesIndexOrder = () => this._slidesIndexOrder;\n  slidesWidths = () => this._slidesWidths;\n  slides = () => this._slidesElements;\n  slideTranslates = () => this._slideTranslates;\n  snapsDom = () => this._snapsDom;\n  currentTranslate = () => this._currentTranslate;\n  lastTranslate = () => this._lastTranslate;\n  navigateSlideBySlide = () => this._navigateSlideBySlide;\n  isRtl = () => this._isRtl;\n  isVertical = () => this._isVertical;\n\n  patch(partial: any) {\n    if (partial.slidesIndexOrder) {\n      this._slidesIndexOrder = partial.slidesIndexOrder;\n    }\n    if (typeof partial.currentTranslate === 'number') {\n      this._currentTranslate = partial.currentTranslate;\n    }\n    if (typeof partial.lastTranslate === 'number') {\n      this._lastTranslate = partial.lastTranslate;\n    }\n  }\n\n  setCurrentPosition(pos: number) {\n    this._currentPosition = pos;\n  }\n\n  setStepSlides(step: number) {\n    this._stepSlides = step;\n  }\n\n  setLoop(loop: boolean) {\n    this._loop = loop;\n  }\n\n  setTotalSlides(total: number) {\n    this._totalSlides = total;\n  }\n\n  setLastSlideAnchor(anchor: number) {\n    this._lastSlideAnchor = anchor;\n  }\n\n  setAllSlides(allSlides: ElementRef<HTMLElement> | undefined) {\n    this._allSlides = allSlides;\n  }\n\n  setSlidesElements(slides: ElementRef<HTMLElement>[] | undefined) {\n    this._slidesElements = slides;\n  }\n\n  setLazyLoading(lazy: boolean) {\n    this._lazyLoading = lazy;\n  }\n\n  setSlidesPerView(spv: number | 'auto') {\n    this._slidesPerView = spv;\n  }\n\n  setSpaceBetween(space: number) {\n    this._spaceBetween = space;\n  }\n\n  setCenter(center: boolean) {\n    this._center = center;\n  }\n\n  // --- nouveaux setters pour ce que le service / tests utilisent ---\n\n  setFullWidth(value: number) {\n    this._fullWidth = value;\n  }\n\n  setMarginStart(value: number) {\n    this._marginStart = value;\n  }\n\n  setInitialSlide(value: number) {\n    this._initialSlide = value;\n  }\n\n  setVisibleDom(snaps: any[]) {\n    this._visibleDom = snaps;\n  }\n\n  setSlidesIndexOrder(order: number[]) {\n    this._slidesIndexOrder = order;\n  }\n\n  setSlidesWidths(widths: number[]) {\n    this._slidesWidths = widths;\n  }\n\n  setSlideTranslates(translates: number[]) {\n    this._slideTranslates = translates;\n  }\n\n  setSnapsDom(snaps: any[]) {\n    this._snapsDom = snaps;\n  }\n\n  setCurrentTranslate(value: number) {\n    this._currentTranslate = value;\n  }\n\n  setLastTranslate(value: number) {\n    this._lastTranslate = value;\n  }\n}\n\nexport function createSlideElement(width: number): ElementRef<HTMLElement> {\n  const nativeElement = {\n    getBoundingClientRect: () => ({ width }),\n  } as any;\n  return new ElementRef(nativeElement);\n}\n",
+            "sourceCode": "import { ElementRef } from '@angular/core';\n\nexport class CarouselStoreFake {\n  private _currentPosition = 0;\n  private _stepSlides = 1;\n  private _loop = false;\n  private _totalSlides = 0;\n  private _lastSlideAnchor = 0;\n  private _spaceBetween = 0;\n\n  private _allSlides?: ElementRef<HTMLElement>;\n  private _slidesElements?: ElementRef<HTMLElement>[];\n\n  private _lazyLoading = false;\n  private _slidesPerView: number | 'auto' = 1;\n  private _center = false;\n\n  private _fullWidth = 0;\n  private _marginStart = 0;\n  private _initialSlide = 0;\n\n  private _visibleDom: any[] = [];\n  private _slidesIndexOrder: number[] = [];\n  private _slidesWidths: number[] = [];\n  private _slideTranslates: number[] = [];\n  private _snapsDom: any[] = [];\n  private _currentTranslate = 0;\n  private _lastTranslate = 0;\n  private _navigateSlideBySlide = false;\n  private _isRtl = false;\n  private _isVertical = false;\n\n  private _virtual = false;\n\n  currentPosition = () => this._currentPosition;\n\n  state = () =>\n    ({\n      stepSlides: this._stepSlides,\n      loop: this._loop,\n      lazyLoading: this._lazyLoading,\n      center: this._center,\n      fullWidth: this._fullWidth,\n      marginStart: this._marginStart,\n      spaceBetween: this._spaceBetween,\n      initialSlide: this._initialSlide,\n      allSlides: this._allSlides,\n      navigateSlideBySlide: this._navigateSlideBySlide,\n    } as any);\n\n  loop = () => this._loop;\n  totalSlides = () => this._totalSlides;\n  lastSlideAnchor = () => this._lastSlideAnchor;\n\n  allSlides = () => this._allSlides;\n  slidesElements = () => this._slidesElements;\n  slidesPerView = () => this._slidesPerView;\n  spaceBetween = () => this._spaceBetween;\n  center = () => this._center;\n\n  visibleDom = () => this._visibleDom;\n  slidesIndexOrder = () => this._slidesIndexOrder;\n  slidesWidths = () => this._slidesWidths;\n  slides = () => this._slidesElements;\n  slideTranslates = () => this._slideTranslates;\n  snapsDom = () => this._snapsDom;\n  currentTranslate = () => this._currentTranslate;\n  lastTranslate = () => this._lastTranslate;\n  navigateSlideBySlide = () => this._navigateSlideBySlide;\n  isRtl = () => this._isRtl;\n  isVertical = () => this._isVertical;\n  virtual = () => this._virtual;\n\n  patch(partial: any) {\n    if (partial.slidesIndexOrder) {\n      this._slidesIndexOrder = partial.slidesIndexOrder;\n    }\n    if (typeof partial.currentTranslate === 'number') {\n      this._currentTranslate = partial.currentTranslate;\n    }\n    if (typeof partial.lastTranslate === 'number') {\n      this._lastTranslate = partial.lastTranslate;\n    }\n  }\n\n  setCurrentPosition(pos: number) {\n    this._currentPosition = pos;\n  }\n\n  setStepSlides(step: number) {\n    this._stepSlides = step;\n  }\n\n  setLoop(loop: boolean) {\n    this._loop = loop;\n  }\n\n  setTotalSlides(total: number) {\n    this._totalSlides = total;\n  }\n\n  setLastSlideAnchor(anchor: number) {\n    this._lastSlideAnchor = anchor;\n  }\n\n  setAllSlides(allSlides: ElementRef<HTMLElement> | undefined) {\n    this._allSlides = allSlides;\n  }\n\n  setSlidesElements(slides: ElementRef<HTMLElement>[] | undefined) {\n    this._slidesElements = slides;\n  }\n\n  setLazyLoading(lazy: boolean) {\n    this._lazyLoading = lazy;\n  }\n\n  setSlidesPerView(spv: number | 'auto') {\n    this._slidesPerView = spv;\n  }\n\n  setSpaceBetween(space: number) {\n    this._spaceBetween = space;\n  }\n\n  setCenter(center: boolean) {\n    this._center = center;\n  }\n\n  // --- nouveaux setters pour ce que le service / tests utilisent ---\n\n  setFullWidth(value: number) {\n    this._fullWidth = value;\n  }\n\n  setMarginStart(value: number) {\n    this._marginStart = value;\n  }\n\n  setInitialSlide(value: number) {\n    this._initialSlide = value;\n  }\n\n  setVisibleDom(snaps: any[]) {\n    this._visibleDom = snaps;\n  }\n\n  setSlidesIndexOrder(order: number[]) {\n    this._slidesIndexOrder = order;\n  }\n\n  setSlidesWidths(widths: number[]) {\n    this._slidesWidths = widths;\n  }\n\n  setSlideTranslates(translates: number[]) {\n    this._slideTranslates = translates;\n  }\n\n  setSnapsDom(snaps: any[]) {\n    this._snapsDom = snaps;\n  }\n\n  setCurrentTranslate(value: number) {\n    this._currentTranslate = value;\n  }\n\n  setLastTranslate(value: number) {\n    this._lastTranslate = value;\n  }\n}\n\nexport function createSlideElement(width: number): ElementRef<HTMLElement> {\n  const nativeElement = {\n    getBoundingClientRect: () => ({ width }),\n  } as any;\n  return new ElementRef(nativeElement);\n}\n",
             "inputsClass": [],
             "outputsClass": [],
             "properties": [
@@ -5545,6 +5545,20 @@
                     ]
                 },
                 {
+                    "name": "_virtual",
+                    "defaultValue": "false",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 33,
+                    "modifierKind": [
+                        123
+                    ]
+                },
+                {
                     "name": "_visibleDom",
                     "defaultValue": "[]",
                     "deprecated": false,
@@ -5567,7 +5581,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 53
+                    "line": 55
                 },
                 {
                     "name": "center",
@@ -5578,7 +5592,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 57
+                    "line": 59
                 },
                 {
                     "name": "currentPosition",
@@ -5589,7 +5603,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 33
+                    "line": 35
                 },
                 {
                     "name": "currentTranslate",
@@ -5600,7 +5614,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 65
+                    "line": 67
                 },
                 {
                     "name": "isRtl",
@@ -5611,7 +5625,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 68
+                    "line": 70
                 },
                 {
                     "name": "isVertical",
@@ -5622,7 +5636,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 69
+                    "line": 71
                 },
                 {
                     "name": "lastSlideAnchor",
@@ -5633,7 +5647,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 51
+                    "line": 53
                 },
                 {
                     "name": "lastTranslate",
@@ -5644,7 +5658,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 66
+                    "line": 68
                 },
                 {
                     "name": "loop",
@@ -5655,7 +5669,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 49
+                    "line": 51
                 },
                 {
                     "name": "navigateSlideBySlide",
@@ -5666,7 +5680,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 67
+                    "line": 69
                 },
                 {
                     "name": "slides",
@@ -5677,7 +5691,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 62
+                    "line": 64
                 },
                 {
                     "name": "slidesElements",
@@ -5688,7 +5702,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 54
+                    "line": 56
                 },
                 {
                     "name": "slidesIndexOrder",
@@ -5699,7 +5713,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 60
+                    "line": 62
                 },
                 {
                     "name": "slidesPerView",
@@ -5710,7 +5724,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 55
+                    "line": 57
                 },
                 {
                     "name": "slidesWidths",
@@ -5721,7 +5735,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 61
+                    "line": 63
                 },
                 {
                     "name": "slideTranslates",
@@ -5732,7 +5746,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 63
+                    "line": 65
                 },
                 {
                     "name": "snapsDom",
@@ -5743,7 +5757,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 64
+                    "line": 66
                 },
                 {
                     "name": "spaceBetween",
@@ -5754,7 +5768,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 56
+                    "line": 58
                 },
                 {
                     "name": "state",
@@ -5765,7 +5779,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 35
+                    "line": 37
                 },
                 {
                     "name": "totalSlides",
@@ -5776,7 +5790,18 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 50
+                    "line": 52
+                },
+                {
+                    "name": "virtual",
+                    "defaultValue": "() => {...}",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "indexKey": "",
+                    "optional": false,
+                    "description": "",
+                    "line": 72
                 },
                 {
                     "name": "visibleDom",
@@ -5787,7 +5812,7 @@
                     "indexKey": "",
                     "optional": false,
                     "description": "",
-                    "line": 59
+                    "line": 61
                 }
             ],
             "methods": [
@@ -5804,7 +5829,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 71,
+                    "line": 74,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5832,7 +5857,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 103,
+                    "line": 106,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5860,7 +5885,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 123,
+                    "line": 126,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5888,7 +5913,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 83,
+                    "line": 86,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5916,7 +5941,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 161,
+                    "line": 164,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5944,7 +5969,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 129,
+                    "line": 132,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -5972,7 +5997,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 137,
+                    "line": 140,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6000,7 +6025,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 99,
+                    "line": 102,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6028,7 +6053,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 165,
+                    "line": 168,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6056,7 +6081,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 111,
+                    "line": 114,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6084,7 +6109,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 91,
+                    "line": 94,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6112,7 +6137,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 133,
+                    "line": 136,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6140,7 +6165,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 107,
+                    "line": 110,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6168,7 +6193,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 145,
+                    "line": 148,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6196,7 +6221,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 115,
+                    "line": 118,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6224,7 +6249,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 149,
+                    "line": 152,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6252,7 +6277,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 153,
+                    "line": 156,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6280,7 +6305,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 157,
+                    "line": 160,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6308,7 +6333,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 119,
+                    "line": 122,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6336,7 +6361,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 87,
+                    "line": 90,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6364,7 +6389,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 95,
+                    "line": 98,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -6392,7 +6417,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 141,
+                    "line": 144,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -11230,7 +11255,7 @@
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
-                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [debug]=\"debug\">\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      [virtual]=\"virtual\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [debug]=\"debug\">\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
             },
             {
                 "name": "TemplateVerticalWithSlides",
@@ -11250,7 +11275,7 @@
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
-                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [slides]=\"slides\"\n      [debug]=\"debug\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      [virtual]=\"virtual\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [slides]=\"slides\"\n      [debug]=\"debug\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
             },
             {
                 "name": "TemplateWithThumbs",
@@ -11343,7 +11368,47 @@
                 "defaultValue": "{\n  render: TemplateVerticalWithSlides,\n  args: {\n    slides: buildSlides(10),\n    axis: 'vertical',\n    center: true,\n    slidesPerView: '3',\n  },\n}"
             },
             {
-                "name": "VirtualModeCarousel",
+                "name": "VirtualLoopAutoSlidesPerView",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: 'auto',\n    virtual: true,\n    loop: true,\n  },\n}"
+            },
+            {
+                "name": "VirtualLoopLargeSPV",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: '6',\n    virtual: true,\n    loop: true,\n  },\n}"
+            },
+            {
+                "name": "VirtualLoopMode",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: '3.5',\n    virtual: true,\n    loop: true,\n  },\n}"
+            },
+            {
+                "name": "VirtualLoopSmallTotal",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story",
+                "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(7),\n    slidesPerView: '3.5',\n    virtual: true,\n    loop: true,\n  },\n}"
+            },
+            {
+                "name": "VirtualMode",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
                 "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
@@ -12255,7 +12320,7 @@
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
-                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [debug]=\"debug\">\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      [virtual]=\"virtual\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [debug]=\"debug\">\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n      <div *slide><img [src]=\"300 | randomSrc:200\" /></div>\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
                 },
                 {
                     "name": "TemplateVerticalWithSlides",
@@ -12275,7 +12340,7 @@
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
-                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [slides]=\"slides\"\n      [debug]=\"debug\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
+                    "defaultValue": "(args: any) => ({\n  props: args,\n  template: `\n    <app-carousel\n      [slidesPerView]=\"slidesPerView\"\n      [stepSlides]=\"stepSlides\"\n      [spaceBetween]=\"spaceBetween\"\n      [showControls]=\"showControls\"\n      [alwaysShowControls]=\"alwaysShowControls\"\n      [iconSize]=\"iconSize\"\n      [pagination]=\"pagination\"\n      [freeMode]=\"freeMode\"\n      [mouseWheel]=\"mouseWheel\"\n      [deltaPosition]=\"deltaPosition\"\n      [showProgress]=\"showProgress\"\n      [dotsControl]=\"dotsControl\"\n      [rewind]=\"rewind\"\n      [loop]=\"loop\"\n      [center]=\"center\"\n      [notCenterBounds]=\"notCenterBounds\"\n      [slideOnClick]=\"slideOnClick\"\n      [marginEnd]=\"marginEnd\"\n      [marginStart]=\"marginStart\"\n      [lazyLoading]=\"lazyLoading\"\n      [autoplay]=\"autoplay\"\n      [resistance]=\"resistance\"\n      [initialSlide]=\"initialSlide\"\n      [draggable]=\"draggable\"\n      [peekEdges]=\"peekEdges\"\n      [direction]=\"direction\"\n      [axis]=\"axis\"\n      [breakpoints]=\"breakpoints\"\n      [virtual]=\"virtual\"\n      (touched)=\"touched($event)\"\n      (slideUpdate)=\"slideUpdate($event)\"\n      (slidePrev)=\"slidePrev($event)\"\n      (slideNext)=\"slideNext($event)\"\n      (reachEnd)=\"reachEnd($event)\"\n      (reachStart)=\"reachStart($event)\"\n      (imagesLoaded)=\"imagesLoaded()\"\n      (indexSelected)=\"indexSelected($event)\"\n      [slides]=\"slides\"\n      [debug]=\"debug\">\n    </app-carousel>\n  `,\n  moduleMetadata: modules,\n})"
                 },
                 {
                     "name": "TemplateWithThumbs",
@@ -12338,7 +12403,47 @@
                     "defaultValue": "{\n  render: TemplateVerticalWithSlides,\n  args: {\n    slides: buildSlides(10),\n    axis: 'vertical',\n    center: true,\n    slidesPerView: '3',\n  },\n}"
                 },
                 {
-                    "name": "VirtualModeCarousel",
+                    "name": "VirtualLoopAutoSlidesPerView",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: 'auto',\n    virtual: true,\n    loop: true,\n  },\n}"
+                },
+                {
+                    "name": "VirtualLoopLargeSPV",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: '6',\n    virtual: true,\n    loop: true,\n  },\n}"
+                },
+                {
+                    "name": "VirtualLoopMode",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(30),\n    slidesPerView: '3.5',\n    virtual: true,\n    loop: true,\n  },\n}"
+                },
+                {
+                    "name": "VirtualLoopSmallTotal",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story",
+                    "defaultValue": "{\n  render: TemplateWithSlides,\n  args: {\n    slides: buildSlides(7),\n    slidesPerView: '3.5',\n    virtual: true,\n    loop: true,\n  },\n}"
+                },
+                {
+                    "name": "VirtualMode",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
                     "file": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
@@ -13517,7 +13622,47 @@
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
-                "name": "VirtualModeCarousel",
+                "name": "VirtualLoopAutoSlidesPerView",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "VirtualLoopLargeSPV",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "VirtualLoopMode",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "VirtualLoopSmallTotal",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/carousel-lib/src/lib/components/carousel/stories/carousel.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "VirtualMode",
                 "coveragePercent": 0,
                 "coverageCount": "0/1",
                 "status": "low"
@@ -13747,7 +13892,7 @@
                 "linktype": "classe",
                 "name": "CarouselStoreFake",
                 "coveragePercent": 0,
-                "coverageCount": "0/68",
+                "coverageCount": "0/70",
                 "status": "low"
             },
             {
