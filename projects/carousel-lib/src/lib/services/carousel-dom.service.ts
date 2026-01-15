@@ -1,4 +1,4 @@
-import { ElementRef, inject, Injectable, Renderer2 } from '@angular/core';
+import { inject, Injectable, Renderer2 } from '@angular/core';
 import { CarouselStore } from '../carousel.store';
 
 export const DEFAULT_IMAGES_TO_LOAD = 6;
@@ -17,15 +17,21 @@ export class CarouselDomService {
       return;
     }
 
-    if (this.store.slidesElements()) {
-      this.store
-        .slidesElements()
-        ?.forEach((slide: ElementRef<HTMLElement>, index: number) => {
-          const logicalIndex = this.getLogicalIndex(index);
-          this.resetPositions(slide.nativeElement, logicalIndex);
-          this.setAccessibility(slide.nativeElement, logicalIndex);
-          this.setLazyLoading(slide.nativeElement, logicalIndex);
-        });
+    const domSlides = this.store.domSlides();
+    const slides =
+      domSlides.length > 0
+        ? domSlides
+        : this.store
+            .slidesElements()
+            ?.map((slide) => slide.nativeElement) ?? [];
+
+    if (slides.length) {
+      slides.forEach((slide: HTMLElement, index: number) => {
+        const logicalIndex = this.getLogicalIndex(index);
+        this.resetPositions(slide, logicalIndex);
+        this.setAccessibility(slide, logicalIndex);
+        this.setLazyLoading(slide, logicalIndex);
+      });
 
       this.setSlidesPositions();
     }

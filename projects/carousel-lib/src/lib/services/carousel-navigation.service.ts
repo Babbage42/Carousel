@@ -20,6 +20,12 @@ export class CarouselNavigationService {
       const newIndex = isSlidingNext
         ? this.store.currentRealPosition() + this.store.state().stepSlides
         : this.store.currentRealPosition() - this.store.state().stepSlides;
+
+      // Don't clamp if rewind is enabled - let caller handle rewind logic
+      if (this.store.rewind()) {
+        return newIndex;
+      }
+
       return Math.max(0, Math.min(newIndex, this.store.totalSlides() - 1));
     }
 
@@ -31,14 +37,15 @@ export class CarouselNavigationService {
       return positiveModulo(newIndex, this.store.totalSlides());
     }
 
+    // Don't clamp if rewind is enabled - let caller handle rewind logic
+    if (this.store.rewind()) {
+      return newIndex;
+    }
+
+    // Only clamp when there's no loop and no rewind (hard stop at bounds)
     return Math.max(
-      0,
-      Math.min(
-        newIndex,
-        isSlidingNext
-          ? this.store.lastSlideAnchor()
-          : this.store.lastSlideAnchor() - 1
-      )
+      this.store.firstSlideAnchor(),
+      Math.min(newIndex, this.store.lastSlideAnchor()),
     );
   }
 
@@ -78,19 +85,24 @@ export class CarouselNavigationService {
     this.loopService.insertLoopSlidesByNavigation(false);
     this.virtualService.syncVirtualSlides();
 
-    const hasReachedEnd = this.store.hasReachedEnd();
-    let newPosition: number | undefined = undefined;
-    if (hasReachedEnd && this.store.rewind()) {
-      newPosition = 0;
-    } else {
-      newPosition = this.calculateNewPositionAfterNavigation(true);
+    // Calculate where we WOULD go
+    const newPosition = this.calculateNewPositionAfterNavigation(true);
+
+    // Check if this would exceed the bounds and we should rewind
+    if (this.store.rewind() && !this.store.loop()) {
+      const wouldExceedEnd = newPosition > this.store.lastSlideAnchor();
+      if (wouldExceedEnd) {
+        // Rewind to firstSlideAnchor (which is 0 for normal mode, or floor(spv/2) for notCenterBounds)
+        const rewindIndex = this.store.firstSlideAnchor();
+        return this.isSlideDisabled(rewindIndex)
+          ? this.findNextEnabledIndex(rewindIndex, +1)
+          : rewindIndex;
+      }
     }
 
-    newPosition = this.isSlideDisabled(newPosition)
+    return this.isSlideDisabled(newPosition)
       ? this.findNextEnabledIndex(this.store.currentPosition(), +1)
       : newPosition;
-
-    return newPosition;
   }
 
   public getPrevIndex() {
@@ -109,7 +121,7 @@ export class CarouselNavigationService {
     const hasReachedStart = this.store.hasReachedStart();
     let newPosition: number | undefined = undefined;
     if (hasReachedStart && this.store.rewind()) {
-      newPosition = this.store.totalSlides() - 1;
+      newPosition = this.store.lastSlideAnchor();
     } else {
       newPosition = this.calculateNewPositionAfterNavigation(false);
     }

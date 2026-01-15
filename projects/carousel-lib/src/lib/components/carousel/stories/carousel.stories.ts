@@ -485,7 +485,6 @@ export const Looping: Story = {
   args: {
     slides: buildSlides(8),
     slidesPerView: '3',
-    stepSlides: 2,
     loop: true,
     freeMode: false,
   },
@@ -514,7 +513,18 @@ export const Centered: Story = {
 export const NotCenterBounds: Story = {
   render: TemplateWithSlides,
   args: {
-    slides: buildSlides(9),
+    slides: buildSlides(10),
+    slidesPerView: '4',
+    center: true,
+    notCenterBounds: true,
+    freeMode: false,
+  },
+};
+
+export const NotCenterBoundsOdd: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
     slidesPerView: '3',
     center: true,
     notCenterBounds: true,
@@ -565,9 +575,32 @@ export const SlidesPerViewAuto: Story = {
   render: TemplateWithSlides,
   args: {
     slides: Array.from({ length: 12 }, (_, i) =>
-      img(i, 200 + (i % 4) * 60, 160)
+      img(i, 200 + (i % 4) * 60, 160),
     ),
     slidesPerView: 'auto' as any,
+    freeMode: false,
+  },
+};
+
+export const AutoWithDifferentWidths: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: Array.from({ length: 10 }, (_, i) =>
+      img(i, 200 + (i % 5) * 60, 160),
+    ),
+    slidesPerView: 'auto' as any,
+    freeMode: false,
+  },
+};
+
+export const LoopingAutoWithDifferentWidths: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: Array.from({ length: 10 }, (_, i) =>
+      img(i, 200 + (i % 5) * 60, 160),
+    ),
+    slidesPerView: 'auto' as any,
+    loop: true,
     freeMode: false,
   },
 };
@@ -781,6 +814,16 @@ export const VirtualMode: Story = {
   },
 };
 
+export const VirtualModeCenter: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(30),
+    slidesPerView: '3',
+    virtual: true,
+    center: true,
+  },
+};
+
 export const VirtualLoopMode: Story = {
   render: TemplateWithSlides,
   args: {
@@ -818,6 +861,13 @@ export const VirtualLoopLargeSPV: Story = {
     slidesPerView: '6',
     virtual: true,
     loop: true,
+  },
+};
+
+export const ManySlides: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(150),
   },
 };
 
@@ -863,5 +913,137 @@ export const Interaction_ClickDots: Story = {
         await userEvent.click(dots[2]);
       });
     }
+  },
+};
+
+// ==============================================================================
+// NEW STORIES FOR COMPREHENSIVE E2E TESTING
+// ==============================================================================
+
+export const WithAbsolutePeekEdges: Story = {
+  render: TemplateWithSlides,
+  args: {
+    peekEdges: {
+      absoluteOffset: 50,
+    },
+    slides: buildSlides(10),
+    slidesPerView: '3',
+  },
+};
+
+export const CanSwipeFalseDraggableTrue: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    draggable: true,
+    canSwipe: false,
+  },
+};
+
+export const AutoplayPauseOnFocus: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(8),
+    slidesPerView: 3,
+    stepSlides: 1,
+    loop: true,
+    autoplay: {
+      delay: 1500,
+      pauseOnHover: false,
+      pauseOnFocus: true,
+      stopOnInteraction: false,
+    },
+  },
+};
+
+export const AutoplayDisableOnHidden: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(8),
+    slidesPerView: 3,
+    stepSlides: 1,
+    loop: true,
+    autoplay: {
+      delay: 1200,
+      pauseOnHover: false,
+      disableOnHidden: true,
+      stopOnInteraction: false,
+    },
+  },
+};
+
+export const NavigateSlideBySlide: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    stepSlides: 1,
+    navigateSlideBySlide: true,
+  },
+};
+
+export const NotCenterBoundsWithLoop: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    center: true,
+    notCenterBounds: true,
+    loop: true,
+    freeMode: false,
+  },
+};
+
+export const NotCenterBoundsWithRewind: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    center: true,
+    notCenterBounds: true,
+    rewind: true,
+    freeMode: false,
+  },
+};
+
+export const PaginationFraction: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(10),
+    slidesPerView: '3',
+    pagination: { type: 'fraction', clickable: false, external: false },
+  },
+};
+
+export const StepSlidesLargerThanView: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(15),
+    slidesPerView: '3',
+    stepSlides: 5,
+    freeMode: false,
+  },
+};
+
+export const StepSlidesWithLoop: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(12),
+    slidesPerView: '3',
+    stepSlides: 2,
+    loop: true,
+    freeMode: false,
+  },
+};
+
+export const StepSlidesWithRewind: Story = {
+  render: TemplateWithSlides,
+  args: {
+    slides: buildSlides(12),
+    slidesPerView: '3',
+    stepSlides: 2,
+    rewind: true,
+    freeMode: false,
   },
 };

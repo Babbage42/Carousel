@@ -158,7 +158,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   slides = input([], {
     transform: (v: Slide[] | string[]): Slide[] => {
       return v.map((el: string | Slide) =>
-        typeof el === 'string' ? { image: el } : el
+        typeof el === 'string' ? { image: el } : el,
       );
     },
   });
@@ -230,7 +230,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         | {
             position: number;
             animated: boolean;
-          }
+          },
     ) => {
       if (value === undefined) {
         return undefined;
@@ -258,7 +258,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * Typical default: interactive elements like buttons, links, inputs…
    */
   dragIgnoreSelector = input<string>(
-    '[data-carousel-no-drag], a, button, input, textarea, select, [role="button"]'
+    '[data-carousel-no-drag], a, button, input, textarea, select, [role="button"]',
   );
 
   keyboardNavigation = input(true);
@@ -317,7 +317,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       this.store.spaceBetween() === 0 &&
       typeof this.store.slidesPerView() === 'number' &&
       Number.isInteger(this.store.slidesPerView()) &&
-      this.store.fullWidth() % (this.store.slidesPerView() as number) !== 0
+      this.store.fullWidth() % (this.store.slidesPerView() as number) !== 0,
   );
 
   /**
@@ -448,7 +448,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     private detectChanges: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     public carouselRegistry: CarouselRegistryService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {
     if (this.debug()) {
       this.enableDebugMode();
@@ -473,10 +473,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     effect(() => {
       const navigation = this.navigation();
       this.carouselRegistry.carouselNavigationLeftSignal.set(
-        navigation?.leftControl()
+        navigation?.leftControl(),
       );
       this.carouselRegistry.carouselNavigationRightSignal.set(
-        navigation?.rightControl()
+        navigation?.rightControl(),
       );
     });
 
@@ -629,7 +629,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const offset = untracked(
         () =>
-          activeRect.left - containerRect.left + this.store.currentTranslate()
+          activeRect.left - containerRect.left + this.store.currentTranslate(),
       );
 
       untracked(() => {
@@ -664,7 +664,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.updateCarouselState({
-      currentRealPosition: this.initialSlide(),
+      currentRealPosition: this.realInitialSlide(),
       uniqueCarouselId: this.uniqueCarouselId,
     });
   }
@@ -714,7 +714,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   private applyUniqueId() {
     this.renderer.addClass(
       this.allSlides()?.nativeElement,
-      this.uniqueCarouselId
+      this.uniqueCarouselId,
     );
   }
 
@@ -730,6 +730,8 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     // Unwanted if a translation is in progress.
     if (!this.interactionService.getDragState().isDragging) {
       this.refreshTranslate();
+      // Initialize hasReachedStart/hasReachedEnd states after translate is refreshed
+      this.handleReachEvents();
     }
   }
 
@@ -767,7 +769,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     const { position, exactPosition } =
       this.transformService.calculateTargetPositionAfterTranslation(
         this.isReachEnd(),
-        this.isReachStart()
+        this.isReachStart(),
       );
 
     console.log('SLIDING TO NEAREST', position, exactPosition);
@@ -963,23 +965,35 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const slideElement = (event.target as HTMLElement).closest(
-      '[class*="position-"]'
-    );
+    const slideElement = (event.target as HTMLElement).closest('.slide');
     if (!slideElement) {
       return;
     }
-    const classes = slideElement.className.split(' ');
-    const posClass = classes.find((cls) => cls.indexOf('position-') === 0);
-    if (!posClass) {
+
+    let index = -1;
+    const testId = slideElement.getAttribute('data-testid');
+    if (testId && testId.startsWith('slide-')) {
+      index = Number(testId.replace('slide-', ''));
+    }
+
+    if (!Number.isFinite(index)) {
+      const classes = slideElement.className.split(' ');
+      const posClass = classes.find((cls) => cls.indexOf('position-') === 0);
+      if (!posClass) {
+        return;
+      }
+      const indexStr = posClass.replace('position-', '');
+      const position = parseInt(indexStr, 10);
+      if (isNaN(position)) {
+        return;
+      }
+      index = position - 1;
+    }
+
+    if (index < 0) {
       return;
     }
-    const indexStr = posClass.replace('position-', '');
-    const position = parseInt(indexStr, 10);
-    if (isNaN(position)) {
-      return;
-    }
-    const index = position - 1;
+
     this.loopService.insertLoopSlidesBySlidingTo(index);
     this.virtualService.syncVirtualSlides(index);
 
@@ -988,7 +1002,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     console.log('SLIDING AFTER CLICK', index);
-    this.slideTo(index);
+    this.slideTo(index, true, true, false);
   }
 
   private clampToVisibleSlide(index: number) {
@@ -998,7 +1012,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return Math.max(
       this.store.firstSlideAnchor(),
-      Math.min(index, this.store.lastSlideAnchor())
+      Math.min(index, this.store.lastSlideAnchor()),
     );
   }
 
@@ -1007,7 +1021,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const css = this.breakpointService.generateCss(
       breakpoints,
-      this.uniqueCarouselId
+      this.uniqueCarouselId,
     );
 
     if (css) {
@@ -1020,7 +1034,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.breakpointService.setupMediaQueryListeners(breakpoints, (config) =>
-      this.updateCarouselState(config)
+      this.updateCarouselState(config),
     );
   }
 
@@ -1067,11 +1081,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.thumbsTransitionDuration.set(
-      customTransition ?? THUMBS_TRANSITION_DURATION_MS
+      customTransition ?? THUMBS_TRANSITION_DURATION_MS,
     );
     setTimeout(
       () => this.disableThumbsTransition(),
-      customTransition ?? THUMBS_TRANSITION_DURATION_MS
+      customTransition ?? THUMBS_TRANSITION_DURATION_MS,
     );
   }
 
@@ -1088,7 +1102,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   public updateTransform(
     translateToApply: number = this.store.currentTranslate(),
     updatePosition = true,
-    detectChanges = false
+    detectChanges = false,
   ) {
     this.updateCarouselState({ currentTranslate: translateToApply });
 
@@ -1127,7 +1141,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     index = this.store.currentRealPosition(),
     animate = true,
     updateRealPosition = true,
-    force = false
+    force = false,
   ) {
     console.log('**** SLIDING TO ', index);
     if (!force && this.thumbsFor()) {
@@ -1231,7 +1245,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.slideResizeObserver.disconnect();
 
     slidesEls.forEach((el) =>
-      this.slideResizeObserver!.observe(el.nativeElement)
+      this.slideResizeObserver!.observe(el.nativeElement),
     );
   }
 }

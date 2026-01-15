@@ -116,7 +116,7 @@ export class CarouselStore {
   }
 
   readonly axisConf = computed<AxisConfig>(() =>
-    this.isVertical() ? VERTICAL_AXIS_CONFIG : HORIZONTAL_AXIS_CONFIG
+    this.isVertical() ? VERTICAL_AXIS_CONFIG : HORIZONTAL_AXIS_CONFIG,
   );
 
   // Expose common values.
@@ -147,6 +147,26 @@ export class CarouselStore {
   readonly slides = computed(() => this._state().slides);
   readonly slidesIndexOrder = computed(() => this._state().slidesIndexOrder);
   readonly slidesElements = computed(() => this._state().slidesElements);
+  // Real DOM order (may differ from slidesElements in loop mode).
+  readonly domSlides = computed(() => {
+    const slidesElements = this.slidesElements();
+    if (!slidesElements.length) {
+      return [];
+    }
+
+    if (this.virtual()) {
+      return slidesElements.map((slide) => slide.nativeElement);
+    }
+
+    const order = this.slidesIndexOrder();
+    if (!order.length || order.length !== slidesElements.length) {
+      return slidesElements.map((slide) => slide.nativeElement);
+    }
+
+    return order
+      .map((logicalIndex) => slidesElements[logicalIndex]?.nativeElement)
+      .filter(Boolean);
+  });
 
   readonly pagination = computed(() => this._state().pagination);
   readonly loop = computed(() => this._state().loop);
@@ -164,10 +184,10 @@ export class CarouselStore {
   readonly slideOnClick = computed(() => this._state().slideOnClick);
   readonly thumbsOptions = computed(() => this._state().thumbsOptions);
   readonly navigateSlideBySlide = computed(
-    () => this._state().navigateSlideBySlide
+    () => this._state().navigateSlideBySlide,
   );
   readonly isRtl = computed(
-    () => this._state().direction === 'rtl' && !this.isVertical()
+    () => this._state().direction === 'rtl' && !this.isVertical(),
   );
   readonly isVertical = computed(() => this._state().axis === 'vertical');
   readonly virtual = computed(() => this._state().virtual);
@@ -223,14 +243,14 @@ export class CarouselStore {
   // Computed, need to update manually in state.
   readonly fullWidth = computed(() =>
     this.axisConf().getContainerSize(
-      this.allSlides()?.nativeElement as HTMLElement
-    )
+      this.allSlides()?.nativeElement as HTMLElement,
+    ),
   );
   readonly scrollWidth = computed(() => {
     // We must watch any slides update.
     this.slidesWidths();
     return this.axisConf().getScrollSize(
-      this.allSlides()?.nativeElement as HTMLElement
+      this.allSlides()?.nativeElement as HTMLElement,
     );
   });
   private sumWidths(from: number, to: number, fallback: number) {
@@ -254,7 +274,7 @@ export class CarouselStore {
           this.sumWidths(
             renderedIndices[0],
             renderedIndices[renderedIndices.length - 1],
-            0
+            0,
           ) - this.fullWidth()
         ) -
         this.marginEnd() -
@@ -297,10 +317,8 @@ export class CarouselStore {
 
       if (this.center()) {
         if (this.notCenterBounds() && this.slidesPerView() !== 'auto') {
-          return (
-            this.totalSlides() -
-            Math.floor((this.slidesPerView() as number) / 2)
-          );
+          const spv = this.slidesPerView() as number;
+          return this.totalSlides() - (Math.round(spv / 2) - 1) - 1;
         } else if (!this.notCenterBounds()) {
           return this.totalSlides() - 1;
         }
@@ -329,7 +347,8 @@ export class CarouselStore {
     if (this.center()) {
       if (this.notCenterBounds()) {
         if (this.slidesPerView() !== 'auto') {
-          return Math.floor((this.slidesPerView() as number) / 2);
+          const spv = this.slidesPerView() as number;
+          return Math.round(spv / 2) - 1;
         }
         // TODO;
         return 0;
@@ -342,7 +361,7 @@ export class CarouselStore {
   private readonly slidesWidthsSource = computed(() => ({
     total: this.totalSlides(),
     start: this.virtual() ? this.currentVirtualRange().start : 0,
-    domCount: this.slidesElements().length,
+    domCount: this.domSlides().length,
     virtual: this.virtual(),
     loop: this.loop(),
     order: this.slidesIndexOrder(),
@@ -361,20 +380,19 @@ export class CarouselStore {
           ? prev.slice(0, total)
           : new Array(total);
 
-      const slidesEls = this.slidesElements();
+      const slidesEls = this.domSlides();
+
       for (let domIndex = 0; domIndex < slidesEls.length; domIndex++) {
         const logicalIndex = src.virtual
           ? src.loop
             ? src.rendered[domIndex]
             : src.start + domIndex
-          : src.order[domIndex] ?? domIndex;
+          : (src.order[domIndex] ?? domIndex);
         if (logicalIndex < 0 || logicalIndex >= total) {
           continue;
         }
 
-        const size = this.axisConf().rectSize(
-          slidesEls[domIndex].nativeElement
-        );
+        const size = this.axisConf().rectSize(slidesEls[domIndex]);
         if (size) {
           next[logicalIndex] = size;
         }
@@ -402,7 +420,7 @@ export class CarouselStore {
       this.currentTranslate(),
       this.fullWidth(),
       undefined,
-      this.center()
+      this.center(),
     );
   });
 
@@ -473,11 +491,11 @@ export class CarouselStore {
 
     const minVisible = visible.reduce(
       (min, s) => Math.min(min, s.logicalIndex),
-      Number.POSITIVE_INFINITY
+      Number.POSITIVE_INFINITY,
     );
     const maxVisible = visible.reduce(
       (max, s) => Math.max(max, s.logicalIndex),
-      Number.NEGATIVE_INFINITY
+      Number.NEGATIVE_INFINITY,
     );
 
     const slidePerView = this.slidesPerView();
@@ -501,7 +519,7 @@ export class CarouselStore {
     }
     return positiveModulo(
       this.virtualRange().end - this.virtualRange().start + 1,
-      this.totalSlides()
+      this.totalSlides(),
     );
   });
   readonly renderedIndices = computed(() => {
@@ -522,12 +540,12 @@ export class CarouselStore {
       const buffer = this.virtualBuffer() ?? 1;
       const windowSize = Math.min(
         total,
-        Math.ceil(slidesPerView * (1 + 2 * buffer))
+        Math.ceil(slidesPerView * (1 + 2 * buffer)),
       );
 
       const start = this.virtualLoopStart();
       return Array.from({ length: windowSize }, (_, i) =>
-        positiveModulo(start + i, total)
+        positiveModulo(start + i, total),
       );
     }
 
@@ -557,7 +575,7 @@ export class CarouselStore {
   private getFallbackSlideWidth(): number {
     const widths = this.slidesWidths();
     const known = widths.filter(
-      (w) => typeof w === 'number' && w > 0
+      (w) => typeof w === 'number' && w > 0,
     ) as number[];
     if (known.length) {
       return known.reduce((a, b) => a + b, 0) / known.length;

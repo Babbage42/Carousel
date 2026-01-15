@@ -4,14 +4,18 @@ import {
   getActiveSlideIndex,
   clickNext,
   clickPrev,
-  findClickableSlide,
   assertCarouselIntegrity,
-  dragCarousel,
+  waitActiveChange,
+  getRenderedIndices,
+  countVisibleSlides,
 } from './helpers/carousel-test.helper';
 const story = (id: string) => `?id=${id}`;
 
 function firstCarousel(page) {
   return page.locator('.carousel').first();
+}
+function nthCarousel(page, index: number) {
+  return page.locator('.carousel').nth(index);
 }
 
 /**
@@ -87,23 +91,23 @@ test.describe('Keyboard Navigation', () => {
     await waitCarouselReady(page);
 
     const carousel = firstCarousel(page);
+
     const initial = await getActiveSlideIndex(carousel);
 
     await carousel.press('Tab');
 
-    // En RTL, ArrowRight devrait aller à prev
-    await carousel.press('ArrowRight');
-    await page.waitForTimeout(600);
-
-    const afterRight = await getActiveSlideIndex(carousel);
-    expect(afterRight).not.toBe(initial);
-
-    // ArrowLeft devrait revenir
     await carousel.press('ArrowLeft');
     await page.waitForTimeout(600);
 
     const afterLeft = await getActiveSlideIndex(carousel);
-    expect(afterLeft).toBe(initial);
+    expect(afterLeft).toBeGreaterThan(initial);
+
+    // ArrowRight devrait revenir
+    await carousel.press('ArrowRight');
+    await page.waitForTimeout(600);
+
+    const afterRight = await getActiveSlideIndex(carousel);
+    expect(afterRight).toBe(initial);
   });
 
   test('keyboard navigation in vertical mode', async ({ page }) => {
@@ -222,19 +226,22 @@ test.describe('Center Mode', () => {
     const activeSlide = carousel.locator('.slide--active').first();
 
     // Récupérer les positions
-    const positions = await carousel.evaluate((carouselEl, activeEl) => {
-      const carouselRect = carouselEl.getBoundingClientRect();
-      const activeRect = activeEl.getBoundingClientRect();
+    const positions = await carousel.evaluate(
+      (carouselEl, activeEl) => {
+        const carouselRect = carouselEl.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
 
-      const carouselCenter = carouselRect.left + carouselRect.width / 2;
-      const activeCenter = activeRect.left + activeRect.width / 2;
+        const carouselCenter = carouselRect.left + carouselRect.width / 2;
+        const activeCenter = activeRect.left + activeRect.width / 2;
 
-      return {
-        carouselCenter,
-        activeCenter,
-        diff: Math.abs(carouselCenter - activeCenter),
-      };
-    }, await activeSlide.elementHandle());
+        return {
+          carouselCenter,
+          activeCenter,
+          diff: Math.abs(carouselCenter - activeCenter),
+        };
+      },
+      await activeSlide.elementHandle(),
+    );
 
     // La slide active devrait être centrée (tolérance de 5px)
     expect(positions.diff).toBeLessThan(5);
@@ -252,15 +259,18 @@ test.describe('Center Mode', () => {
 
     const activeSlide = carousel.locator('.slide--active').first();
 
-    const positions = await carousel.evaluate((carouselEl, activeEl) => {
-      const carouselRect = carouselEl.getBoundingClientRect();
-      const activeRect = activeEl.getBoundingClientRect();
+    const positions = await carousel.evaluate(
+      (carouselEl, activeEl) => {
+        const carouselRect = carouselEl.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
 
-      const carouselCenter = carouselRect.left + carouselRect.width / 2;
-      const activeCenter = activeRect.left + activeRect.width / 2;
+        const carouselCenter = carouselRect.left + carouselRect.width / 2;
+        const activeCenter = activeRect.left + activeRect.width / 2;
 
-      return Math.abs(carouselCenter - activeCenter);
-    }, await activeSlide.elementHandle());
+        return Math.abs(carouselCenter - activeCenter);
+      },
+      await activeSlide.elementHandle(),
+    );
 
     expect(positions).toBeLessThan(5);
   });
@@ -339,6 +349,257 @@ test.describe('Performance', () => {
 });
 
 /**
+ * Tests fonctionnels additionnels
+ */
+test.describe('Functional Coverage', () => {
+  test('slidesPerView=auto applies class and still navigates', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--slides-per-view-auto'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    await expect(carousel.locator('.slides')).toHaveClass(/slides-auto/);
+
+    const initial = await getActiveSlideIndex(carousel);
+    await clickNext(carousel, 1);
+    await waitActiveChange(carousel, initial);
+
+    const afterNext = await getActiveSlideIndex(carousel);
+    expect(afterNext).not.toBe(initial);
+  });
+
+  test('responsive breakpoints keep active index stable', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.goto(story('components-carousel--responsive-breakpoints'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const slides = carousel.locator('.slides').first();
+
+    const initial = await getActiveSlideIndex(carousel);
+    await clickNext(carousel, 1);
+    await waitActiveChange(carousel, initial);
+    const afterNext = await getActiveSlideIndex(carousel);
+
+    const wideCount = await countVisibleSlides(slides);
+
+    await page.setViewportSize({ width: 500, height: 800 });
+    await page.waitForTimeout(300);
+
+    const narrowCount = await countVisibleSlides(slides);
+    const afterResize = await getActiveSlideIndex(carousel);
+
+    expect(afterResize).toBe(afterNext);
+    expect(narrowCount).toBeLessThan(wideCount);
+  });
+
+  test('virtual loop large SPV renders a window of slides', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--virtual-loop-large-spv'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const rendered = await getRenderedIndices(carousel);
+
+    expect(rendered.length).toBeGreaterThan(8);
+    expect(rendered.length).toBeLessThan(25);
+
+    const before = await getActiveSlideIndex(carousel);
+    await clickNext(carousel, 1);
+    await waitActiveChange(carousel, before);
+
+    const active = await getActiveSlideIndex(carousel);
+    const renderedAfter = await getRenderedIndices(carousel);
+    expect(renderedAfter).toContain(active);
+  });
+
+  test('few slides loop stays consistent during navigation', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--few-slides-loop'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+
+    for (let i = 0; i < 5; i++) {
+      await clickNext(carousel, 1);
+      await page.waitForTimeout(200);
+      await assertCarouselIntegrity(carousel);
+    }
+
+    const after = await getActiveSlideIndex(carousel);
+    expect(after).not.toBe(initial);
+  });
+
+  test('one/two slide stories do not advance on next/prev', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--one-slide'));
+    await waitCarouselReady(page);
+
+    const one = firstCarousel(page);
+    const oneInitial = await getActiveSlideIndex(one);
+    await clickNext(one, 1);
+    await page.waitForTimeout(300);
+    expect(await getActiveSlideIndex(one)).toBe(oneInitial);
+    await clickPrev(one, 1);
+    await page.waitForTimeout(300);
+    expect(await getActiveSlideIndex(one)).toBe(oneInitial);
+
+    await page.goto(story('components-carousel--two-slides'));
+    await waitCarouselReady(page);
+
+    const two = firstCarousel(page);
+    const twoInitial = await getActiveSlideIndex(two);
+    await clickNext(two, 1);
+    await page.waitForTimeout(300);
+    expect(await getActiveSlideIndex(two)).toBe(twoInitial);
+    await clickPrev(two, 1);
+    await page.waitForTimeout(300);
+    expect(await getActiveSlideIndex(two)).toBe(twoInitial);
+  });
+
+  test('thumbs: clicking a thumb updates the master carousel', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--thumbs'));
+    await waitCarouselReady(page);
+
+    const master = nthCarousel(page, 0);
+    const thumbs = nthCarousel(page, 1);
+    await thumbs.waitFor();
+
+    const targetIndex = 4;
+    const thumbSlide = thumbs.locator(`[data-testid="slide-${targetIndex}"]`);
+    await expect(thumbSlide).toBeVisible();
+
+    const before = await getActiveSlideIndex(master);
+    await thumbSlide.click({ force: true });
+    await waitActiveChange(master, before);
+
+    const after = await getActiveSlideIndex(master);
+    expect(after).toBe(targetIndex);
+  });
+
+  test('thumbs: master navigation syncs active thumb', async ({ page }) => {
+    await page.goto(story('components-carousel--thumbs'));
+    await waitCarouselReady(page);
+
+    const master = nthCarousel(page, 0);
+    const thumbs = nthCarousel(page, 1);
+    await thumbs.waitFor();
+
+    const before = await getActiveSlideIndex(master);
+    await clickNext(master, 1);
+    await waitActiveChange(master, before);
+
+    const activeMaster = await getActiveSlideIndex(master);
+    await expect
+      .poll(() => getActiveSlideIndex(thumbs), { timeout: 2000 })
+      .toBe(activeMaster);
+  });
+
+  test('stepSlides: next/prev jumps by the configured step', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--step-by-3'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+
+    await clickNext(carousel, 1);
+    await waitActiveChange(carousel, initial);
+    const afterNext = await getActiveSlideIndex(carousel);
+    expect(afterNext).toBe(initial + 3);
+
+    await clickPrev(carousel, 1);
+    await waitActiveChange(carousel, afterNext);
+    const afterPrev = await getActiveSlideIndex(carousel);
+    expect(afterPrev).toBe(initial);
+  });
+
+  test('initialSlide: starts on the configured index', async ({ page }) => {
+    await page.goto(story('components-carousel--initial-slide-middle'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+    expect(initial).toBe(4);
+  });
+
+  test('initialSlide with loop keeps the configured index', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--initial-slide-with-loop'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+    expect(initial).toBe(7);
+  });
+
+  test('projected slides: click selects the correct slide', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--projected-slides'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const targetIndex = 4;
+    const target = carousel.locator(`[data-testid="slide-${targetIndex}"]`);
+    await expect(target).toBeVisible();
+
+    const before = await getActiveSlideIndex(carousel);
+    await target.click({ force: true });
+    await waitActiveChange(carousel, before);
+
+    const after = await getActiveSlideIndex(carousel);
+    expect(after).toBe(targetIndex);
+  });
+
+  test('few slides (< slidesPerView) do not advance on next/prev', async ({
+    page,
+  }) => {
+    await page.goto(
+      story('components-carousel--few-slides-less-than-slides-per-view'),
+    );
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+
+    await clickNext(carousel, 1);
+    await page.waitForTimeout(500);
+    expect(await getActiveSlideIndex(carousel)).toBe(initial);
+
+    await clickPrev(carousel, 1);
+    await page.waitForTimeout(500);
+    expect(await getActiveSlideIndex(carousel)).toBe(initial);
+  });
+
+  test('peekEdges adds container padding', async ({ page }) => {
+    await page.goto(story('components-carousel--with-relative-peek-edges'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const padding = await carousel.evaluate((el) => {
+      const style = window.getComputedStyle(el);
+      return {
+        left: parseFloat(style.paddingLeft || '0'),
+        right: parseFloat(style.paddingRight || '0'),
+      };
+    });
+
+    expect(padding.left).toBeGreaterThan(0);
+    expect(padding.right).toBeGreaterThan(0);
+  });
+});
+
+/**
  * Tests d'accessibilité
  */
 test.describe('Accessibility', () => {
@@ -402,7 +663,7 @@ test.describe('Accessibility', () => {
 
     // La slide désactivée devrait avoir pointer-events: none
     const pointerEvents = await disabled2.evaluate(
-      (el) => window.getComputedStyle(el).pointerEvents
+      (el) => window.getComputedStyle(el).pointerEvents,
     );
 
     expect(pointerEvents).toBe('none');
@@ -470,5 +731,120 @@ test.describe('Regression Tests', () => {
 
     // Vérifier qu'on peut toujours naviguer
     await assertCarouselIntegrity(carousel);
+  });
+});
+
+/**
+ * Tests for new features and combinations
+ */
+test.describe('Advanced Features', () => {
+  test('peek edges (absolute): adds fixed pixel padding', async ({ page }) => {
+    await page.goto(story('components-carousel--with-absolute-peek-edges'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+
+    // Check padding is applied
+    const padding = await carousel.evaluate((el: Element) => {
+      const style = window.getComputedStyle(el);
+      return {
+        left: parseFloat(style.paddingLeft || '0'),
+        right: parseFloat(style.paddingRight || '0'),
+      };
+    });
+
+    // Should have padding (exact value depends on config)
+    expect(padding.left).toBeGreaterThan(0);
+    expect(padding.right).toBeGreaterThan(0);
+  });
+
+  test('notCenterBounds + loop: navigation works correctly', async ({
+    page,
+  }) => {
+    await page.goto(story('components-carousel--not-center-bounds-with-loop'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+
+    // Navigate multiple times
+    for (let i = 0; i < 5; i++) {
+      const before = await getActiveSlideIndex(carousel);
+      await clickNext(carousel, 1);
+      await waitActiveChange(carousel, before, { loop: true });
+
+      // Verify integrity
+      await assertCarouselIntegrity(carousel);
+    }
+  });
+
+  test('notCenterBounds + rewind: navigation works correctly', async ({
+    page,
+  }) => {
+    await page.goto(
+      story('components-carousel--not-center-bounds-with-rewind'),
+    );
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+
+    // Navigate to end
+    await clickNext(carousel, 10);
+    await page.waitForTimeout(1000);
+
+    // Verify still works
+    await assertCarouselIntegrity(carousel);
+  });
+
+  test('step slides larger than view: navigates correctly', async ({
+    page,
+  }) => {
+    await page.goto(
+      story('components-carousel--step-slides-larger-than-view'),
+    );
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+    const initial = await getActiveSlideIndex(carousel);
+
+    // Should jump by step size (5)
+    await clickNext(carousel, 1);
+    await waitActiveChange(carousel, initial);
+
+    const afterNext = await getActiveSlideIndex(carousel);
+    // Should have moved significantly (step=5)
+    expect(afterNext).toBeGreaterThanOrEqual(initial + 3);
+  });
+
+  test('step slides with loop: wraps correctly', async ({ page }) => {
+    await page.goto(story('components-carousel--step-slides-with-loop'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+
+    // Navigate full circle
+    for (let i = 0; i < 8; i++) {
+      const before = await getActiveSlideIndex(carousel);
+      await clickNext(carousel, 1);
+      await waitActiveChange(carousel, before, { loop: true });
+    }
+
+    // Should still be valid
+    await assertCarouselIntegrity(carousel);
+  });
+
+  test('step slides with rewind: rewinds to start', async ({ page }) => {
+    await page.goto(story('components-carousel--step-slides-with-rewind'));
+    await waitCarouselReady(page);
+
+    const carousel = firstCarousel(page);
+
+    // Navigate to end: with stepSlides=2 and lastSlideAnchor=9
+    // 0 → 2 → 4 → 6 → 8 → 10 (exceeds 9, triggers rewind to 0)
+    await clickNext(carousel, 5);
+    await page.waitForTimeout(1000);
+
+    // After 5 clicks, should have rewound to 0
+    const afterRewind = await getActiveSlideIndex(carousel);
+    expect(afterRewind).toBe(0);
   });
 });

@@ -26,6 +26,8 @@ export const DRAG_CONFIG = {
   STEPS_FAST: 8,
   STEP_DELAY_DEFAULT: 10,
   STEP_DELAY_FAST: 5,
+  STEPS_REALISTIC: 40,
+  STEP_DELAY_REALISTIC: 25,
 } as const;
 
 /**
@@ -44,7 +46,7 @@ export type CarouselMode = {
  */
 export function getTimeout(
   mode: CarouselMode,
-  action: 'transition' | 'poll' = 'transition'
+  action: 'transition' | 'poll' = 'transition',
 ): number {
   if (action === 'poll') {
     return mode.virtual
@@ -79,7 +81,7 @@ export function getDragDistance(mode: CarouselMode): number {
  */
 export async function waitCarouselReady(
   page: Page,
-  options?: { timeout?: number }
+  options?: { timeout?: number },
 ) {
   const timeout = options?.timeout ?? 3000;
 
@@ -139,7 +141,7 @@ export async function getActiveSlideIndex(carousel: Locator): Promise<number> {
 export async function waitActiveChange(
   carousel: Locator,
   from: number,
-  mode: CarouselMode = {}
+  mode: CarouselMode = {},
 ): Promise<number> {
   const timeout = getTimeout(mode, 'poll');
 
@@ -149,7 +151,7 @@ export async function waitActiveChange(
         const current = await getActiveSlideIndex(carousel);
         return current;
       },
-      { timeout, intervals: [100, 250, 500] }
+      { timeout, intervals: [100, 250, 500] },
     )
     .not.toBe(from)
     .then(() => getActiveSlideIndex(carousel));
@@ -165,7 +167,7 @@ export async function dragCarousel(
     distance?: number;
     mode?: CarouselMode;
     fast?: boolean;
-  } = {}
+  } = {},
 ): Promise<void> {
   const { mode = {}, fast = false } = options;
   const distance = options.distance ?? getDragDistance(mode);
@@ -234,7 +236,7 @@ export async function findClickableSlide(
     notActive?: boolean;
     notDisabled?: boolean;
     preferredIndex?: number;
-  } = {}
+  } = {},
 ): Promise<{ locator: Locator; index: number } | null> {
   const { notActive = true, notDisabled = true, preferredIndex } = options;
 
@@ -258,24 +260,35 @@ export async function findClickableSlide(
   // Essayer l'index préféré d'abord
   if (preferredIndex !== undefined) {
     const preferred = carousel.locator(
-      `${selector}[data-testid="slide-${preferredIndex}"]`
+      `[data-testid="slide-${preferredIndex}"]`,
     );
-    if ((await preferred.count()) > 0 && (await preferred.isVisible())) {
-      return { locator: preferred, index: preferredIndex };
+    if ((await preferred.count()) > 0) {
+      const isVisible = await preferred.isVisible();
+      const inViewport = isVisible
+        ? await isSlideInViewport(preferred, carousel)
+        : false;
+      if (isVisible && inViewport) {
+        return { locator: preferred, index: preferredIndex };
+      }
     }
   }
 
-  // Sinon, chercher la première slide visible
+  // Sinon, chercher la première slide VISIBLE ET DANS LE VIEWPORT
   for (let i = 0; i < count; i++) {
     const candidate = candidates.nth(i);
     const isVisible = await candidate.isVisible();
 
     if (isVisible) {
-      const testId = await candidate.getAttribute('data-testid');
-      const index = testId ? Number(testId.replace('slide-', '')) : -1;
+      // AJOUT : Vérifier qu'elle est dans le viewport
+      const inViewport = await isSlideInViewport(candidate, carousel);
 
-      if (index >= 0) {
-        return { locator: candidate, index };
+      if (inViewport) {
+        const testId = await candidate.getAttribute('data-testid');
+        const index = testId ? Number(testId.replace('slide-', '')) : -1;
+
+        if (index >= 0) {
+          return { locator: candidate, index };
+        }
       }
     }
   }
@@ -289,52 +302,64 @@ export async function findClickableSlide(
 export async function isSlideInViewport(
   slide: Locator,
   carousel: Locator,
-  threshold: number = 0.5
+  threshold: number = 0.5,
 ): Promise<boolean> {
   return await slide.evaluate(
     (slideEl, { carouselEl, threshold }) => {
+      if (!carouselEl) {
+        return false;
+      }
       const slideRect = slideEl.getBoundingClientRect();
       const carouselRect = carouselEl.getBoundingClientRect();
+      const isVertical = carouselEl.classList.contains('carousel--vertical');
 
       const visibleWidth = Math.max(
         0,
         Math.min(slideRect.right, carouselRect.right) -
-          Math.max(slideRect.left, carouselRect.left)
+          Math.max(slideRect.left, carouselRect.left),
+      );
+      const visibleHeight = Math.max(
+        0,
+        Math.min(slideRect.bottom, carouselRect.bottom) -
+          Math.max(slideRect.top, carouselRect.top),
       );
 
-      const visibilityRatio = visibleWidth / slideRect.width;
+      const visibleMain = isVertical ? visibleHeight : visibleWidth;
+      const sizeMain = isVertical ? slideRect.height : slideRect.width;
+      if (!sizeMain) {
+        return false;
+      }
+      const visibilityRatio = visibleMain / sizeMain;
       return visibilityRatio >= threshold;
     },
-    { carouselEl: await carousel.elementHandle(), threshold }
+    { carouselEl: await carousel.elementHandle(), threshold },
   );
 }
 
-/**
- * Clique sur le bouton Next avec retry
- */
 export async function clickNext(
   carousel: Locator,
   times: number = 1,
-  mode: CarouselMode = {}
+  mode: CarouselMode = {},
 ): Promise<{ clicked: number; blocked: boolean }> {
-  const next = carousel.getByRole('button', { name: /next slide/i });
+  // En RTL, "Next" physique fait reculer l'index
+  const buttonName = mode.rtl ? /previous slide/i : /next slide/i;
+  const button = carousel.getByRole('button', { name: buttonName });
   let clicked = 0;
   const timeout = getTimeout(mode);
 
   for (let i = 0; i < times; i++) {
-    if ((await next.count()) === 0) {
+    if ((await button.count()) === 0) {
       return { clicked, blocked: true };
     }
 
-    const visible = await next.isVisible().catch(() => false);
+    const visible = await button.isVisible().catch(() => false);
     if (!visible) {
       return { clicked, blocked: true };
     }
 
-    await next.click();
+    await button.click();
     clicked++;
 
-    // Petit délai entre les clics
     if (i < times - 1) {
       await carousel.page().waitForTimeout(timeout / 2);
     }
@@ -343,29 +368,27 @@ export async function clickNext(
   return { clicked, blocked: false };
 }
 
-/**
- * Clique sur le bouton Prev avec retry
- */
 export async function clickPrev(
   carousel: Locator,
   times: number = 1,
-  mode: CarouselMode = {}
+  mode: CarouselMode = {},
 ): Promise<{ clicked: number; blocked: boolean }> {
-  const prev = carousel.getByRole('button', { name: /previous slide/i });
+  const buttonName = mode.rtl ? /next slide/i : /previous slide/i;
+  const button = carousel.getByRole('button', { name: buttonName });
   let clicked = 0;
   const timeout = getTimeout(mode);
 
   for (let i = 0; i < times; i++) {
-    if ((await prev.count()) === 0) {
+    if ((await button.count()) === 0) {
       return { clicked, blocked: true };
     }
 
-    const visible = await prev.isVisible().catch(() => false);
+    const visible = await button.isVisible().catch(() => false);
     if (!visible) {
       return { clicked, blocked: true };
     }
 
-    await prev.click();
+    await button.click();
     clicked++;
 
     if (i < times - 1) {
@@ -381,7 +404,7 @@ export async function clickPrev(
  */
 export async function debugCarouselState(
   carousel: Locator,
-  label: string = ''
+  label: string = '',
 ) {
   const activeIndex = await getActiveSlideIndex(carousel);
   const activeCount = await carousel.locator('.slide--active').count();
@@ -395,9 +418,8 @@ export async function debugCarouselState(
 }
 
 export async function countVisibleSlides(slidesContainer: Locator) {
-  return await slidesContainer
-    .locator('[data-testid^="slide-"]')
-    .evaluateAll((nodes, container) => {
+  return await slidesContainer.locator('[data-testid^="slide-"]').evaluateAll(
+    (nodes, container) => {
       if (!container) return 0;
       const parentRect = container.getBoundingClientRect();
       return nodes.reduce((acc, el) => {
@@ -405,18 +427,20 @@ export async function countVisibleSlides(slidesContainer: Locator) {
         const visibleWidth = Math.max(
           0,
           Math.min(r.right, parentRect.right) -
-            Math.max(r.left, parentRect.left)
+            Math.max(r.left, parentRect.left),
         );
         const visibleHeight = Math.max(
           0,
           Math.min(r.bottom, parentRect.bottom) -
-            Math.max(r.top, parentRect.top)
+            Math.max(r.top, parentRect.top),
         );
         const visibleArea = visibleWidth * visibleHeight;
         const area = r.width * r.height || 1;
         return acc + (visibleArea / area >= 0.5 ? 1 : 0);
       }, 0);
-    }, await slidesContainer.elementHandle());
+    },
+    await slidesContainer.elementHandle(),
+  );
 }
 
 export async function waitStoryReady(page: Page) {
@@ -438,24 +462,28 @@ export function firstCarousel(page: Page) {
   return page.locator('.carousel').first();
 }
 
-export async function getRenderedIndices(scope: HasLocator): Promise<number[]> {
-  const indices = await scope
+export async function getRenderedIndices(scope: Page | Locator): Promise<number[]> {
+  const indices: number[] = await scope
     .locator('[data-testid^="slide-"]')
     .evaluateAll((els) =>
       els
         .map((el) => (el as HTMLElement).getAttribute('data-testid') || '')
         .map((s) => Number(s.replace('slide-', '')))
-        .filter((n) => Number.isFinite(n))
+        .filter((n) => Number.isFinite(n)),
     );
 
-  return Array.from(new Set(indices)).sort((a, b) => a - b);
+  return Array.from(new Set(indices)).sort((a: number, b: number) => a - b);
 }
 
-export async function clickNextUntilStop(carousel: Locator, maxSteps: number) {
+export async function clickNextUntilStop(
+  carousel: Locator,
+  maxSteps: number,
+  mode: CarouselMode = {},
+) {
   let prev = await getActiveSlideIndex(carousel);
 
   for (let i = 0; i < maxSteps; i++) {
-    const res = await clickNext(carousel, 1);
+    const res = await clickNext(carousel, 1, mode);
     if (res.blocked) {
       return { stoppedAt: prev, steps: i };
     }
@@ -466,11 +494,15 @@ export async function clickNextUntilStop(carousel: Locator, maxSteps: number) {
   return { stoppedAt: prev, steps: maxSteps };
 }
 
-export async function clickPrevUntilStop(carousel: Locator, maxSteps: number) {
+export async function clickPrevUntilStop(
+  carousel: Locator,
+  maxSteps: number,
+  mode: CarouselMode = {},
+) {
   let prev = await getActiveSlideIndex(carousel);
 
   for (let i = 0; i < maxSteps; i++) {
-    const res = await clickPrev(carousel, 1);
+    const res = await clickPrev(carousel, 1, mode);
     if (res.blocked) {
       return { stoppedAt: prev, steps: i };
     }
@@ -479,20 +511,35 @@ export async function clickPrevUntilStop(carousel: Locator, maxSteps: number) {
     prev = cur;
   }
   return { stoppedAt: prev, steps: maxSteps };
+}
+
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v));
 }
 
 export async function dragSlides(
   page: Page,
   carousel: Locator,
-  offsetX: number,
-  offsetY: number
-) {
+  options: {
+    distance?: number;
+    mode?: CarouselMode;
+    fast?: boolean;
+  } = {},
+): Promise<void> {
+  const { mode = {}, fast = false } = options;
+  const distance = options.distance ?? getDragDistance(mode);
+  const waitAfter = mode.freeMode
+    ? TIMEOUTS.WAIT_AFTER_DRAG_FREE_MODE
+    : TIMEOUTS.WAIT_AFTER_DRAG;
+
   const handle = carousel.locator('.slides');
   await handle.waitFor();
   await handle.scrollIntoViewIfNeeded();
 
-  const box = await handle.boundingBox();
-  if (!box) return;
+  const box = await carousel.boundingBox();
+  if (!box) {
+    throw new Error('Cannot get bounding box of slides container');
+  }
 
   const startX = box.x + box.width / 2;
   const startY = box.y + box.height / 2;
@@ -501,12 +548,21 @@ export async function dragSlides(
   await page.waitForTimeout(30);
   await page.mouse.down();
 
-  const steps = 12;
-  for (let i = 1; i <= steps; i++) {
-    const t = i / steps;
-    await page.mouse.move(startX + offsetX * t, startY + offsetY * t);
-  }
+  const offsetX = mode.vertical ? 0 : distance;
+  const offsetY = mode.vertical ? distance : 0;
 
+  const rawEndX = startX + offsetX;
+  const rawEndY = startY + offsetY;
+  const margin = 5;
+  const endX = clamp(rawEndX, box.x + margin, box.x + box.width - margin);
+  const endY = clamp(rawEndY, box.y + margin, box.y + box.height - margin);
+
+  await page.mouse.move(endX, endY, {
+    steps: 12,
+  });
+  // Keep drag duration above swipe threshold to avoid swipe-only handling.
+  await page.waitForTimeout(250);
   await page.mouse.up();
-  await page.waitForTimeout(400);
+
+  await page.waitForTimeout(waitAfter);
 }

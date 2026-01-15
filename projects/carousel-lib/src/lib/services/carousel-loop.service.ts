@@ -6,7 +6,6 @@ import {
 } from '../components/carousel/view-adapter';
 import { extractVisibleSlides } from '../helpers/calculations.helper';
 import { CAROUSEL_SLIDE_CLASS, SnapDom } from '../models/carousel.model';
-import { extractSlidesFromContainer } from '../helpers/dom.helper';
 import { positiveModulo } from '../helpers/utils.helper';
 
 @Injectable()
@@ -28,7 +27,7 @@ export class CarouselLoopService {
   }
 
   private insertElement(before = true) {
-    const slides = extractSlidesFromContainer(this.store.allSlides());
+    const slides = this.store.domSlides();
 
     const container = this.store.allSlides()?.nativeElement;
     const indexToInsert = before ? this.store.totalSlides() - 1 : 0;

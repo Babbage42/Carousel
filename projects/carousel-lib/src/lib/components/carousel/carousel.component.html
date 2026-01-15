@@ -10,28 +10,28 @@
   [attr.dir]="direction()"
   [class.carousel--rtl]="store.isRtl()"
 >
-  @if(debug()) {
-  <span>total slides:{{ totalSlides() }}</span>
-  <span>current anchor:{{ currentPosition() }}</span>
-  <span>real position:{{ currentRealPosition() }}</span>
+  @if (debug()) {
+    <span>total slides:{{ totalSlides() }}</span>
+    <span>current anchor:{{ currentPosition() }}</span>
+    <span>real position:{{ currentRealPosition() }}</span>
   }
 
   <div class="slides-wrapper">
     @if (showControls()) {
-    <app-navigation
-      [alwaysShowControls]="alwaysShowControls()"
-      [customLeftArrow]="customLeftArrow?.templateRef"
-      [customRightArrow]="customRightArrow?.templateRef"
-      (slidePrev)="slideToPrev()"
-      (slideNext)="slideToNext()"
-      (slideTo)="slideTo($event)"
-      [loop]="loop()"
-      [rewind]="rewind()"
-      [currentPosition]="currentPosition()"
-      [totalSlides]="totalSlides()"
-      [iconSize]="iconSize()"
-    >
-    </app-navigation>
+      <app-navigation
+        [alwaysShowControls]="alwaysShowControls()"
+        [customLeftArrow]="customLeftArrow?.templateRef"
+        [customRightArrow]="customRightArrow?.templateRef"
+        (slidePrev)="slideToPrev()"
+        (slideNext)="slideToNext()"
+        (slideTo)="slideTo($event)"
+        [loop]="loop()"
+        [rewind]="rewind()"
+        [currentPosition]="currentPosition()"
+        [totalSlides]="totalSlides()"
+        [iconSize]="iconSize()"
+      >
+      </app-navigation>
     }
 
     <div
@@ -50,61 +50,70 @@
       (imagesReady)="onImagesReady()"
       (imagesChanged)="onImagesChanged()"
     >
-      @if (slides().length) { @for (index of store.renderedIndices(); track
-      $index) { @let slideElement = slides()[index]; @let realIndex = index;
-      <div
-        #slide
-        class="slide"
-        [class.slide--disabled]="navigationService.isSlideDisabled(realIndex)"
-        [class.slide--active]="store.currentPosition() === realIndex"
-        [attr.data-testid]="'slide-' + realIndex"
-      >
-        <img src="{{ slideElement.image }}" alt="" />
+      @if (slides().length) {
+        @for (index of store.renderedIndices(); track $index) {
+          @let slideElement = slides()[index]; @let realIndex = index;
+          <div
+            #slide
+            class="slide"
+            [class.slide--disabled]="
+              navigationService.isSlideDisabled(realIndex)
+            "
+            [class.slide--active]="store.currentRealPosition() === realIndex"
+            [attr.data-testid]="'slide-' + realIndex"
+          >
+            <img src="{{ slideElement.image }}" alt="" />
 
-        @if(debug()) {
-        <span>{{ realIndex + 1 }}</span>
+            @if (debug()) {
+              <span>{{ realIndex + 1 }}</span>
+            }
+          </div>
         }
-      </div>
-      } } @else if (projectedSlides().length) { @for (slide of
-      projectedSlides(); track $index) {
-      <ng-container>
-        <div
-          #slide
-          class="slide position-{{ $index + 1 }}"
-          [class.slide--disabled]="navigationService.isSlideDisabled($index)"
-          [class.slide--active]="store.currentPosition() === $index"
-          [attr.data-testid]="'slide-' + $index"
-        >
-          <ng-container *ngTemplateOutlet="slide.templateRef"></ng-container>
-        </div>
-      </ng-container>
-      } } @else {
-      <ng-content></ng-content>
+      } @else if (projectedSlides().length) {
+        @for (slide of projectedSlides(); track $index) {
+          <ng-container>
+            <div
+              #slide
+              class="slide position-{{ $index + 1 }}"
+              [class.slide--disabled]="
+                navigationService.isSlideDisabled($index)
+              "
+              [class.slide--active]="store.currentPosition() === $index"
+              [attr.data-testid]="'slide-' + $index"
+            >
+              <ng-container
+                *ngTemplateOutlet="slide.templateRef"
+              ></ng-container>
+            </div>
+          </ng-container>
+        }
+      } @else {
+        <ng-content></ng-content>
       }
     </div>
 
-    @if(thumbsFor() && store.thumbsOptions()?.selectionBar) {
-    <div
-      class="carousel-thumb-indicator"
-      [style.transform]="'translateX(' + thumbIndicatorLeft() + 'px)'"
-      [style.transition-duration.ms]="thumbsTransitionDuration()"
-      [style.width.px]="thumbIndicatorWidth()"
-    ></div>
+    @if (thumbsFor() && store.thumbsOptions()?.selectionBar) {
+      <div
+        class="carousel-thumb-indicator"
+        [style.transform]="'translateX(' + thumbIndicatorLeft() + 'px)'"
+        [style.transition-duration.ms]="thumbsTransitionDuration()"
+        [style.width.px]="thumbIndicatorWidth()"
+      ></div>
     }
   </div>
 
   @if (store.pagination() && !store.pagination()!.external) {
-  <ng-container *ngTemplateOutlet="paginationTemplate"></ng-container>
+    <ng-container *ngTemplateOutlet="paginationTemplate"></ng-container>
   }
 </div>
 
 <ng-template #paginationTemplate>
   @if (store.pagination()) {
-  <div
-    class="carousel__pagination"
-    [class.carousel__pagination--vertical]="store.isVertical()"
-  >
-    <app-pagination (goToSlide)="slideTo($event)"></app-pagination>
-  </div>
+    <div
+      class="carousel__pagination"
+      [class.carousel__pagination--vertical]="store.isVertical()"
+    >
+      <app-pagination (goToSlide)="slideTo($event)"></app-pagination>
+    </div>
   }
 </ng-template>
