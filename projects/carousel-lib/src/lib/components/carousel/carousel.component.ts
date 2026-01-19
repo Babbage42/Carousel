@@ -408,15 +408,47 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     return inputs;
   });
 
-  @Output() slideUpdate = new EventEmitter();
-  @Output() slideNext = new EventEmitter();
-  @Output() slidePrev = new EventEmitter();
-  @Output() touched = new EventEmitter();
-  @Output() reachEnd = new EventEmitter();
-  @Output() reachStart = new EventEmitter();
+  // Navigation events
+  @Output() slideUpdate = new EventEmitter<number>();
+  @Output() slideNext = new EventEmitter<void>();
+  @Output() slidePrev = new EventEmitter<void>();
+
+  // Lifecycle events
+  @Output() afterInit = new EventEmitter<void>();
+  @Output() beforeDestroy = new EventEmitter<void>();
+
+  // Interaction events
+  @Output() touched = new EventEmitter<void>();
+  @Output() touchStart = new EventEmitter<MouseEvent | TouchEvent>();
+  @Output() touchMove = new EventEmitter<MouseEvent | TouchEvent>();
+  @Output() touchEnd = new EventEmitter<MouseEvent | TouchEvent>();
+  @Output() sliderMove = new EventEmitter<number>(); // translation value
+
+  // Boundary events
+  @Output() reachEnd = new EventEmitter<void>();
+  @Output() reachStart = new EventEmitter<void>();
+
+  // Transition events
+  @Output() transitionStart = new EventEmitter<void>();
+  @Output() transitionEnd = new EventEmitter<void>();
+
+  // Progress event (0-1 normalized progress)
+  @Output() progress = new EventEmitter<number>();
+
+  // Click events
+  @Output() slideClick = new EventEmitter<{
+    index: number;
+    event: MouseEvent;
+  }>();
+
+  // Autoplay events
+  @Output() autoplayStart = new EventEmitter<void>();
+  @Output() autoplayStop = new EventEmitter<void>();
+  @Output() autoplayPause = new EventEmitter<void>();
+
+  // Outputs (new Angular API)
   indexSelected = output<number>();
   imagesLoaded = output<void>();
-  transitionEnd = output<void>();
 
   firstTouch = false;
   uniqueCarouselId = '';
@@ -674,16 +706,20 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initProjectedSlides();
     this.refresh(false);
     this.setupResizeObserver();
+
+    // Emit afterInit once layout is ready
+    setTimeout(() => {
+      if (this.layoutReady()) {
+        this.afterInit.emit();
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
+    this.beforeDestroy.emit();
+
     this.breakpointService.clear();
-
-    if (this.autoplayTimer) {
-      clearInterval(this.autoplayTimer);
-      this.autoplayTimer = undefined;
-    }
-
+    this.stopAutoplay();
     this.observer?.disconnect();
   }
 
@@ -798,7 +834,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   onHostTransitionEnd(event: TransitionEvent) {
     const slidesEl = this.allSlides()?.nativeElement;
     if (event.propertyName === 'transform' && event.target === slidesEl) {
-      console.log('*** trnasition end event:', event);
       this.transitionEnd.emit();
     }
   }
@@ -806,6 +841,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('mousedown', ['$event'])
   @HostListener('touchstart', ['$event'])
   onMouseDown(event: MouseEvent | TouchEvent) {
+    this.touchStart.emit(event);
     this.interactionService.handleStart(event);
   }
 
@@ -821,12 +857,14 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('touchmove', ['$event'])
   onMouseMove(event: MouseEvent | TouchEvent) {
     this.initTouched();
+    this.touchMove.emit(event);
     this.interactionService.handleMove(event);
   }
 
   @HostListener('document:mouseup', ['$event'])
   @HostListener('document:touchend', ['$event'])
   onMouseUp(event: MouseEvent | TouchEvent) {
+    this.touchEnd.emit(event);
     this.interactionService.handleEnd(event);
   }
 
@@ -893,6 +931,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     if (autoplay && autoplay.pauseOnHover && this.autoplayTimer) {
       clearInterval(this.autoplayTimer);
       this.autoplayTimer = undefined;
+      this.autoplayPause.emit();
     }
   }
 
@@ -915,6 +954,22 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     this.autoplayTimer = setInterval(() => {
       this.slideToNext();
     }, autoplay.delay);
+    this.autoplayStart.emit();
+  }
+
+  private stopAutoplay() {
+    if (this.autoplayTimer) {
+      clearInterval(this.autoplayTimer);
+      this.autoplayTimer = undefined;
+      this.autoplayStop.emit();
+    }
+  }
+
+  public stopAutoplayOnInteraction() {
+    const autoplay = this.autoplay();
+    if (autoplay && autoplay.stopOnInteraction) {
+      this.stopAutoplay();
+    }
   }
 
   private isReachEnd(): boolean {
@@ -961,10 +1016,6 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param event
    */
   private clickOnSlide(event: Event) {
-    if (!this.store.slideOnClick()) {
-      return;
-    }
-
     const slideElement = (event.target as HTMLElement).closest('.slide');
     if (!slideElement) {
       return;
@@ -994,6 +1045,13 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Emit slideClick event with index
+    this.slideClick.emit({ index, event: event as MouseEvent });
+
+    if (!this.store.slideOnClick()) {
+      return;
+    }
+
     this.loopService.insertLoopSlidesBySlidingTo(index);
     this.virtualService.syncVirtualSlides(index);
 
@@ -1001,7 +1059,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    console.log('SLIDING AFTER CLICK', index);
+    if (this.debug()) {
+      console.log('SLIDING AFTER CLICK', index);
+    }
+
     this.slideTo(index, true, true, false);
   }
 
@@ -1069,6 +1130,7 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private enableTransition() {
     this._transitionDuration.set(TRANSITION_DURATION);
+    this.transitionStart.emit();
     setTimeout(() => this.disableTransition(), TRANSITION_DURATION);
   }
 
@@ -1094,6 +1156,27 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Calculate and emit progress (0-1 normalized value)
+   */
+  private emitProgress() {
+    const currentTranslate = this.store.currentTranslate();
+    const minTranslate = this.store.minTranslate();
+    const maxTranslate = this.store.maxTranslate();
+
+    // Calculate progress between 0 and 1
+    const range = minTranslate - maxTranslate;
+    if (range === 0) {
+      this.progress.emit(0);
+      return;
+    }
+
+    const rawProgress = (currentTranslate - maxTranslate) / range;
+    const clampedProgress = Math.max(0, Math.min(1, rawProgress));
+
+    this.progress.emit(clampedProgress);
+  }
+
+  /**
    * Move slides.
    * From arrows or by mouse / touch.
    * @param posX
@@ -1105,6 +1188,10 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     detectChanges = false,
   ) {
     this.updateCarouselState({ currentTranslate: translateToApply });
+
+    // Emit sliderMove and progress events
+    this.sliderMove.emit(translateToApply);
+    this.emitProgress();
 
     if (detectChanges) {
       this.detectChanges.detectChanges();
@@ -1143,7 +1230,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
     updateRealPosition = true,
     force = false,
   ) {
-    console.log('**** SLIDING TO ', index);
+    if (this.debug()) {
+      console.log('**** SLIDING TO ', index);
+    }
     if (!force && this.thumbsFor()) {
       this.thumbsFor()?.slideTo(index, animate);
       return;

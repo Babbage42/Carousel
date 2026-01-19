@@ -287,6 +287,9 @@ export class CarouselInteractionService {
       lastClickTime: new Date().getTime(),
       lockedAxis: null,
     });
+
+    // Stop autoplay on interaction if option is enabled
+    this.view.stopAutoplayOnInteraction();
   }
 
   public handleEnd(event: MouseEvent | TouchEvent) {

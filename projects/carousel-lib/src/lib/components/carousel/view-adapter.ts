@@ -11,6 +11,7 @@ export interface CarouselViewActions {
   slideToPrev(): void;
   slideToNearest(): void;
   clickOnSlide(event: Event): void;
+  stopAutoplayOnInteraction(): void;
 }
 export const CAROUSEL_VIEW = new InjectionToken<CarouselViewActions>(
   'CAROUSEL_VIEW'

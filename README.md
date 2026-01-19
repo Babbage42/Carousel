@@ -343,24 +343,24 @@ Keyboard navigation adapts: `ArrowUp`/`ArrowDown` instead of left/right.
 
 ## 4. Outputs
 
-All outputs are declared in `carousel.component.ts` and can be used to react to navigation events.
+The carousel provides a comprehensive event system similar to SwiperJS, allowing you to react to all lifecycle, interaction, and navigation events.
+
+### 4.1. Navigation Events
 
 ```ts
-@Output() slideUpdate = new EventEmitter<number>();
-@Output() slideNext = new EventEmitter<void>();
-@Output() slidePrev = new EventEmitter<void>();
-@Output() touched = new EventEmitter<void>();
-@Output() reachEnd = new EventEmitter<void>();
-@Output() reachStart = new EventEmitter<void>();
-imagesLoaded = output<void>();
+@Output() slideUpdate = new EventEmitter<number>();    // Emitted when active slide changes
+@Output() slideNext = new EventEmitter<void>();        // Emitted when navigating next
+@Output() slidePrev = new EventEmitter<void>();        // Emitted when navigating previous
 ```
 
-### 4.1. `slideUpdate: EventEmitter<number>`
-
-Emitted whenever the current logical slide index changes.
-
+**Example:**
 ```html
-<app-carousel [slides]="slides" (slideUpdate)="onSlideUpdate($event)"></app-carousel>
+<app-carousel
+  [slides]="slides"
+  (slideUpdate)="onSlideUpdate($event)"
+  (slideNext)="log('next')"
+  (slidePrev)="log('prev')">
+</app-carousel>
 ```
 
 ```ts
@@ -369,29 +369,199 @@ onSlideUpdate(index: number) {
 }
 ```
 
-### 4.2. `slideNext` / `slidePrev`
+### 4.2. Lifecycle Events
 
-Emitted when navigation moves to the next / previous slide (e.g. via arrows or programmatic calls):
-
-```html
-<app-carousel [slides]="slides" (slideNext)="log('next')" (slidePrev)="log('prev')"></app-carousel>
+```ts
+@Output() afterInit = new EventEmitter<void>();        // Emitted after carousel initialization
+@Output() beforeDestroy = new EventEmitter<void>();    // Emitted before carousel destruction
+imagesLoaded = output<void>();                         // Emitted when all images are loaded
 ```
 
-### 4.3. `touched`
-
-Emitted once, on the first user interaction (drag, wheel, etc.). Useful for analytics or lazy loading extra data:
-
+**Example:**
 ```html
-<app-carousel [slides]="slides" (touched)="onUserInteracted()"></app-carousel>
+<app-carousel
+  [slides]="slides"
+  (afterInit)="onCarouselReady()"
+  (beforeDestroy)="cleanup()">
+</app-carousel>
 ```
 
-### 4.4. `reachEnd` / `reachStart`
+### 4.3. Interaction Events
 
-Emitted when the carousel reaches the logical end or start (considering loop/rewind settings):
-
-```html
-<app-carousel [slides]="slides" (reachEnd)="onReachEnd()" (reachStart)="onReachStart()"></app-carousel>
+```ts
+@Output() touched = new EventEmitter<void>();                      // First user interaction (once)
+@Output() touchStart = new EventEmitter<MouseEvent | TouchEvent>(); // Touch/mouse down
+@Output() touchMove = new EventEmitter<MouseEvent | TouchEvent>();  // Touch/mouse move
+@Output() touchEnd = new EventEmitter<MouseEvent | TouchEvent>();   // Touch/mouse up
+@Output() sliderMove = new EventEmitter<number>();                  // Emits translate value during drag
 ```
+
+**Example:**
+```html
+<app-carousel
+  [slides]="slides"
+  (touched)="trackFirstInteraction()"
+  (touchStart)="onDragStart($event)"
+  (touchEnd)="onDragEnd($event)"
+  (sliderMove)="onSlide($event)">
+</app-carousel>
+```
+
+```ts
+onDragStart(event: MouseEvent | TouchEvent) {
+  console.log('Drag started', event);
+}
+
+onSlide(translate: number) {
+  console.log('Current translation:', translate);
+}
+```
+
+### 4.4. Transition Events
+
+```ts
+@Output() transitionStart = new EventEmitter<void>();  // Emitted when CSS transition starts
+@Output() transitionEnd = new EventEmitter<void>();    // Emitted when CSS transition ends
+```
+
+**Example:**
+```html
+<app-carousel
+  [slides]="slides"
+  (transitionStart)="showSpinner()"
+  (transitionEnd)="hideSpinner()">
+</app-carousel>
+```
+
+### 4.5. Progress Event
+
+```ts
+@Output() progress = new EventEmitter<number>();  // Emits 0-1 normalized progress value
+```
+
+This event emits the current scroll progress as a value between 0 and 1, where:
+- `0` = at the start
+- `0.5` = halfway through
+- `1` = at the end
+
+**Example - Progress bar:**
+```html
+<app-carousel
+  [slides]="slides"
+  (progress)="updateProgressBar($event)">
+</app-carousel>
+
+<div class="progress-bar">
+  <div class="progress-fill" [style.width.%]="carouselProgress * 100"></div>
+</div>
+```
+
+```ts
+carouselProgress = 0;
+
+updateProgressBar(progress: number) {
+  this.carouselProgress = progress;
+}
+```
+
+### 4.6. Click Events
+
+```ts
+@Output() slideClick = new EventEmitter<{ index: number; event: MouseEvent }>(); // Emitted when slide is clicked
+indexSelected = output<number>();  // Alternative: emits the newly selected real index
+```
+
+**Example:**
+```html
+<app-carousel
+  [slides]="slides"
+  (slideClick)="onSlideClick($event)"
+  (indexSelected)="onIndexChanged($event)">
+</app-carousel>
+```
+
+```ts
+onSlideClick(data: { index: number; event: MouseEvent }) {
+  console.log('Clicked slide:', data.index);
+  // Custom handling (e.g., open modal, navigate, etc.)
+}
+```
+
+### 4.7. Boundary Events
+
+```ts
+@Output() reachEnd = new EventEmitter<void>();    // Emitted when reaching the end
+@Output() reachStart = new EventEmitter<void>();  // Emitted when reaching the start
+```
+
+**Example:**
+```html
+<app-carousel
+  [slides]="slides"
+  (reachEnd)="loadMoreSlides()"
+  (reachStart)="onReachStart()">
+</app-carousel>
+```
+
+### 4.8. Autoplay Events
+
+```ts
+@Output() autoplayStart = new EventEmitter<void>();  // Emitted when autoplay starts
+@Output() autoplayStop = new EventEmitter<void>();   // Emitted when autoplay stops
+@Output() autoplayPause = new EventEmitter<void>();  // Emitted when autoplay pauses
+```
+
+**Example:**
+```html
+<app-carousel
+  [slides]="slides"
+  [autoplay]="true"
+  (autoplayStart)="log('Autoplay started')"
+  (autoplayPause)="log('Autoplay paused')"
+  (autoplayStop)="log('Autoplay stopped')">
+</app-carousel>
+```
+
+### 4.9. Complete Event Monitoring Example
+
+```ts
+@Component({
+  selector: 'app-monitored-carousel',
+  template: `
+    <app-carousel
+      [slides]="slides"
+      (afterInit)="log('Carousel initialized')"
+      (slideUpdate)="log('Slide changed to: ' + $event)"
+      (progress)="updateProgress($event)"
+      (transitionStart)="log('Transition started')"
+      (transitionEnd)="log('Transition ended')"
+      (touchStart)="log('Touch started')"
+      (touchEnd)="log('Touch ended')"
+      (slideClick)="handleSlideClick($event)"
+      (reachEnd)="log('Reached end')"
+      (beforeDestroy)="log('Carousel destroyed')">
+    </app-carousel>
+
+    <div class="progress">{{ (currentProgress * 100).toFixed(0) }}%</div>
+  `
+})
+export class MonitoredCarouselComponent {
+  slides = ['slide1.jpg', 'slide2.jpg', 'slide3.jpg'];
+  currentProgress = 0;
+
+  log(message: string) {
+    console.log(`[Carousel Event] ${message}`);
+  }
+
+  updateProgress(progress: number) {
+    this.currentProgress = progress;
+  }
+
+  handleSlideClick(data: { index: number; event: MouseEvent }) {
+    console.log('Slide clicked:', data);
+    // Custom logic here
+  }
+}
 
 ### 4.5. `imagesLoaded`
 
