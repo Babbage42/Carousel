@@ -10,13 +10,30 @@ Designed to be easy to drop into your app, with sensible defaults and a clear, d
 
 ## Features
 
-- 🖱️ Mouse & touch drag with smooth animations
-- 🔁 Loop or rewind navigation
-- 🆓 Optional “free mode” scrolling with inertia
-- 🔢 Built‑in navigation controls and pagination dots
-- 📐 Responsive layout via CSS media queries (SSR‑friendly)
-- 🎨 Works with simple image arrays **or** fully custom slide templates
-- ⚙️ Rich configuration via strongly‑typed inputs and outputs
+### Core Features
+- 🖱️ **Mouse & touch drag** with smooth animations and momentum
+- 🔁 **Loop or rewind** navigation for infinite scrolling
+- 🆓 **Free mode** scrolling with inertia (no snapping)
+- 🎯 **Center mode** to highlight the active slide
+- 🔢 **Built-in UI** with navigation arrows and pagination dots
+- ⌨️ **Keyboard navigation** with accessibility support
+
+### Advanced Features
+- 🚀 **Virtual scrolling** (windowing) for massive datasets (1000+ slides)
+- 🖼️ **Thumbnail carousel** - sync two carousels together
+- 🌍 **RTL support** for right-to-left languages
+- ↕️ **Vertical mode** for up/down scrolling
+- 🎬 **Autoplay** with pause on hover/focus
+- 🖱️ **Mouse wheel** navigation
+- 📐 **Responsive breakpoints** via CSS media queries (SSR-friendly)
+- 🎨 **Custom templates** with `*slide` directive or simple image arrays
+- ⚙️ **TypeScript** with strongly-typed inputs and outputs
+
+### Quality
+- ✅ **373 e2e tests** covering all features and edge cases
+- 📦 **Standalone components** - works with Angular 14+
+- 🎨 **Customizable styling** via CSS
+- 🔧 **Well-tested** - notCenterBounds, virtual+loop, RTL+vertical, etc.
 
 ---
 
@@ -140,7 +157,7 @@ Types and defaults come directly from `carousel.component.ts`.
 | `iconSize`           | `number`                  | `50`                                                        | Size of arrow icons, passed to `NavigationComponent`.                                           |
 | `pagination`         | `Pagination \| undefined` | `{ type: 'dynamic_dot', clickable: true, external: false }` | Controls pagination behavior and whether dots are rendered inside the carousel or externally.   |
 | `slideOnClick`       | `boolean`                 | `true`                                                      | When `true`, clicking a slide moves the carousel to that slide.                                 |
-| `debug`              | `boolean`                 | `true`                                                      | When `true`, exposes a debug object on `window` and logs state changes (disable in production). |
+| `debug`              | `boolean`                 | `false`                                                     | When `true`, shows debug info overlay with slide indices and state.                             |
 | `showProgress`       | `boolean`                 | `true`                                                      | Enables internal progress tracking (used by navigation/pagination).                             |
 | `dotsControl`        | `boolean`                 | `true`                                                      | Enables dots control (used by pagination).                                                      |
 
@@ -161,12 +178,27 @@ If you set `pagination.external === true`, you can render `<app-pagination>` you
 | `mouseWheel`      | `boolean \| { horizontal?: boolean; vertical?: boolean }` | `false` | Enable navigation with the mouse wheel. Use `true` or specify axes.                                          |
 | `deltaPosition`   | `number`                                                  | `0.6`   | Threshold controlling when a swipe should change slide. Swipes smaller than this value may snap back.        |
 | `center`          | `boolean`                                                 | `false` | Center the active slide within the carousel.                                                                 |
-| `notCenterBounds` | `boolean`                                                 | `false` | Adjusts how bounds are computed when `center` is true (advanced layout tuning).                              |
+| `notCenterBounds` | `boolean`                                                 | `false` | When `true` with `center`, prevents empty space at carousel edges. The first/last slides won't be centered if it would create gaps. |
 | `resistance`      | `boolean`                                                 | `true`  | When `true`, dragging beyond bounds applies a resistance effect instead of clamping immediately.             |
+| `virtual`         | `boolean`                                                 | `false` | Enables virtual scrolling (windowing) for performance with large lists (100+ slides).                        |
+| `direction`       | `'ltr' \| 'rtl'`                                          | `'ltr'` | Text direction. Use `'rtl'` for right-to-left languages (automatically flips navigation).                    |
+| `vertical`        | `boolean`                                                 | `false` | When `true`, carousel scrolls vertically instead of horizontally.                                            |
 | `lazyLoading`     | `boolean`                                                 | `true`  | Used internally to control loading strategy together with the `ImagesReady` directive.                       |
 
-You normally only need `loop`, `rewind`, `freeMode`, `mouseWheel`, `center` and maybe `resistance`.  
-The other options are useful for fine‑tuning behavior.
+**Mode comparison guide:**
+
+| Use case | Recommended settings |
+|----------|---------------------|
+| **Simple gallery** | Default settings work great |
+| **Infinite scrolling** | `loop="true"` |
+| **Wrap to start** | `rewind="true"` (no loop clones) |
+| **Hero/spotlight** | `center="true"` + `slidesPerView="3"` |
+| **Hero (no gaps)** | `center="true"` + `notCenterBounds="true"` |
+| **Free scrolling** | `freeMode="true"` + `slidesPerView="auto"` |
+| **Large dataset** | `virtual="true"` (100+ slides) |
+| **Product thumbs** | Use two carousels with `thumbsFor` |
+| **Vertical stories** | `vertical="true"` + `autoplay` |
+| **RTL language** | `direction="rtl"` |
 
 ---
 
@@ -230,6 +262,82 @@ Example:
 
 For each media query you can provide a partial carousel configuration (e.g. `slidesPerView`, `spaceBetween`, `loop`, etc.).  
 The library generates CSS based on these breakpoints and applies them both on the server and in the browser.
+
+---
+
+### 3.6. Advanced features
+
+#### Virtual scrolling (windowing)
+
+For carousels with many slides (100+), enable `virtual` mode for better performance:
+
+```ts
+<app-carousel
+  [slides]="manySlides"
+  [virtual]="true"
+  [slidesPerView]="3"
+></app-carousel>
+```
+
+Virtual mode renders only the visible slides plus a buffer, dramatically reducing DOM size and improving performance.
+
+**Notes:**
+- Works with `loop` mode for infinite virtual scrolling
+- Automatically manages slide rendering as you navigate
+- Best for uniform slide sizes
+
+#### Thumbnails carousel
+
+Link two carousels together (main + thumbnails) using `thumbsFor`:
+
+```ts
+<app-carousel
+  #mainCarousel
+  [slides]="slides"
+  [slidesPerView]="1"
+></app-carousel>
+
+<app-carousel
+  [slides]="slides"
+  [slidesPerView]="5"
+  [thumbsFor]="mainCarousel"
+></app-carousel>
+```
+
+The thumbnail carousel automatically:
+- Highlights the active thumbnail
+- Syncs with main carousel navigation
+- Allows clicking thumbnails to change main slide
+
+#### Right-to-left (RTL) support
+
+For RTL languages, set `direction="rtl"`:
+
+```ts
+<app-carousel
+  [slides]="slides"
+  [direction]="'rtl'"
+></app-carousel>
+```
+
+This automatically:
+- Reverses navigation direction (next/prev buttons)
+- Flips keyboard shortcuts
+- Mirrors the visual layout
+
+#### Vertical carousel
+
+For vertical scrolling:
+
+```ts
+<app-carousel
+  [slides]="slides"
+  [vertical]="true"
+  [slidesPerView]="3"
+></app-carousel>
+```
+
+Keyboard navigation adapts: `ArrowUp`/`ArrowDown` instead of left/right.
 
 ---
 
@@ -341,21 +449,95 @@ You can use this to:
 ></app-carousel>
 ```
 
+### 5.4. Virtual scrolling with loop
+
+For large datasets with infinite loop:
+
+```ts
+<app-carousel
+  [slides]="largeDataset"
+  [virtual]="true"
+  [loop]="true"
+  [slidesPerView]="3"
+  [spaceBetween]="10"
+></app-carousel>
+```
+
+### 5.5. Center mode with notCenterBounds
+
+Prevent empty space at edges while keeping slides centered:
+
+```ts
+<app-carousel
+  [slides]="slides"
+  [center]="true"
+  [notCenterBounds]="true"
+  [slidesPerView]="3"
+></app-carousel>
+```
+
+**Behavior:**
+- Middle slides: centered as normal
+- First slides: aligned to start (no gap on left)
+- Last slides: aligned to end (no gap on right)
+- Perfect for hero carousels or featured content
+
+### 5.6. Vertical RTL carousel with thumbnails
+
+Combine multiple features:
+
+```ts
+<app-carousel
+  #main
+  [slides]="slides"
+  [vertical]="true"
+  [direction]="'rtl'"
+  [slidesPerView]="1"
+  [autoplay]="{ delay: 3000 }"
+></app-carousel>
+
+<app-carousel
+  [slides]="slides"
+  [thumbsFor]="main"
+  [slidesPerView]="5"
+></app-carousel>
+```
+
 ---
 
 ## 6. Keyboard support & accessibility
 
 The carousel listens to keyboard events on its host:
 
-- `ArrowRight` → next slide
-- `ArrowLeft` → previous slide
+**Horizontal mode:**
+- `ArrowRight` → next slide (or prev in RTL)
+- `ArrowLeft` → previous slide (or next in RTL)
 - `Home` → first slide
 - `End` → last slide
 
-To make it keyboard accessible in your app:
+**Vertical mode:**
+- `ArrowDown` → next slide
+- `ArrowUp` → previous slide
+- `Home` → first slide
+- `End` → last slide
 
-1. Ensure the carousel host is focusable (e.g. via `tabindex` on the host element if needed).
-2. Surround it with appropriate ARIA roles / labels (e.g. region with an accessible name).
+**Accessibility features:**
+- Navigation buttons have proper `aria-label` attributes
+- Active slide has `slide--active` class
+- Disabled slides have `slide--disabled` class
+- Keyboard navigation respects `loop` and `rewind` modes
+- `aria-live="polite"` on slides container announces changes
+
+**To improve accessibility:**
+
+1. Add a descriptive label to the carousel:
+   ```html
+   <app-carousel [slides]="slides" aria-label="Product gallery"></app-carousel>
+   ```
+
+2. Ensure slides have meaningful alt text for images
+
+3. Test with screen readers (NVDA, JAWS, VoiceOver)
 
 ---
 
@@ -418,6 +600,124 @@ import { CarouselComponent, CarouselNavLeftDirective, CarouselNavRightDirective,
 
 ---
 
-## 10. License
+## 10. Troubleshooting
+
+### Carousel not visible or slides overlap
+
+**Problem:** Slides don't display correctly or overlap.
+
+**Solution:** Ensure slides have explicit dimensions. The carousel uses CSS Grid, so slides need a defined size:
+
+```css
+.slide {
+  width: 100%;
+  height: 300px; /* or use aspect-ratio */
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+```
+
+### Navigation buttons don't appear
+
+**Problem:** Prev/next arrows are missing.
+
+**Solutions:**
+1. Check `showControls` is `true` (default)
+2. In non-loop/non-rewind mode, buttons hide at boundaries
+3. Set `alwaysShowControls="true"` to always show them
+4. Check your CSS isn't hiding `.carousel-nav-button`
+
+### Autoplay doesn't start
+
+**Problem:** Carousel doesn't auto-advance.
+
+**Solutions:**
+1. Verify `autoplay` is configured: `[autoplay]="true"` or `[autoplay]="{ delay: 3000 }"`
+2. Autoplay starts after images load - wait for `imagesLoaded` event
+3. Check if `stopOnInteraction` stopped it after user interaction
+4. Ensure carousel is visible (autoplay pauses on hidden elements)
+
+### Drag/swipe not working
+
+**Problem:** Can't drag slides.
+
+**Solutions:**
+1. Check `draggable` isn't set to `false` (it's `true` by default)
+2. Ensure there's no CSS `pointer-events: none` blocking interactions
+3. For touch devices, verify viewport meta tag: `<meta name="viewport" content="width=device-width, initial-scale=1">`
+
+### Virtual mode shows blank slides
+
+**Problem:** In virtual mode, some slides are blank.
+
+**Solution:** Virtual mode requires slides to have uniform sizes. Use fixed dimensions:
+
+```css
+.slide {
+  width: 300px;
+  height: 200px;
+}
+```
+
+### Performance issues with many slides
+
+**Problem:** Carousel is slow with 100+ slides.
+
+**Solution:** Enable virtual mode:
+```ts
+<app-carousel [slides]="manySlides" [virtual]="true"></app-carousel>
+```
+
+This renders only visible slides, dramatically improving performance.
+
+### Slides don't center correctly
+
+**Problem:** With `center="true"`, slides aren't centered.
+
+**Solution:**
+- For edge slides, use `notCenterBounds="true"` to prevent empty space
+- Check `slidesPerView` - decimal values (e.g. `3.5`) work best with center mode
+- Verify slide widths are consistent
+
+### TypeScript errors with inputs
+
+**Problem:** Type errors when setting carousel options.
+
+**Solution:** Import types from the library:
+
+```ts
+import { CarouselComponent, AutoplayOptions, Pagination } from 'carousel-lib';
+
+// Then use proper types
+autoplayConfig: AutoplayOptions = {
+  delay: 3000,
+  pauseOnHover: true
+};
+
+paginationConfig: Pagination = {
+  type: 'bullets',
+  clickable: true
+};
+```
+
+---
+
+## 11. Performance tips
+
+1. **Use virtual mode** for 100+ slides
+2. **Optimize images**: Use appropriate sizes, consider lazy loading
+3. **Limit `slidesPerView`**: More slides = more DOM elements
+4. **Disable debug mode** in production: `[debug]="false"`
+5. **Use `freeMode`** sparingly: It's more CPU-intensive than snap mode
+6. **Avoid complex slide content**: Keep slide templates simple
+7. **Consider pagination over thumbnails**: Thumbnails double the carousel count
+
+---
+
+## 12. License
 
 Add your license information here (MIT, etc.).
