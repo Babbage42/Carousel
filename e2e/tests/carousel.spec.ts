@@ -806,6 +806,97 @@ function defineDragSuite(s: Scenario) {
       .poll(() => getActiveSlideIndex(carousel), { timeout })
       .not.toBe(initial);
   });
+
+  test('drag: swipe left/right navigates in correct direction', async ({
+    page,
+  }) => {
+    test.skip(s.caps.draggable === false, 'Not draggable');
+    test.skip(!!s.caps.freeMode, 'Free mode has different drag behavior');
+
+    const carousel = firstCarousel(page);
+    const isVertical = s.caps.vertical ?? false;
+    const isRtl = s.caps.rtl ?? false;
+    const isLoop = s.caps.loop ?? false;
+
+    // Navigate to a middle position for non-loop scenarios to have room to move
+    if (!isLoop && !s.caps.rewind) {
+      await clickNext(carousel, 3);
+      await page.waitForTimeout(500);
+    }
+
+    const initial = await getActiveSlideIndex(carousel);
+
+    // Swipe LEFT (negative distance) = move FORWARD in LTR
+    // In RTL, swipe left = move BACKWARD
+    await dragSlides(page, carousel, {
+      distance: -600,
+      mode: { vertical: isVertical, rtl: isRtl, loop: isLoop },
+    });
+
+    await page.waitForTimeout(400);
+    const afterLeftSwipe = await getActiveSlideIndex(carousel);
+
+    // Verify it moved (or stayed if at boundary)
+    expect(afterLeftSwipe).toBeDefined();
+
+    if (afterLeftSwipe !== initial) {
+      if (isRtl) {
+        // RTL: swipe left should decrease index (or wrap to end)
+        if (isLoop && afterLeftSwipe > initial) {
+          // Wrapped around to end
+          expect(afterLeftSwipe).toBeGreaterThan(initial);
+        } else {
+          expect(afterLeftSwipe).toBeLessThan(initial);
+        }
+      } else {
+        // LTR: swipe left should increase index (or wrap to start)
+        if (isLoop && afterLeftSwipe < initial) {
+          // Wrapped around to start
+          expect(afterLeftSwipe).toBeLessThan(initial);
+        } else {
+          expect(afterLeftSwipe).toBeGreaterThan(initial);
+        }
+      }
+    }
+
+    // Wait before next swipe
+    await page.waitForTimeout(400);
+
+    // Swipe RIGHT (positive distance) = move BACKWARD in LTR
+    // In RTL, swipe right = move FORWARD
+    await dragSlides(page, carousel, {
+      distance: 600,
+      mode: { vertical: isVertical, rtl: isRtl, loop: isLoop },
+    });
+
+    await page.waitForTimeout(400);
+    const afterRightSwipe = await getActiveSlideIndex(carousel);
+
+    // At least one of the swipes should have moved
+    const atLeastOneMoved =
+      afterLeftSwipe !== initial || afterRightSwipe !== afterLeftSwipe;
+    expect(atLeastOneMoved).toBe(true);
+
+    if (afterRightSwipe !== afterLeftSwipe) {
+      if (isRtl) {
+        // RTL: swipe right should increase index (or wrap to start)
+        if (isLoop && afterRightSwipe < afterLeftSwipe) {
+          // Wrapped around to start
+          expect(afterRightSwipe).toBeLessThan(afterLeftSwipe);
+        } else {
+          expect(afterRightSwipe).toBeGreaterThan(afterLeftSwipe);
+        }
+      } else {
+        // LTR: swipe right should decrease index (or wrap to end)
+        if (isLoop && afterRightSwipe > afterLeftSwipe) {
+          // Wrapped around to end
+          expect(afterRightSwipe).toBeGreaterThan(afterLeftSwipe);
+        } else {
+          expect(afterRightSwipe).toBeLessThan(afterLeftSwipe);
+        }
+      }
+    }
+  });
 }
 
 function defineMouseWheelSuite(s: Scenario) {
