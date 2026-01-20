@@ -64,6 +64,11 @@ export class CarouselTransformService {
   public getRealPositionFromExactPosition(position: number) {
     const roundPosition = Math.round(position);
     const realPosition = this.store.slidesIndexOrder()[roundPosition];
+
+    if (realPosition === undefined) {
+      return Math.round(position);
+    }
+
     // We keep exact decimal part of position and add it to real position.
     const decimalPart = position - roundPosition;
     position = realPosition + decimalPart;
@@ -76,7 +81,7 @@ export class CarouselTransformService {
    * @returns
    */
   public getTranslateFromPosition(
-    index = this.store.currentRealPosition()
+    index = this.store.currentRealPosition(),
   ): number {
     const snaps = this.store.slideTranslates();
     let posX = snaps[index];
@@ -102,7 +107,7 @@ export class CarouselTransformService {
   private clampTranslateValue(posX: number) {
     return Math.max(
       this.store.maxTranslate(),
-      Math.min(posX, this.store.minTranslate())
+      Math.min(posX, this.store.minTranslate()),
     );
   }
 
@@ -122,25 +127,25 @@ export class CarouselTransformService {
     } else {
       this.view.updateTransform(
         this.getTranslateFromPosition(currentIndex),
-        false
+        false,
       );
     }
   }
 
   public calculateTargetPositionAfterTranslation(
     isReachEnd: boolean,
-    isReachStart: boolean
+    isReachStart: boolean,
   ): { position: number; exactPosition: number } {
     const { position, exactPosition } = this.getNewPositionFromTranslate();
 
     const realPosition = this.getVirtualPositionFromExactPosition(
-      position ?? this.store.currentPosition()
+      position ?? this.store.currentPosition(),
     );
 
     const virtualPosition =
       this.getVirtualPositionFromExactPosition(exactPosition);
     const currentVirtualPosition = this.getVirtualPositionFromExactPosition(
-      this.store.currentPosition()
+      this.store.currentPosition(),
     );
 
     if (isReachEnd) {
@@ -148,7 +153,7 @@ export class CarouselTransformService {
         realPosition,
         exactPosition,
         virtualPosition,
-        currentVirtualPosition
+        currentVirtualPosition,
       );
     }
 
@@ -157,7 +162,7 @@ export class CarouselTransformService {
         realPosition,
         exactPosition,
         virtualPosition,
-        currentVirtualPosition
+        currentVirtualPosition,
       );
     }
 
@@ -171,7 +176,7 @@ export class CarouselTransformService {
     position: number | undefined,
     exactPosition: number,
     virtualPosition: number,
-    currentVirtualPosition: number
+    currentVirtualPosition: number,
   ): { position: number; exactPosition: number } {
     if (virtualPosition > currentVirtualPosition) {
       // Maximum reached.
@@ -196,7 +201,7 @@ export class CarouselTransformService {
     position: number | undefined,
     exactPosition: number,
     virtualPosition: number,
-    currentVirtualPosition: number
+    currentVirtualPosition: number,
   ): { position: number; exactPosition: number } {
     if (virtualPosition < currentVirtualPosition) {
       // Minimum reached.

@@ -10,6 +10,7 @@ export class CarouselStoreFake {
 
   private _allSlides?: ElementRef<HTMLElement>;
   private _slidesElements?: ElementRef<HTMLElement>[];
+  private _domSlides?: HTMLElement[];
 
   private _lazyLoading = false;
   private _slidesPerView: number | 'auto' = 1;
@@ -46,7 +47,7 @@ export class CarouselStoreFake {
       initialSlide: this._initialSlide,
       allSlides: this._allSlides,
       navigateSlideBySlide: this._navigateSlideBySlide,
-    } as any);
+    }) as any;
 
   loop = () => this._loop;
   totalSlides = () => this._totalSlides;
@@ -54,6 +55,8 @@ export class CarouselStoreFake {
 
   allSlides = () => this._allSlides;
   slidesElements = () => this._slidesElements;
+  domSlides = () => this._domSlides;
+
   slidesPerView = () => this._slidesPerView;
   spaceBetween = () => this._spaceBetween;
   center = () => this._center;
@@ -109,6 +112,7 @@ export class CarouselStoreFake {
 
   setSlidesElements(slides: ElementRef<HTMLElement>[] | undefined) {
     this._slidesElements = slides;
+    this._domSlides = slides?.map((slide) => slide?.nativeElement);
   }
 
   setLazyLoading(lazy: boolean) {

@@ -30,6 +30,10 @@ export class CarouselLoopService {
     const slides = this.store.domSlides();
 
     const container = this.store.allSlides()?.nativeElement;
+    if (!container) {
+      return undefined;
+    }
+
     const indexToInsert = before ? this.store.totalSlides() - 1 : 0;
     const index = this.store.slidesIndexOrder()[indexToInsert];
     const width = this.store.slidesWidths()[index];
@@ -48,10 +52,11 @@ export class CarouselLoopService {
       }
       try {
         this.renderer.removeChild(container, elementToInsert);
-        this.renderer.insertBefore(container, elementToInsert, firstReal);
       } catch (e) {
-        this.renderer.insertBefore(container, elementToInsert, firstReal);
+        // Element not in container, that's ok
+        console.warn('[Carousel] Element not in container during loop insertion', e);
       }
+      this.renderer.insertBefore(container, elementToInsert, firstReal);
     } else {
       this.renderer.appendChild(container, elementToInsert);
     }

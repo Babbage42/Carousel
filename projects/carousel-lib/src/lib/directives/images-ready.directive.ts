@@ -53,35 +53,46 @@ export class ImagesReadyDirective implements AfterViewInit, OnDestroy {
     });
 
     if (visibleOrEagerImages.length === 0) {
-      console.warn(
-        "No visible or eager images found, emitting ready immediately"
-      );
+      // No visible images, emit ready immediately
       return;
     }
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       visibleOrEagerImages.map(async (img) => {
         if (img.complete && img.naturalWidth > 0) {
-          return;
+          return Promise.resolve();
         }
         try {
           if ("decode" in img && typeof (img as any).decode === "function") {
             await (img as any).decode();
-            return;
+            return Promise.resolve();
           }
-        } catch {}
+        } catch (e) {
+          return Promise.reject(e);
+        }
 
-        await new Promise<void>((resolve) => {
-          const onDone = () => {
-            img.removeEventListener("load", onDone);
-            img.removeEventListener("error", onDone);
+        return new Promise<void>((resolve) => {
+          const onLoad = () => {
+            img.removeEventListener("load", onLoad);
+            img.removeEventListener("error", onError);
             resolve();
           };
-          img.addEventListener("load", onDone, { once: true });
-          img.addEventListener("error", onDone, { once: true });
+          const onError = () => {
+            img.removeEventListener("load", onLoad);
+            img.removeEventListener("error", onError);
+            // Resolve even on error - we still want to show the carousel
+            resolve();
+          };
+          img.addEventListener("load", onLoad, { once: true });
+          img.addEventListener("error", onError, { once: true });
         });
-      })
+      }),
     );
+
+    const failedCount = results.filter((r) => r.status === "rejected").length;
+    if (failedCount > 0) {
+      console.warn(`[Carousel] ${failedCount} image(s) failed to load`);
+    }
   }
 
   ngAfterViewInit(): void {

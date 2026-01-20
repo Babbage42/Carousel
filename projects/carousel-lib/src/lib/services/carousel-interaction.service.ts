@@ -88,7 +88,7 @@ export class CarouselInteractionService {
   public followUserMove(
     deltaMain: number,
     noExtraTranslation = false,
-    mainPosition?: number
+    mainPosition?: number,
   ) {
     const effectiveDeltaMain = this.store.isRtl() ? -deltaMain : deltaMain;
 
@@ -105,7 +105,7 @@ export class CarouselInteractionService {
         // If we are out of bounds, we don't want to apply extra translation.
         newTranslate = Math.max(
           this.store.maxTranslate(),
-          Math.min(newTranslate, this.store.minTranslate())
+          Math.min(newTranslate, this.store.minTranslate()),
         );
       } else {
         this.dragState.update((state) => ({
@@ -133,7 +133,7 @@ export class CarouselInteractionService {
    */
   private updatePositionOnMouseMove(
     newTranslate: number,
-    mainPosition?: number
+    mainPosition?: number,
   ) {
     const rawVelocity = mainPosition
       ? (mainPosition - this.dragState().lastMainPosition) *
@@ -180,8 +180,13 @@ export class CarouselInteractionService {
       return true;
     }
 
-    const ignoreCandidate = target.closest(selector);
-    return !ignoreCandidate;
+    try {
+      const ignoreCandidate = target.closest(selector);
+      return !ignoreCandidate;
+    } catch (e) {
+      console.error('[Carousel] Invalid dragIgnoreSelector:', selector, e);
+      return true;
+    }
   }
 
   public handleMove(event: MouseEvent | TouchEvent) {

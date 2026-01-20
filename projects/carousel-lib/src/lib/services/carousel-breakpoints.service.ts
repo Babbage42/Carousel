@@ -1,8 +1,9 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { CarouselStore } from '../carousel.store';
+import { Carousel } from '../models/carousel.model';
 
-type CarouselBreakpoints = Record<string, any>;
+type CarouselBreakpoints = Record<string, Partial<Carousel>>;
 
 @Injectable()
 export class CarouselBreakpointService {
@@ -32,8 +33,17 @@ export class CarouselBreakpointService {
     const baseSpaceBetween = this.store.spaceBetween();
 
     Object.keys(breakpoints).forEach((query) => {
+      // Validate media query contains only safe characters
+      if (!/^[\w\s():\-,\.]+$/.test(query)) {
+        console.warn('[Carousel] Invalid media query skipped:', query);
+        return;
+      }
+
       const config = breakpoints[query] ?? {};
-      const slidesPerView: number = config.slidesPerView ?? baseSlidesPerView;
+      const slidesPerView: number =
+        (typeof config.slidesPerView === 'number'
+          ? config.slidesPerView
+          : baseSlidesPerView) as number;
       const spaceBetween: number = config.spaceBetween ?? baseSpaceBetween;
 
       const columns = this.getGridColumnsValue(slidesPerView, spaceBetween);
@@ -57,7 +67,7 @@ export class CarouselBreakpointService {
    */
   setupMediaQueryListeners(
     breakpoints: CarouselBreakpoints | undefined,
-    onMatch: (config: any) => void
+    onMatch: (config: Partial<Carousel>) => void
   ): void {
     if (!this.window || !breakpoints) {
       return;

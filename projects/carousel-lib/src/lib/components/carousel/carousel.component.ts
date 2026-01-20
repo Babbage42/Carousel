@@ -168,7 +168,11 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         return 'auto';
       }
       const n = typeof v === 'string' ? Number(v) : v;
-      return Number.isFinite(n) ? (n as number) : 1;
+      // Validate: must be finite and positive
+      if (!Number.isFinite(n) || n <= 0) {
+        return 1;
+      }
+      return n as number;
     },
   });
   spaceBetween = input(5);
@@ -457,6 +461,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   slidesElements = viewChildren<ElementRef<HTMLElement>>('slide');
   autoplayTimer?: ReturnType<typeof setInterval>;
   resizeTimeout?: ReturnType<typeof setTimeout>;
+  private isDestroyed = false;
+  private lastResizeTime = 0;
+  private readonly resizeThrottleMs = 250;
 
   // Can be used by user to move pagination element.
   @ViewChild('paginationTemplate', { static: true })
@@ -536,7 +543,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         this.updateLayoutFromDom();
       } else {
         untracked(() => this.refresh());
-        console.log('*** REFRESHING AFTER SLIDES UPDATE');
+        if (this.debug()) {
+          console.log('*** REFRESHING AFTER SLIDES UPDATE');
+        }
       }
     });
 
@@ -544,7 +553,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       const currentPosition = this.store.currentPosition();
 
       this.initTouched();
-      console.log('*** Position changed (slideUpdate) ***', currentPosition);
+      if (this.debug()) {
+        console.log('*** Position changed (slideUpdate) ***', currentPosition);
+      }
       this.slideUpdate.emit(currentPosition);
     });
 
@@ -716,11 +727,19 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.isDestroyed = true;
     this.beforeDestroy.emit();
 
     this.breakpointService.clear();
     this.stopAutoplay();
     this.observer?.disconnect();
+    this.slideResizeObserver?.disconnect();
+
+    // Clear any pending timeouts
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = undefined;
+    }
   }
 
   private enableDebugMode() {
@@ -807,9 +826,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isReachEnd(),
         this.isReachStart(),
       );
-
-    console.log('SLIDING TO NEAREST', position, exactPosition);
-
+    if (this.debug()) {
+      console.log('SLIDING TO NEAREST', position, exactPosition);
+    }
     const target = !this.navigationService.isSlideDisabled(position)
       ? position
       : this.store.currentPosition();
@@ -819,8 +838,18 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private focusOnCurrentSlide() {
     const slides = this.slidesElements();
-    if (slides && slides[this.store.currentPosition()]) {
-      slides[this.store.currentPosition()].nativeElement.focus();
+    const pos = this.store.currentPosition();
+
+    if (!slides || pos < 0 || pos >= slides.length) {
+      if (this.debug()) {
+        console.warn('[Carousel] Cannot focus slide at invalid position', pos);
+      }
+      return;
+    }
+
+    const slideElement = slides[pos]?.nativeElement;
+    if (slideElement?.focus) {
+      slideElement.focus();
     }
   }
 
@@ -944,6 +973,9 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private startAutoplay() {
+    if (this.isDestroyed) {
+      return;
+    }
     const autoplay = this.autoplay();
     if (!autoplay) {
       return;
@@ -1104,13 +1136,22 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.observer = new ResizeObserver((entries) => {
+      const now = Date.now();
+
+      // Ignore resize events if last resize was too recent
+      if (now - this.lastResizeTime < this.resizeThrottleMs) {
+        return;
+      }
+
       for (const entry of entries) {
         const newWidth = entry.contentRect.width;
         if (Math.abs(newWidth - this.store.fullWidth()) > 1) {
+          this.lastResizeTime = now;
           clearTimeout(this.resizeTimeout);
           this.resizeTimeout = setTimeout(() => {
             this.refresh();
           }, 120);
+          break;
         }
       }
     });
@@ -1119,13 +1160,17 @@ export class CarouselComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public onImagesReady() {
-    console.log('IMAGES LOADED !!!!');
+    if (this.debug()) {
+      console.log('IMAGES LOADED !!!!');
+    }
     this.imagesLoaded.emit();
     this.areImagesReady.set(true);
   }
 
   public onImagesChanged() {
-    console.log('IMAGES CHANGED !!!!');
+    if (this.debug()) {
+      console.log('IMAGES CHANGED !!!!');
+    }
   }
 
   private enableTransition() {

@@ -563,20 +563,6 @@ export class MonitoredCarouselComponent {
   }
 }
 
-### 4.5. `imagesLoaded`
-
-`imagesLoaded` is an Angular signal output (`output<void>()`) emitted when all images have been reported as ready.
-
-```html
-<app-carousel [slides]="slides" (imagesLoaded)="onCarouselImagesLoaded()"></app-carousel>
-```
-
-You can use this to:
-
-- Hide a skeleton loader or placeholder
-- Start autoplay only after images are ready
-- Measure performance
-
 ---
 
 ## 5. Advanced examples

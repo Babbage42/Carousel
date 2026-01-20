@@ -569,6 +569,24 @@ export class CarouselStore {
   });
 
   patch(partial: Partial<Carousel>) {
+    // Validate peekEdges if provided
+    if (partial.peekEdges) {
+      const peek = partial.peekEdges;
+      if (peek.absoluteOffset !== undefined && peek.absoluteOffset < 0) {
+        console.warn('[Carousel] peekEdges.absoluteOffset must be >= 0, using 0');
+        peek.absoluteOffset = 0;
+      }
+      if (
+        peek.relativeOffset !== undefined &&
+        (peek.relativeOffset < 0 || peek.relativeOffset > 1)
+      ) {
+        console.warn(
+          '[Carousel] peekEdges.relativeOffset must be in [0, 1], clamping',
+        );
+        peek.relativeOffset = Math.max(0, Math.min(1, peek.relativeOffset));
+      }
+    }
+
     this._state.update((curr) => ({ ...curr, ...partial }));
   }
 

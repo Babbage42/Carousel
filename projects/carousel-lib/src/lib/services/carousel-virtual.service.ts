@@ -40,7 +40,7 @@ export class CarouselVirtualService {
       const buffer = this.store.virtualBuffer() ?? 1;
       const windowSize = Math.min(
         total,
-        Math.ceil(slidesPerView * (1 + 2 * buffer))
+        Math.ceil(slidesPerView * (1 + 2 * buffer)),
       );
       const half = Math.floor(windowSize / 2);
 
@@ -146,6 +146,16 @@ export class CarouselVirtualService {
       return;
     }
 
+    if (
+      targetIndex !== undefined &&
+      (targetIndex < 0 || targetIndex >= total)
+    ) {
+      console.error(
+        `[Carousel] Invalid targetIndex: ${targetIndex}, total: ${total}`,
+      );
+      return;
+    }
+
     const currentPos = this.store.currentPosition();
     const rendered = this.store.renderedIndices();
     if (!rendered.length) {
@@ -171,7 +181,7 @@ export class CarouselVirtualService {
 
     const avgWidth = (() => {
       const w = widths.filter(
-        (x) => typeof x === 'number' && x > 0
+        (x) => typeof x === 'number' && x > 0,
       ) as number[];
       if (w.length) return w.reduce((a, b) => a + b, 0) / w.length;
       return viewport;

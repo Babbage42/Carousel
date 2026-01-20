@@ -49,20 +49,24 @@ export class PaginationComponent {
   });
 
   public slideTo(slide: number) {
-    this.goToSlide.emit(slide);
+    if (!Number.isFinite(slide) || slide < 0) {
+      return;
+    }
+    const clampedSlide = Math.floor(slide);
+    this.goToSlide.emit(clampedSlide);
   }
 
   public readonly range = computed(() =>
-    Array.from({ length: this.store.totalSlidesVisible() }, (_, i) => i + 1)
+    Array.from({ length: this.store.totalSlidesVisible() }, (_, i) => i + 1),
   );
   public readonly currentPositionVisible = computed(() => {
     const realPaginationPosition = Math.max(
       0,
-      this.store.currentPosition() - this.store.firstSlideAnchor()
+      this.store.currentPosition() - this.store.firstSlideAnchor(),
     );
     return Math.min(
       realPaginationPosition,
-      this.store.totalSlidesVisible() - 1
+      this.store.totalSlidesVisible() - 1,
     );
   });
 

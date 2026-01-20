@@ -38,7 +38,10 @@
       #allSlides
       class="slides"
       [class.slides--vertical]="store.isVertical()"
+      role="region"
+      aria-label="Carousel slides"
       aria-live="polite"
+      aria-atomic="false"
       [class.slides-auto]="slidesPerView() === 'auto'"
       [class.fix-subpixel]="fixSubPixelIssue()"
       [style.transform]="slidesTransform()"

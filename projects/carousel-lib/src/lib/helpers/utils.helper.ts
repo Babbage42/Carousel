@@ -11,7 +11,7 @@ export function positiveModulo(n: number, m: number) {
   return ((n % m) + m) % m;
 }
 
-export function deepEqual(a: any, b: any) {
+export function deepEqual<T = unknown>(a: T, b: T): boolean {
   try {
     return JSON.stringify(a) === JSON.stringify(b);
   } catch {

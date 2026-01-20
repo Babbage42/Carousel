@@ -1,14 +1,16 @@
-export function rafThrottle<T extends (...args: any[]) => void>(fn: T): T {
-  let scheduled = false,
-    lastArgs: any[] | null = null;
-  return function (this: any, ...args: any[]) {
+export function rafThrottle<T extends (...args: never[]) => void>(fn: T): T {
+  let scheduled = false;
+  let lastArgs: Parameters<T> | null = null;
+  return function (this: unknown, ...args: Parameters<T>) {
     lastArgs = args;
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => {
       scheduled = false;
-      fn.apply(this, lastArgs as any[]);
-      lastArgs = null;
+      if (lastArgs !== null) {
+        fn.apply(this, lastArgs);
+        lastArgs = null;
+      }
     });
   } as T;
 }
