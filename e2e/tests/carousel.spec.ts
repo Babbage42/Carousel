@@ -1404,3 +1404,36 @@ test.describe('Carousel E2E (edge cases)', () => {
     }
   });
 });
+
+// Additional test: Autoplay pause on hover and resume on leave
+test.describe('Autoplay behavior', () => {
+  test('pauses on hover and resumes on leave', async ({ page }) => {
+    // Choose a story that supports autoplay; prefer one that exists in scenarios
+    const STORY = `?id=components-carousel--looping-auto-with-different-widths`;
+    await page.goto(STORY);
+    await waitCarouselReady(page);
+    const carousel = firstCarousel(page);
+
+    const initial = await getActiveSlideIndex(carousel);
+    // wait slightly longer than autoplay timeout to allow slide change
+    const autoplayWait = getTimeout('autoplay') || 1000;
+    await page.waitForTimeout(Math.ceil(autoplayWait * 1.2));
+    const after = await getActiveSlideIndex(carousel);
+    test.expect(after).not.toBe(initial);
+
+    // Hover to pause autoplay
+    const box = await carousel.boundingBox();
+    if (!box) test.skip(true, 'Carousel bounding box not available');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const pausedIndex = await getActiveSlideIndex(carousel);
+    await page.waitForTimeout(Math.ceil(autoplayWait * 1.2));
+    const still = await getActiveSlideIndex(carousel);
+    test.expect(still).toBe(pausedIndex);
+
+    // Move mouse out to resume autoplay
+    await page.mouse.move(box.x + box.width + 100, box.y + box.height + 100);
+    await page.waitForTimeout(Math.ceil(autoplayWait * 1.2));
+    const resumed = await getActiveSlideIndex(carousel);
+    test.expect(resumed).not.toBe(still);
+  });
+});
